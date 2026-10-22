@@ -804,6 +804,18 @@ button.kpi:hover::after{transform:scaleX(1)}
 #hdrNovo{transition:transform .2s var(--ease),background-color .2s}
 #hdrNovo:hover{transform:translateY(-1px)}
 body:not(.launch) .subnav #bizName{animation:navIn .45s var(--ease)}
+
+/* ===== mensagens automáticas ===== */
+.auto-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:1068px){.auto-grid{grid-template-columns:minmax(0,1fr)}}
+.auto-list{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.auto-list .item{padding:10px 14px}
+.auto-passos{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px;letter-spacing:-.224px}
+.auto-passos a{color:var(--accent)}
+.auto-ok{border-left:3px solid var(--ok)}
+.auto-prox h3,#pAuto h3{font-size:17px;margin-bottom:4px}
+.auto-prox{display:grid;gap:10px}
+#pAuto .pill{flex:none}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 
@@ -1038,12 +1050,16 @@ async function guardarPDF(gerarFn){
 /* ================= Gmail + email modal ================= */
 const b64=blob=>new Promise((ok,ko)=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(",")[1]);fr.onerror=ko;fr.readAsDataURL(blob)});
 function erroGmail(e){const c=e&&e.code;
+  if(!c&&e&&e.message&&S.modo==="supa")return e.message;
   if(c==="consent_required"||c==="not_granted"||c==="blocked_by_policy")return"O Gmail não foi autorizado para esta página. Autorize-o no menu de permissões do artefacto e tente de novo.";
   if(c==="server_not_connected"||c==="server_not_found")return"O Gmail não está ligado na sua conta. Ligue-o nos conectores do claude.ai.";
   if(c==="tool_error")return"O Gmail recusou o envio. Verifique o endereço do destinatário.";
   return"Não foi possível enviar agora. Tente de novo dentro de momentos.";}
-async function enviarGmail({to,subject,body,gerar}){
-  if(!mcp)throw{code:"server_not_connected"};
+const srvOk=()=>S.modo==="supa"&&!!(S.srv&&S.srv.configurado);
+const gmailOk=()=>!!mcp||srvOk();
+async function enviarGmail({to,subject,body,gerar,meta}){
+  if(!mcp){if(!srvOk())throw{code:"server_not_connected"};let anexo=null;if(gerar){const r=await gerar();if(r)anexo={nome:r.nome,base64:await b64(r.blob)}}
+    return fnMensagens({acao:"enviar",para:to.trim(),assunto:subject,texto:body,anexo,...(meta||{})})}
   const input={to:[to.trim()],subject,body};
   if(gerar){const r=await gerar();if(r)input.attachments=[{content:await b64(r.blob),filename:r.nome,mimeType:"application/pdf"}]}
   return mcp.callTool("Gmail","send_message",input,{cache:false});
@@ -1059,12 +1075,12 @@ function smsPartes(t){let gsm=true,len=0;for(const ch of t){if(GSM7.has(ch))len+
 const smsNum=t=>{const d=waNum(t);return d?"+"+d:""};
 /* email-to-SMS: the provider turns an email sent to <number>@<their domain> into an SMS */
 const CFG_SMS={ativo:false,modelo:"{numero}@email.smsglobal.com",formato:"258",assunto:""};
-const smsAuto=()=>!!(mcp&&S.scfg&&S.scfg.ativo&&/\{numero\}/.test(S.scfg.modelo||"")&&/@/.test(S.scfg.modelo||""));
+const smsAuto=()=>!!(gmailOk()&&S.scfg&&S.scfg.ativo&&/\{numero\}/.test(S.scfg.modelo||"")&&/@/.test(S.scfg.modelo||""));
 function smsEndereco(tel){const d=waNum(tel);if(!d)return"";const n=S.scfg.formato==="+258"?"+"+d:S.scfg.formato==="local"?d.replace(/^258/,""):d;return S.scfg.modelo.replace("{numero}",n)}
-async function enviarSMS(tel,texto){const to=smsEndereco(tel);if(!to)throw{code:"sem_telefone"};
-  if(!mcp)throw{code:"server_not_connected"};
+async function enviarSMS(tel,texto,meta){const to=smsEndereco(tel);if(!to)throw{code:"sem_telefone"};
+  if(!mcp){if(!srvOk())throw{code:"server_not_connected"};return fnMensagens({acao:"enviar",sms:{tel,texto},...(meta||{})})}
   return mcp.callTool("Gmail","send_message",{to:[to],subject:S.scfg.assunto||"SMS",body:texto},{cache:false})}
-function smsCfgHTML(){const c=S.scfg;return`<form class="panel" id="fSms" style="padding:16px;display:grid;gap:14px">
+function smsCfgHTML(){const c=S.scfg;return autoHTML()+`<form class="panel" id="fSms" style="padding:16px;display:grid;gap:14px">
   <div><h2>SMS automático</h2><p class="sub">Partilhado pelos dois negócios. Usa um serviço de “e-mail para SMS”: a página envia, pelo seu Gmail, um e-mail para o endereço do serviço e o serviço entrega-o como SMS ao cliente.</p></div>
   <label class="f check"><input type="checkbox" name="ativo"${c.ativo?" checked":""}> Enviar SMS automaticamente</label>
   <div class="fgrid">
@@ -1076,7 +1092,7 @@ function smsCfgHTML(){const c=S.scfg;return`<form class="panel" id="fSms" style=
   <p class="note" id="smsMsg" style="margin:0"></p>
   <div class="row" style="justify-content:flex-end;gap:8px"><button type="button" class="btn" id="smsTeste">Enviar SMS de teste</button><button class="btn pri" type="submit">Guardar SMS</button></div>
 </form>`}
-function ligarSmsCfg(){const f=$("#fSms");if(!f)return;
+function ligarSmsCfg(){ligarAuto();const f=$("#fSms");if(!f)return;
   const ler=()=>{const fd=new FormData(f);return{ativo:!!fd.get("ativo"),modelo:String(fd.get("modelo")).trim(),formato:fd.get("formato"),assunto:String(fd.get("assunto")).trim()}};
   const ex=()=>{const keep=S.scfg;S.scfg=ler();$("#smsEx").textContent=smsEndereco("841234567")||"—";S.scfg=keep};
   f.addEventListener("input",ex);f.addEventListener("change",ex);ex();
@@ -1084,7 +1100,7 @@ function ligarSmsCfg(){const f=$("#fSms");if(!f)return;
     if(c.ativo&&(!/\{numero\}/.test(c.modelo)||!/@/.test(c.modelo))){m.style.color="var(--bad)";m.textContent="O endereço tem de ter {numero} e um @, por exemplo {numero}@email.smsglobal.com.";return}
     await store.cfg("scfg","config/sms",c);m.style.color="var(--ok)";m.textContent=c.ativo?"SMS automático ativado.":"Definições guardadas. O SMS automático está desligado."};
   $("#smsTeste").onclick=async()=>{const m=$("#smsMsg"),keep=S.scfg;S.scfg={...ler(),ativo:true};const tel=S.cfg.telefone||S.mcfg.telefone;
-    if(!smsAuto()){S.scfg=keep;m.style.color="var(--bad)";m.textContent=mcp?"Preencha o endereço do serviço com {numero}.":"O Gmail não está disponível nesta vista.";return}
+    if(!smsAuto()){S.scfg=keep;m.style.color="var(--bad)";m.textContent=gmailOk()?"Preencha o endereço do serviço com {numero}.":"Ligue primeiro o envio pelo Gmail em “Mensagens automáticas”.";return}
     if(!waNum(tel)){S.scfg=keep;m.style.color="var(--bad)";m.textContent="Indique o seu telefone nas definições do negócio para receber o teste.";return}
     m.style.color="";m.textContent="A enviar teste para "+smsNum(tel)+"…";
     try{await enviarSMS(tel,"Heel Service: SMS de teste do sistema de gestao. Se recebeu esta mensagem, o SMS automatico funciona.");m.style.color="var(--ok)";m.textContent="Teste enviado para "+smsEndereco(tel)+". Confirme no telemóvel se chegou."}
@@ -1093,6 +1109,7 @@ function ligarSmsCfg(){const f=$("#fSms");if(!f)return;
 }
 /* o: {titulo, info, para, tel, assunto, corpo, sms, anexo:{rotulo,gerar}, aposEnvio(to), extraBtn:{label,fn}} */
 function modalEmail(o){
+  {const auto=S.autoRecibo;S.autoRecibo=false;if(auto&&autoLigado("recibos"))return envioAuto(o)}
   abrir(hdr(o.titulo,"Notifique o cliente por e-mail e por SMS.")+`
   <div class="body">
     ${o.info?`<div class="calc">${o.info}</div>`:""}
@@ -1100,9 +1117,9 @@ function modalEmail(o){
       <label class="f">Para<span class="withbtn"><input id="eTo" type="email" value="${esc(o.para||"")}" placeholder="sem e-mail registado"><button type="button" class="btn sm" data-act="copy-to">Copiar</button></span></label>
       <label class="f">Assunto<input id="eSub" value="${esc(o.assunto)}"></label>
       <label class="f">Mensagem<textarea id="eBody" rows="10">${esc(o.corpo)}</textarea></label>
-      ${o.anexo?`<div class="row">${mcp?`<label class="f check"><input type="checkbox" id="eAnexo" checked> Anexar ${esc(o.anexo.rotulo)} (PDF)</label>`:""}<button type="button" class="btn sm" id="eDl">Descarregar PDF</button></div>`:""}
-      <p class="note" id="eStatus">${mcp?"O e-mail sai da sua conta Gmail.":"O Gmail não está disponível nesta vista. Use “Abrir no e-mail” ou copie a mensagem."}</p>
-      <div class="row" style="justify-content:flex-end;gap:8px"><button type="button" class="btn sm" data-act="copy-msg">Copiar e-mail</button>${mcp?`<button type="button" class="btn pri" id="eSend">Enviar e-mail</button>`:`<a class="btn pri" id="eMail" href="#">Abrir no e-mail</a>`}</div>
+      ${o.anexo?`<div class="row">${gmailOk()?`<label class="f check"><input type="checkbox" id="eAnexo" checked> Anexar ${esc(o.anexo.rotulo)} (PDF)</label>`:""}<button type="button" class="btn sm" id="eDl">Descarregar PDF</button></div>`:""}
+      <p class="note" id="eStatus">${gmailOk()?"O e-mail sai da sua conta Gmail.":"O envio pelo Gmail não está ligado. Use “Abrir no e-mail” ou ligue-o em Definições → Mensagens automáticas."}</p>
+      <div class="row" style="justify-content:flex-end;gap:8px"><button type="button" class="btn sm" data-act="copy-msg">Copiar e-mail</button>${gmailOk()?`<button type="button" class="btn pri" id="eSend">Enviar e-mail</button>`:`<a class="btn pri" id="eMail" href="#">Abrir no e-mail</a>`}</div>
     </fieldset>
     <fieldset><legend>SMS</legend>
       <label class="f">Telefone<input id="sTo" inputmode="tel" value="${esc(smsNum(o.tel)||"")}" placeholder="sem telefone registado"></label>
@@ -1144,6 +1161,64 @@ function modalEmail(o){
     }catch(e){console.error(e);st.textContent=erroGmail(e);st.style.color="var(--bad)";bs.disabled=false;bs.textContent="Tentar de novo"}
   };
 }
+
+/* ===== Avisos automáticos: lógica partilhada pelo site e pelo servidor (sem DOM) ===== */
+const AVISOS=(()=>{
+  const AUTO_PADRAO={ativo:true,recibos:true,email:true,sms:true,iptv:true,iptvAntes:"7,3,1",iptvNoDia:true,iptvDepois:"1,3",mc:true,mcAntes:"3,1",mcNoDia:true,mcAtraso:"1,7,15"};
+  const r2=v=>Math.round((Number(v)||0)*100)/100;
+  const mt=v=>{const n=r2(v),[i,d]=Math.abs(n).toFixed(2).split(".");return(n<0?"-":"")+i.replace(/\B(?=(\d{3})+(?!\d))/g," ")+","+d+" MT"};
+  const fmtD=s=>{if(!s)return"—";const[y,m,d]=String(s).slice(0,10).split("-");return d+"/"+m+"/"+y};
+  const diasEntre=(de,ate)=>{const a=Date.UTC(...de.split("-").map((x,i)=>i===1?x-1:+x)),b=Date.UTC(...ate.split("-").map((x,i)=>i===1?x-1:+x));return Math.round((b-a)/864e5)};
+  const limpo=t=>String(t).replace(/[—–]/g,"-").replace(/[·•]/g,"-").replace(/º/g,"o").replace(/ª/g,"a").replace(/[“”«»]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,"...").normalize("NFD").replace(/[̀-ͯ]/g,"");
+  const waNum=t=>{let d=String(t||"").replace(/\D/g,"");if(d.length===9&&/^8/.test(d))d="258"+d;return d};
+  const emailOk=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||"").trim());
+  const semPh=v=>/^\s*\(preencher/i.test(String(v||""))?"":String(v||"");
+  const lista=s=>String(s||"").split(/[,;\s]+/).map(Number).filter(n=>Number.isFinite(n)&&n>0);
+  function smsEndereco(tel,sc){const d=waNum(tel);if(!d||!sc||!/\{numero\}/.test(sc.modelo||"")||!/@/.test(sc.modelo||""))return"";const n=sc.formato==="+258"?"+"+d:sc.formato==="local"?d.replace(/^258/,""):d;return sc.modelo.replace("{numero}",n)}
+  const assinatura=c=>`\n\nCumprimentos,\n${c.signatario?c.signatario+"\n":""}${c.nome||"Heel Service"}${c.telefone?"\nTel./WhatsApp: "+c.telefone:""}${c.email?"\n"+c.email:""}`;
+  /* the most recent threshold already reached: marcos sorted from earliest (most days before) to latest (most days after) */
+  function marcoAtual(n,antes,noDia,depois){
+    const ms=[...antes.map(x=>x),...(noDia?[0]:[]),...depois.map(x=>-x)].sort((a,b)=>b-a);
+    if(!ms.length)return null;const cand=ms.filter(m=>m>=n);if(!cand.length)return null;
+    const m=Math.min(...cand);const ultimo=ms[ms.length-1];if(n<ultimo-7)return null;return m;
+  }
+  function situacaoEmp(e,hoje){
+    const pago=(e.pagamentos||[]).reduce((a,p)=>a+(Number(p.valor)||0),0),multas=(e.multas||[]).reduce((a,m)=>a+(Number(m.valor)||0),0);
+    let cum=0,atraso=0,primeira=null,proxima=null;
+    (e.prestacoes||[]).forEach((p,i)=>{const ini=cum;cum=r2(cum+p.valor);const pg=Math.max(0,Math.min(p.valor,pago-ini)),falta=r2(p.valor-pg);
+      if(falta>0.004){if(p.venc<hoje){atraso=r2(atraso+falta);if(!primeira)primeira={...p,n:i+1}}else if(!proxima)proxima={...p,n:i+1,falta}}});
+    return{saldo:Math.max(0,r2((Number(e.total)||0)+multas-pago)),atraso,primeira,proxima};
+  }
+  /* d: {hoje, auto, iptvCfg, mcfg, sms, clientes, emprestimos, enviados:Set} → [{id,tipo,ref,nome,email:{para,assunto,texto}|null,sms:{numero,para,texto}|null,marco}] */
+  function planear(d){
+    const A={...AUTO_PADRAO,...(d.auto||{})},out=[];if(!A.ativo)return out;
+    const smsOn=A.sms&&d.sms&&d.sms.ativo;
+    const add=(o,email,smsTxt,tel)=>{if(d.enviados&&d.enviados.has(o.id))return;
+      const em=A.email&&emailOk(email)?{para:String(email).trim(),assunto:o.assunto,texto:o.texto}:null;
+      const end=smsOn?smsEndereco(tel,d.sms):"";const sm=end?{numero:"+"+waNum(tel),para:end,texto:limpo(smsTxt)}:null;
+      if(!em&&!sm)return;out.push({id:o.id,tipo:o.tipo,ref:o.ref,nome:o.nome,marco:o.marco,email:em,sms:sm})};
+    if(A.iptv){const c=d.iptvCfg||{},pag=semPh(c.pagamento),N=c.nome||"Heel Service";
+      (d.clientes||[]).forEach(cl=>{if(!cl.expira)return;const n=diasEntre(d.hoje,cl.expira),m=marcoAtual(n,lista(A.iptvAntes),A.iptvNoDia,lista(A.iptvDepois));if(m===null)return;
+        const p=(c.planos||[]).find(x=>x.id===cl.planoId),nome=String(cl.nome||"").split(" ")[0];
+        const quando=n<0?`expirou no dia ${fmtD(cl.expira)}`:n===0?"expira hoje":`expira dentro de ${n} dia${n>1?"s":""}, no dia ${fmtD(cl.expira)}`;
+        add({id:`iptv_${cl.id}_${cl.expira}_${m}`,tipo:"iptv",ref:cl.id,nome:cl.nome,marco:m,
+          assunto:n<0?"A sua subscrição IPTV expirou — renove já":n===0?"A sua subscrição IPTV expira hoje":"A sua subscrição IPTV está a terminar",
+          texto:`Olá ${nome},\n\nInformamos que a sua subscrição IPTV (${p?.nome||"—"}) ${quando}.\n\nPara continuar a ver sem interrupções, renove${p?" com o pagamento de "+mt(p.preco):""}${pag?" para:\n"+pag:"."}\n\nDepois de pagar, responda a esta mensagem com o comprovativo e enviamos o recibo e a confirmação da renovação.${assinatura(c)}`},
+          cl.email,`${N}: Ola ${nome}, a sua subscricao IPTV ${n<0?"expirou a "+fmtD(cl.expira):n===0?"expira hoje":"expira a "+fmtD(cl.expira)}.${p?" Renove com "+mt(p.preco):" Renove"}${pag?" via "+pag:""} e envie o comprovativo.`,cl.telefone)})}
+    if(A.mc){const c=d.mcfg||{},pag=semPh(c.pagamento),N=c.nome||"Heel Service";
+      (d.emprestimos||[]).forEach(e=>{if(e.estado==="anulado")return;const s=situacaoEmp(e,d.hoje);if(s.saldo<=0.004)return;const mu=e.mutuario||{},nome=String(mu.nome||"").split(" ")[0];
+        if(s.primeira){const n=diasEntre(d.hoje,s.primeira.venc),m=marcoAtual(n,[],false,lista(A.mcAtraso));if(m===null)return;const da=-n;
+          add({id:`mc_${e.id}_${s.primeira.venc}_${m}`,tipo:"mc",ref:e.id,nome:mu.nome,marco:m,assunto:`Pagamento em atraso — empréstimo ${e.numero}`,
+            texto:`Olá ${nome},\n\nO seu empréstimo ${e.numero} tem ${mt(s.atraso)} em atraso desde ${fmtD(s.primeira.venc)} (${da} dia${da===1?"":"s"}).\n\nPedimos que regularize o pagamento o mais breve possível${pag?" para:\n"+pag:""}.\n\nSaldo total em dívida: ${mt(s.saldo)}.\nDepois de pagar, envie-nos o comprovativo para emitirmos o recibo.${assinatura(c)}`},
+            mu.email,`${N}: Ola ${nome}, o emprestimo ${e.numero} tem ${mt(s.atraso)} em atraso desde ${fmtD(s.primeira.venc)}.${pag?" Regularize via "+pag+".":" Regularize o pagamento."} Saldo: ${mt(s.saldo)}.`,mu.telefone);return}
+        if(s.proxima){const n=diasEntre(d.hoje,s.proxima.venc),m=marcoAtual(n,lista(A.mcAntes),A.mcNoDia,[]);if(m===null)return;
+          add({id:`mc_${e.id}_${s.proxima.venc}_${m}`,tipo:"mc",ref:e.id,nome:mu.nome,marco:m,assunto:n===0?`Hoje: pagamento do empréstimo ${e.numero}`:`Lembrete: pagamento a ${fmtD(s.proxima.venc)}`,
+            texto:`Olá ${nome},\n\nLembramos que o pagamento n.º ${s.proxima.n} de ${(e.prestacoes||[]).length} do seu empréstimo ${e.numero}, no valor de ${mt(s.proxima.falta)}, vence ${n===0?"hoje":"a "+fmtD(s.proxima.venc)}.${pag?"\n\nPagamento para:\n"+pag:""}\n\nDepois de pagar, envie-nos o comprovativo para emitirmos o recibo.${assinatura(c)}`},
+            mu.email,`${N}: Ola ${nome}, o pagamento de ${mt(s.proxima.falta)} do emprestimo ${e.numero} vence ${n===0?"hoje":"a "+fmtD(s.proxima.venc)}.${pag?" Pague via "+pag+".":""}`,mu.telefone)}})}
+    return out;
+  }
+  return{AUTO_PADRAO,planear,diasEntre,smsEndereco,limpo,marcoAtual};
+})();
 
 /* ================= IPTV ================= */
 const plano=id=>S.cfg.planos.find(p=>p.id===id);
@@ -1298,7 +1373,7 @@ function abrirCliente(id){
     await store.put("clientes",out);
     let recId=null;
     if(novo&&fd.pago){const p=plano(out.planoId);recId=await emitirRecibo(out,[{desc:`Subscrição IPTV — ${p.nome} (${fmtD(out.inicio)} a ${fmtD(out.expira)})`,qtd:1,preco:p.preco}],fd.metodo,fd.ref)}
-    if(novo)abrirEmail("credenciais",out.id,recId);else{fechar();toast("Cliente atualizado")}
+    if(novo){S.autoRecibo=true;abrirEmail("credenciais",out.id,recId)}else{fechar();toast("Cliente atualizado")}
   };
 }
 async function emitirRecibo(c,itens,metodo,ref,nota){
@@ -1329,7 +1404,7 @@ function abrirRenovar(id){
     const ini=base();const out={...c,planoId:fd.planoId,expira:fd.expira,avisoEm:""};
     await store.put("clientes",out);
     const recId=await emitirRecibo(out,[{desc:`Renovação IPTV — ${p.nome} (${fmtD(ini)} a ${fmtD(fd.expira)})`,qtd:1,preco:Number(fd.valor)||0}],fd.metodo,fd.ref);
-    abrirEmail("confirmacao",out.id,recId);
+    S.autoRecibo=true;abrirEmail("confirmacao",out.id,recId);
   };
 }
 
@@ -1411,7 +1486,7 @@ function abrirEmail(tipo,clienteId,docId){
     extraBtn:tipo==="aviso"&&c?{label:"Marcar como avisado",fn:async()=>{await store.put("clientes",{...cliente(c.id),avisoEm:hoje()});fechar();toast("Marcado como avisado")}}:null});
 }
 function abrirAvisoTodos(){
-  if(!mcp){toast("O Gmail não está disponível nesta vista");return}
+  if(!gmailOk()){toast("Ligue o envio pelo Gmail em Definições → Mensagens automáticas");return}
   const auto=smsAuto();
   const l=S.clientes.filter(c=>{const k=estado(c).k;return(k==="warn"||k==="bad")&&c.avisoEm!==hoje()&&(emailOk(c.email)||(auto&&waNum(c.telefone)))}).sort((a,b)=>estado(a).n-estado(b).n);
   const sem=S.clientes.filter(c=>{const k=estado(c).k;return(k==="warn"||k==="bad")&&!emailOk(c.email)&&!(auto&&waNum(c.telefone))}).length;
@@ -1597,7 +1672,7 @@ function abrirReciboAvulso(){
     if(!c.nome){er.textContent="Indique o cliente.";er.hidden=false;return}
     if(!itens.length){er.textContent="Adicione pelo menos um item com descrição.";er.hidden=false;return}
     const id=await emitirRecibo({...c,id:cid},itens,$("#dMet").value,$("#dRef").value.trim(),$("#dNota").value.trim());
-    abrirEmail("recibo",cid,id)};
+    S.autoRecibo=true;abrirEmail("recibo",cid,id)};
 }
 function reciboHTML(d){
   const c=K().cfg();return`<div class="paper">
@@ -1630,7 +1705,7 @@ async function aceitarCotacao(id){
   if(t.ivaMT)itens.push({desc:`IVA (${pct(d.iva)})`,qtd:1,preco:t.ivaMT});
   const c=K().cliente(d.clienteId)||{...d.cliente,id:d.clienteId};
   const rid=await emitirRecibo(c,itens,"M-Pesa","","Referente à cotação "+d.numero);
-  abrirEmail("recibo",d.clienteId,rid);
+  S.autoRecibo=true;abrirEmail("recibo",d.clienteId,rid);
 }
 
 /* ---------- definições IPTV ---------- */
@@ -2336,7 +2411,7 @@ function abrirPagamento(id){
     const p={id:novoId("p"),recibo:proxNumMicro("rec"),data:$("#pData").value||hoje(),valor:v,metodo:$("#pMet").value,ref:$("#pRef").value.trim(),criadoEm:new Date().toISOString()};
     const out={...e,pagamentos:[...(e.pagamentos||[]),p]};
     if(situacao(out).saldo<=0.004)out.estado="liquidado";
-    await store.put("mc_emprestimos",out);mailRecibo(out.id,p.id,true)};
+    await store.put("mc_emprestimos",out);S.autoRecibo=true;mailRecibo(out.id,p.id,true)};
 }
 function abrirMulta(id){
   const e=emprestimo(id),s=situacao(e),base=s.primeiraAtraso?s.linhas.find(l=>l.n===s.primeiraAtraso.n).falta:pagaMes(e);
@@ -2762,6 +2837,119 @@ async function ctrAcao(a,k,id,b){
   if(a==="ctr-apagar"&&c){if(confirmar(b,"Confirmar eliminação")){await store.del(CTR[k].col,id);fechar();toast("Contrato eliminado")}return}
 }
 
+/* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
+Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
+const autoCfg=()=>({...AVISOS.AUTO_PADRAO,...(S.acfg||{})});
+function autoLigado(k){const A=autoCfg();return!!(A[k]&&gmailOk())}
+const enviosIds=()=>new Set((S.envios||[]).map(x=>x.id));
+async function registarLocal(id,dados){if(S.modo==="supa"||!db)return;try{await db.collection("envios").doc(String(id).replace(/[^\w.-]/g,"_").slice(0,120)).set({...dados,quando:new Date().toISOString()})}catch(e){console.error(e)}}
+
+/* ---- recibo emitido: envia logo por e-mail (com PDF) e SMS ---- */
+async function envioAuto(o){
+  const temEmail=emailOk(o.para),temSms=!!(o.sms&&smsAuto()&&waNum(o.tel));
+  if(!temEmail&&!temSms)return modalEmail(o);
+  const linha=(k,rot,dest)=>`<div class="item"><div class="who"><b>${rot}</b><small>${esc(dest)}</small></div><span class="pill sem" id="aSt${k}">A enviar…</span></div>`;
+  abrir(hdr(o.titulo,"Enviado automaticamente ao cliente")+`<div class="body">
+    ${o.info?`<div class="calc">${o.info}</div>`:""}
+    <div class="list auto-list">${temEmail?linha("E","E-mail"+(o.anexo?" com o "+esc(o.anexo.rotulo)+" em PDF":""),o.para):""}${temSms?linha("S","SMS",smsNum(o.tel)):""}</div>
+    <p class="note" id="aNota">${!temEmail?"O cliente não tem e-mail registado: segue só o SMS.":!temSms&&o.tel?(smsAuto()?"":"O SMS automático está desligado: segue só o e-mail."):""}</p></div>
+  <footer><button type="button" class="btn" id="aRever" style="margin-right:auto">Rever e reenviar</button><button type="button" class="btn pri" data-act="fechar">Concluído</button></footer>`,{nofocus:true});
+  $("#aRever").onclick=()=>modalEmail(o);
+  const set=(k,ok,t)=>{const p=$("#aSt"+k);if(p){p.className="pill "+(ok?"ok":"bad");p.textContent=t}};
+  const nota=t=>{const n=$("#aNota");if(n){n.style.color="var(--bad)";n.textContent=t}};
+  const feitos=[],meta={auto:true,tipo:"recibo",nome:o.nomeCliente||((/Olá ([^,\n]+)/.exec(o.corpo||"")||[])[1]||""),ref:o.ref||""};
+  if(temEmail){try{await enviarGmail({to:o.para,subject:o.assunto,body:o.corpo,gerar:o.anexo?.gerar,meta});set("E",true,"Enviado ✓");feitos.push("e-mail");if(o.aposEnvio)try{await o.aposEnvio(o.para)}catch(_){}}
+    catch(e){console.error(e);set("E",false,"Falhou");nota(erroGmail(e))}}
+  if(temSms){try{await enviarSMS(o.tel,smsLimpo(o.sms),meta);set("S",true,"Enviado ✓");feitos.push("SMS");if(o.aposSMS)try{await o.aposSMS()}catch(_){}}
+    catch(e){console.error(e);set("S",false,"Falhou");nota(e&&e.code==="sem_telefone"?"Telefone inválido.":erroGmail(e))}}
+  if(feitos.length){toast("Recibo enviado ao cliente por "+feitos.join(" e "));registarLocal("rec_"+Date.now(),{...meta,ok:true,canais:feitos,assunto:o.assunto,email:temEmail?o.para:"",sms:temSms?smsNum(o.tel):""})}
+}
+
+/* ---- avisos pelo Gmail do claude.ai (quando não há servidor) ---- */
+let correndo=false;
+async function correrLocal(silencioso){
+  if(correndo||!mcp)return null;correndo=true;
+  const plano=AVISOS.planear({hoje:hoje(),auto:autoCfg(),iptvCfg:S.cfg,mcfg:S.mcfg,sms:S.scfg,clientes:S.clientes,emprestimos:S.emprestimos,enviados:enviosIds()});
+  const r={hoje:hoje(),origem:"site",planeados:plano.length,enviados:0,falhas:0,quando:new Date().toISOString()};
+  for(const p of plano.slice(0,40)){const res={tipo:p.tipo,ref:p.ref,nome:p.nome,marco:p.marco,auto:true,assunto:p.email?.assunto||"SMS",canais:[]};
+    if(p.email)try{await mcp.callTool("Gmail","send_message",{to:[p.email.para],subject:p.email.assunto,body:p.email.texto},{cache:false});res.canais.push("e-mail");res.email=p.email.para}catch(e){res.erroEmail=erroGmail(e);if(["consent_required","not_granted","server_not_connected"].includes(e?.code))break}
+    if(p.sms)try{await mcp.callTool("Gmail","send_message",{to:[p.sms.para],subject:S.scfg.assunto||"SMS",body:p.sms.texto},{cache:false});res.canais.push("SMS");res.sms=p.sms.numero}catch(e){res.erroSms=erroGmail(e)}
+    res.ok=res.canais.length>0;if(res.ok)r.enviados++;else r.falhas++;await registarLocal(res.ok?p.id:p.id+"_falha_"+hoje(),res)}
+  try{await store.cfg("aestado","config/automacao_estado",r)}catch(_){}
+  correndo=false;if(!silencioso)toast(r.enviados?r.enviados+" aviso"+(r.enviados>1?"s":"")+" enviado"+(r.enviados>1?"s":""):"Não havia avisos por enviar");return r;
+}
+function autoDiario(){
+  if(!mcp||S.modo!=="db"||!autoCfg().ativo)return;
+  if(S.aestado&&S.aestado.hoje===hoje())return;
+  setTimeout(()=>correrLocal(true),2500);
+}
+
+/* ---- painel em Definições ---- */
+const tick=(n,l,v)=>`<label class="f check"><input type="checkbox" name="${n}"${v?" checked":""}> ${l}</label>`;
+function autoHTML(){
+  const A=autoCfg(),hojeK=hoje(),sup=S.modo==="supa",srv=S.srv;
+  const plano=S.ready?AVISOS.planear({hoje:hojeK,auto:A,iptvCfg:S.cfg,mcfg:S.mcfg,sms:S.scfg,clientes:S.clientes,emprestimos:S.emprestimos,enviados:enviosIds()}):[];
+  const ult=S.aestado||srv?.ultima;
+  const reg=[...(S.envios||[])].sort((a,b)=>String(b.quando||"").localeCompare(String(a.quando||""))).slice(0,25);
+  const estadoPill=gmailOk()?(A.ativo||A.recibos?'<span class="pill ok">Ligado</span>':'<span class="pill sem">Pausado</span>'):'<span class="pill warn">Por configurar</span>';
+  let srvBox="";
+  if(sup){
+    if(!srv)srvBox=`<div class="calc">A verificar o envio pelo Gmail…</div>`;
+    else if(srv.configurado)srvBox=`<div class="calc auto-ok"><b>Envio pelo Gmail ligado</b> · as mensagens saem de <b class="mono">${esc(srv.remetente)}</b>, mesmo com o site fechado.
+      <div class="row" style="margin-top:10px;gap:8px"><button type="button" class="btn sm" data-act="auto-teste">Enviar e-mail de teste</button>${srv.admin?`<button type="button" class="btn sm danger" data-act="auto-desligar">Desligar</button>`:""}</div></div>`;
+    else if(srv.admin)srvBox=`<form class="calc" id="fGmail" style="display:grid;gap:12px" autocomplete="off">
+      <b>Ligar o envio pelo seu Gmail</b>
+      <ol class="auto-passos"><li>Na sua conta Google, ative a <b>verificação em 2 passos</b> (Segurança → Verificação em dois passos).</li>
+        <li>Abra <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">myaccount.google.com/apppasswords</a>, escreva o nome “Heel Service” e clique em <b>Criar</b>.</li>
+        <li>Copie a palavra-passe de 16 letras que aparece e cole-a abaixo. Fica guardada só no servidor, nunca no navegador.</li></ol>
+      <div class="fgrid"><label class="f">Endereço Gmail<input id="gUser" type="email" value="${esc(S.cfg.email||"")}" autocomplete="off"></label>
+        <label class="f">Palavra-passe de aplicação<input id="gPass" type="password" autocomplete="new-password" placeholder="xxxx xxxx xxxx xxxx"></label></div>
+      <p class="note" id="gMsg" style="margin:0">Use a palavra-passe de aplicação, não a senha normal do Gmail.</p>
+      <div class="row" style="justify-content:flex-end"><button class="btn pri" type="submit">Ligar Gmail</button></div></form>`;
+    else srvBox=`<div class="calc">O envio automático ainda não foi ligado. Peça ao administrador para o ligar nesta secção.</div>`;
+  }else if(mcp)srvBox=`<div class="calc auto-ok"><b>Usa o Gmail ligado ao claude.ai.</b> Nesta versão, os avisos do dia são enviados quando abre o sistema. Para envio com o site fechado, use o site online.</div>`;
+  else srvBox=`<div class="calc">O envio automático funciona no site online (com a base de dados na Internet). Nesta cópia, use os botões de envio em cada cliente.</div>`;
+  const quando=ult?`Última execução: ${fmtD(ult.hoje)} às ${String(ult.quando||"").slice(11,16)} UTC · ${ult.enviados||0} enviado${ult.enviados===1?"":"s"}${ult.falhas?" · "+ult.falhas+" falhou":""}`:"Ainda não correu nenhuma vez.";
+  return`<section class="panel" id="pAuto" style="padding:18px;display:grid;gap:18px">
+  <div class="row spread"><div><h2>Mensagens automáticas</h2><p class="sub">Avisos de expiração, lembretes de pagamento e recibos enviados aos clientes sem precisar de abrir cada um.</p></div>${estadoPill}</div>
+  ${srvBox}
+  <form id="fAuto" style="display:grid;gap:14px">
+    <div class="auto-grid">
+      <fieldset><legend>Geral</legend>${tick("ativo","Enviar avisos automáticos todos os dias",A.ativo)}${tick("recibos","Enviar o recibo ao cliente logo que é emitido",A.recibos)}
+        <div class="row" style="gap:16px">${tick("email","Por e-mail",A.email)}${tick("sms","Por SMS",A.sms)}</div>
+        <p class="note" style="margin:0">O SMS usa o serviço “e-mail para SMS” configurado abaixo${S.scfg.ativo?"":" (ainda desligado)"}.</p></fieldset>
+      <fieldset><legend>IPTV — fim da subscrição</legend>${tick("iptv","Avisar os clientes",A.iptv)}
+        <div class="fgrid"><label class="f">Dias antes<input name="iptvAntes" value="${esc(A.iptvAntes)}" placeholder="7,3,1"></label><label class="f">Dias depois de expirar<input name="iptvDepois" value="${esc(A.iptvDepois)}" placeholder="1,3"></label></div>${tick("iptvNoDia","Também no dia em que expira",A.iptvNoDia)}</fieldset>
+      <fieldset><legend>Microcrédito — prestações</legend>${tick("mc","Lembrar os mutuários",A.mc)}
+        <div class="fgrid"><label class="f">Dias antes do vencimento<input name="mcAntes" value="${esc(A.mcAntes)}" placeholder="3,1"></label><label class="f">Dias de atraso para cobrar<input name="mcAtraso" value="${esc(A.mcAtraso)}" placeholder="1,7,15"></label></div>${tick("mcNoDia","Também no dia do vencimento",A.mcNoDia)}</fieldset>
+    </div>
+    <p class="note" style="margin:0">${sup?"O servidor envia os avisos todos os dias às 8h00 e às 14h00 (hora de Maputo).":"Os avisos do dia são enviados ao abrir o sistema."} Cada aviso só é enviado uma vez. Separe os dias com vírgulas.</p>
+    <div class="row" style="justify-content:flex-end"><button class="btn pri" type="submit">Guardar</button></div>
+  </form>
+  <div class="auto-prox"><div class="row spread"><div><h3>Por enviar hoje</h3><p class="note" style="margin:0">${quando}</p></div>
+    ${gmailOk()&&plano.length?`<button type="button" class="btn pri" data-act="auto-agora">Enviar ${plano.length} agora</button>`:""}</div>
+    ${plano.length?`<div class="list auto-list">${plano.slice(0,8).map(p=>`<div class="item"><div class="who"><b>${esc(p.nome||"")}</b><small>${esc(p.email?.assunto||p.sms?.texto.slice(0,60)||"")}</small></div><span class="tag">${[p.email?"e-mail":"",p.sms?"SMS":""].filter(Boolean).join(" + ")}</span></div>`).join("")}</div>${plano.length>8?`<p class="note">+${plano.length-8} outros</p>`:""}`:`<p class="note">${S.ready?"Nenhum aviso pendente para hoje.":"A carregar…"}</p>`}</div>
+  <div><h3>Registo de envios</h3>${reg.length?`<div class="tbl-wrap"><table class="sched"><thead><tr><th>Quando</th><th>Cliente</th><th>Mensagem</th><th>Canais</th><th>Estado</th></tr></thead><tbody>${reg.map(x=>`<tr><td>${fmtD(String(x.quando||"").slice(0,10))} ${String(x.quando||"").slice(11,16)}</td><td>${esc(x.nome||"—")}</td><td style="white-space:normal">${esc(x.assunto||x.tipo||"")}${x.auto?' <span class="tag">auto</span>':""}</td><td>${esc((x.canais||[]).join(" + ")||"—")}</td><td>${x.ok?'<span class="pill ok">Enviado</span>':`<span class="pill bad" title="${esc(x.erroEmail||x.erroSms||"")}">Falhou</span>`}</td></tr>`).join("")}</tbody></table></div>`:'<p class="note">Ainda não foi enviada nenhuma mensagem.</p>'}</div>
+</section>`;
+}
+function reAuto(){const p=$("#pAuto");if(!p)return;p.outerHTML=autoHTML();ligarAuto()}
+function ligarAuto(){
+  const f=$("#fAuto");if(f)f.onsubmit=async e=>{e.preventDefault();const fd=new FormData(f),l=k=>String(fd.get(k)||"").replace(/[^\d,;\s]/g,"").trim();
+    const c={ativo:!!fd.get("ativo"),recibos:!!fd.get("recibos"),email:!!fd.get("email"),sms:!!fd.get("sms"),iptv:!!fd.get("iptv"),iptvAntes:l("iptvAntes"),iptvDepois:l("iptvDepois"),iptvNoDia:!!fd.get("iptvNoDia"),mc:!!fd.get("mc"),mcAntes:l("mcAntes"),mcAtraso:l("mcAtraso"),mcNoDia:!!fd.get("mcNoDia")};
+    await store.cfg("acfg","config/automacao",c);toast("Mensagens automáticas guardadas")};
+  const g=$("#fGmail");if(g)g.onsubmit=async e=>{e.preventDefault();const m=$("#gMsg"),bt=g.querySelector("button[type=submit]");
+    bt.disabled=true;bt.textContent="A verificar…";m.style.color="";m.textContent="A ligar ao Gmail para confirmar os dados…";
+    try{const r=await fnMensagens({acao:"configurar",gmail:$("#gUser").value,senha:$("#gPass").value});$("#gPass").value="";S.srv={...(S.srv||{}),configurado:true,remetente:r.remetente};toast("Gmail ligado");reAuto()}
+    catch(err){m.style.color="var(--bad)";m.textContent=err.message;bt.disabled=false;bt.textContent="Ligar Gmail"}};
+}
+async function autoAcao(a,b){
+  if(a==="auto-teste"){b.disabled=true;try{const r=await fnMensagens({acao:"testar"});toast("E-mail de teste enviado para "+r.para)}catch(e){toast(e.message)}b.disabled=false;return}
+  if(a==="auto-desligar"){if(!confirmar(b,"Confirmar: desligar"))return;try{await fnMensagens({acao:"desligar"});S.srv={...S.srv,configurado:false,remetente:""};toast("Envio pelo Gmail desligado");reAuto()}catch(e){toast(e.message)}return}
+  if(a==="auto-agora"){b.disabled=true;b.textContent="A enviar…";
+    try{if(S.modo==="supa"){const r=await fnMensagens({acao:"rotina"});S.aestado=r;toast(r.enviados?r.enviados+" aviso"+(r.enviados>1?"s":"")+" enviado"+(r.enviados>1?"s":""):"Não havia avisos por enviar")}else await correrLocal(false)}
+    catch(e){toast(e.message||erroGmail(e))}reAuto();return}
+}
+
 /* ================= site próprio: Supabase (base de dados + logins por e-mail) ================= */
 let sb=null;
 const SUPA=()=>window.HS_SUPA;
@@ -2798,6 +2986,15 @@ async function fnUtilizadores(corpo){
   let j={};try{j=await r.json()}catch(_){}
   if(!r.ok)throw new Error(j.erro||"O servidor respondeu com erro ("+r.status+").");return j;
 }
+/* sends e-mail/SMS through the server (Gmail) */
+async function fnMensagens(corpo){
+  const s=(await sb.auth.getSession()).data.session;
+  const h={"Content-Type":"application/json",apikey:SUPA().key};if(s)h.Authorization="Bearer "+s.access_token;
+  let r;try{r=await fetch(SUPA().url+"/functions/v1/mensagens",{method:"POST",headers:h,body:JSON.stringify(corpo)})}catch(e){throw new Error("Sem ligação ao servidor. Verifique a Internet.")}
+  let j={};try{j=await r.json()}catch(_){}
+  if(!r.ok)throw new Error(j.erro||"O servidor respondeu com erro ("+r.status+").");return j;
+}
+async function srvEstado(){if(S.modo!=="supa")return;try{S.srv=await fnMensagens({acao:"estado"})}catch(e){console.error(e);S.srv={configurado:false,erro:e.message}}reAuto()}
 /* password-recovery link from the e-mail lands back here with type=recovery in the address */
 const urlRecuperacao=()=>location.origin+location.pathname;
 let emRecuperacao=/type=recovery/.test(location.hash);
@@ -2879,7 +3076,7 @@ async function supaEntrar(email){
   try{const{data:m,error}=await sb.from("membros").select("email,nome,papel").eq("email",email.toLowerCase()).maybeSingle();if(error)throw error;
     if(!m){await sb.auth.signOut();return telaLoginEmail("A conta "+email+" não tem acesso a este sistema. Peça ao administrador para a adicionar.")}
     admin={usuario:m.email,nome:m.nome,papel:m.papel,supa:true};
-    await db.carregar();entrar();
+    await db.carregar();entrar();srvEstado();
   }catch(err){console.error(err);telaAuth("Erro ao carregar","Não foi possível carregar os dados. Verifique a Internet e tente de novo.",`<button class="btn pri" onclick="location.reload()">Tentar de novo</button>`)}
 }
 async function supaSair(msg){try{db.parar();await sb.auth.signOut()}catch(_){}telaLoginEmail(msg)}
@@ -3062,7 +3259,7 @@ let rvIO=null;
 function revelar(){
   if(calmo()||!("IntersectionObserver" in window))return;
   if(!rvIO)rvIO=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add("rv-in");rvIO.unobserve(x.target)}}),{rootMargin:"0px 0px -6% 0px"});
-  document.querySelectorAll("#view .panel,#view .ovsec,#view .kpis,#view fieldset,#view .grid2>*").forEach(el=>{
+  document.querySelectorAll("#view section.panel,#view .ovsec,#view .kpis,#view .grid2>*").forEach(el=>{
     if(el.classList.contains("rv"))return;const r=el.getBoundingClientRect();
     if(r.top>innerHeight*.92){el.classList.add("rv");rvIO.observe(el)}});
 }
@@ -3273,7 +3470,7 @@ function armarInatividade(){
 function subscrever(){
   const err=e=>{console.error(e);if(e&&e.code==="revoked")toast("O acesso aos dados foi retirado nesta vista.")};
   const fixCfg=(base,d)=>{const c={...base,...d};if(base.planos&&(!Array.isArray(c.planos)||!c.planos.length))c.planos=PLANOS_PADRAO;return c};
-  let pend=9;const pronto=()=>{if(--pend===0){S.ready=true;refresh();notifAuto();return}refresh()};
+  let pend=9;const pronto=()=>{if(--pend===0){S.ready=true;refresh();notifAuto();autoDiario();return}refresh()};
   const once=f=>{let first=true;return s=>{f(s);if(first){first=false;pronto()}else refresh()}};
   unsubs.push(db.doc("config/negocio").onSnapshot(s=>{S.cfg=fixCfg(CFG_IPTV,s.exists?s.data():{});refresh()},err));
   unsubs.push(db.doc("config/servicos").onSnapshot(s=>{S.vcfg={...CFG_SERV,...(s.exists?s.data():{})};refresh()},err));
@@ -3286,6 +3483,9 @@ function subscrever(){
   unsubs.push(db.collection("documentos").onSnapshot(once(s=>{S.docs=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
   unsubs.push(db.collection("mc_mutuarios").onSnapshot(once(s=>{S.mutuarios=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
   unsubs.push(db.collection("mc_emprestimos").onSnapshot(once(s=>{S.emprestimos=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
+  unsubs.push(db.doc("config/automacao").onSnapshot(s=>{S.acfg={...AVISOS.AUTO_PADRAO,...(s.exists?s.data():{})};refresh()},err));
+  unsubs.push(db.doc("config/automacao_estado").onSnapshot(s=>{S.aestado=s.exists?s.data():null;reAuto()},err));
+  unsubs.push(db.collection("envios").onSnapshot(s=>{S.envios=s.docs.map(d=>({...d.data(),id:d.id}));reAuto()},err));
   unsubs.push(db.collection("sv_contratos").onSnapshot(once(s=>{S.vcontratos=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
   unsubs.push(db.collection("mc_contratos").onSnapshot(once(s=>{S.mcontratos=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
 }
@@ -3297,7 +3497,7 @@ function entrar(){
 }
 function sair(msg){
   fecharNotif();store_("sessionStorage","hs_notif_visto",null);nfUlt=-1;store_("sessionStorage",SESS,null);store_("sessionStorage","hs_negocio",null);unsubs.forEach(u=>{try{u()}catch(_){}});unsubs=[];
-  S.clientes=[];S.docs=[];S.mutuarios=[];S.emprestimos=[];S.servicos=[];S.vclientes=[];S.vdocs=[];S.vcontratos=[];S.mcontratos=[];S.ready=false;S.biz=null;clearTimeout(idleT);$("#hdrUser").textContent="";$("#tabs").innerHTML="";if(S.modo==="supa")supaSair(msg);else telaLogin(msg);
+  S.clientes=[];S.docs=[];S.mutuarios=[];S.emprestimos=[];S.servicos=[];S.vclientes=[];S.vdocs=[];S.vcontratos=[];S.mcontratos=[];S.envios=[];S.srv=null;S.ready=false;S.biz=null;clearTimeout(idleT);$("#hdrUser").textContent="";$("#tabs").innerHTML="";if(S.modo==="supa")supaSair(msg);else telaLogin(msg);
 }
 async function gate(){
   telaAuth("A verificar acesso…","");
@@ -3326,6 +3526,7 @@ document.addEventListener("click",async e=>{
   switch(a){
     case"fechar":e.preventDefault();fechar();break;
     case"tema":trocarTema();break;
+    case"auto-teste":case"auto-desligar":case"auto-agora":autoAcao(a,b);break;
     case"ctr-novo":case"ctr-abrir":case"ctr-pdf":case"ctr-filtro":case"ctr-estado":case"ctr-apagar":ctrAcao(a,b.dataset.k,id,b);break;
     case"ctr-de-cot":{const ex=S.vcontratos.find(c=>c.cotacaoId===id&&c.estado!=="anulado");abrirContrato("serv",ex?.id,ex?null:id);break}
     case"ctr-de-emp":{const ex=S.mcontratos.find(c=>c.emprestimoId===id&&c.estado!=="anulado");abrirContrato("micro",ex?.id,ex?null:id);break}
