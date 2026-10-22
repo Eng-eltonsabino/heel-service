@@ -1615,7 +1615,7 @@ function abrirDoc(id){
   <div class="body">${recibo?reciboHTML(d):cotHTML(d)}</div>
   <footer>
     ${d.estado!=="anulado"?`<button type="button" class="btn danger" data-act="anular-doc" data-id="${d.id}" style="margin-right:auto">Anular</button>`:`<button type="button" class="btn danger" data-act="apagar-doc" data-id="${d.id}" style="margin-right:auto">Eliminar</button>`}
-    ${!recibo&&d.estado==="pendente"?`<button type="button" class="btn" data-act="editar-cot" data-id="${d.id}">Ajustar</button><button type="button" class="btn" data-act="aceitar" data-id="${d.id}">Converter em recibo</button>`:""}
+    ${!recibo&&S.biz==="serv"&&d.estado!=="anulado"?`<button type="button" class="btn" data-act="ctr-de-cot" data-id="${d.id}">Contrato</button>`:""}${!recibo&&d.estado==="pendente"?`<button type="button" class="btn" data-act="editar-cot" data-id="${d.id}">Ajustar</button><button type="button" class="btn" data-act="aceitar" data-id="${d.id}">Converter em recibo</button>`:""}
     ${recibo?`<button type="button" class="btn" data-act="pdf-doc" data-id="${d.id}" data-semcarimbo="1">PDF sem carimbo</button>`:""}
     <button type="button" class="btn" data-act="pdf-doc" data-id="${d.id}">${recibo?"PDF carimbado":"Gerar PDF"}</button>
     <button type="button" class="btn pri" data-act="email-doc" data-id="${d.id}">Enviar</button>
@@ -1684,7 +1684,7 @@ CTX.serv={col:"sv_documentos",catRotulo:"serviço",cfg:()=>S.vcfg,docs:()=>S.vdo
 function estadoCot(d){if(d.estado==="anulado")return"anulado";if(d.tipo==="recibo")return"recibo";if(d.estado==="aceite")return"aceite";if(d.validade&&dias(d.validade)<0)return"caducada";return"pendente"}
 
 const SERV={
-  nome:"Prestação de serviços",tabs:[["painel","Painel"],["cotacoes","Cotações e recibos"],["servicos","Serviços"],["clientes","Clientes"],["definicoes","Definições"]],
+  nome:"Prestação de serviços",tabs:[["painel","Painel"],["cotacoes","Cotações e recibos"],["contratos","Contratos"],["servicos","Serviços"],["clientes","Clientes"],["definicoes","Definições"]],
   novo:["+ Nova cotação",()=>abrirCotacao()],
   build(t){const v=$("#view");
     if(t==="painel")v.innerHTML=banner()+`
@@ -1708,11 +1708,12 @@ const SERV={
     if(t==="clientes")v.innerHTML=banner()+`
       <div class="row spread"><div><h1>Clientes</h1><p class="sub">Empresas e pessoas a quem presta serviços.</p></div><button class="btn pri" data-act="sv-novo-cliente">+ Novo cliente</button></div>
       <section class="panel"><div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Contacto</th><th>Morada / NUIT</th><th class="num">Cotações</th><th class="num">Aceite / pago</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbVCli"></tbody></table></div></section>`;
+    if(t==="contratos")v.innerHTML=ctrListaHTML("serv");
     if(t==="definicoes"){v.innerHTML=banner()+defsServHTML();ligarDefsServ()}
     const q=$("#vq");if(q)q.addEventListener("input",e=>{S.vq=e.target.value;refVDocs()});
     const q2=$("#sq");if(q2)q2.addEventListener("input",e=>{S.sq=e.target.value;refServ()});
   },
-  ref(t){if(t==="painel")refVPainel();if(t==="cotacoes")refVDocs();if(t==="servicos")refServ();if(t==="clientes")refVCli()},
+  ref(t){if(t==="contratos")refCtr("serv");if(t==="painel")refVPainel();if(t==="cotacoes")refVDocs();if(t==="servicos")refServ();if(t==="clientes")refVCli()},
   stats(){const cot=S.vdocs.filter(d=>d.tipo==="cotacao"),pend=cot.filter(d=>estadoCot(d)==="pendente"),mes=hoje().slice(0,7);
     const fat=S.vdocs.filter(d=>d.tipo==="recibo"&&d.estado!=="anulado"&&(d.data||"").startsWith(mes));
     const fechadas=cot.filter(d=>["aceite","caducada"].includes(estadoCot(d))||d.estado==="anulado"),aceites=cot.filter(d=>d.estado==="aceite");
@@ -1742,7 +1743,7 @@ function refVDocs(){
     <td class="cname"><b>${esc(d.cliente?.nome)}</b><small>${esc(d.cliente?.telefone||d.cliente?.email||"")}</small></td>
     <td style="max-width:260px;white-space:normal">${esc((d.itens||[]).map(i=>i.desc).slice(0,2).join(", "))}${(d.itens||[]).length>2?` <span class="tag">+${d.itens.length-2}</span>`:""}</td>
     <td>${pillCot[estadoCot(d)]}</td><td class="num"><b>${mt(d.total)}</b></td>
-    <td><div class="acts"><button class="btn sm" data-act="ver-doc" data-id="${d.id}">Abrir</button><button class="btn sm" data-act="pdf-doc" data-id="${d.id}">PDF</button>${d.tipo==="cotacao"&&estadoCot(d)==="pendente"?`<button class="btn sm" data-act="editar-cot" data-id="${d.id}">Ajustar</button>`:""}</div></td></tr>`).join("")
+    <td><div class="acts"><button class="btn sm" data-act="ver-doc" data-id="${d.id}">Abrir</button><button class="btn sm" data-act="pdf-doc" data-id="${d.id}">PDF</button>${d.tipo==="cotacao"&&estadoCot(d)==="pendente"?`<button class="btn sm" data-act="editar-cot" data-id="${d.id}">Ajustar</button>`:""}${d.tipo==="cotacao"&&d.estado!=="anulado"?`<button class="btn sm" data-act="ctr-de-cot" data-id="${d.id}">Contrato</button>`:""}</div></td></tr>`).join("")
     :`<tr><td colspan="7" class="empty">${S.vdocs.length?"Nenhum documento neste filtro.":"Ainda sem cotações. Clique em “+ Nova cotação”."}</td></tr>`;
 }
 function vezesCotado(nome){let n=0;S.vdocs.forEach(d=>{if(d.tipo==="cotacao"&&(d.itens||[]).some(i=>i.desc===nome))n++});return n}
@@ -1846,15 +1847,15 @@ function csvServ(){salvarFicheiro("servicos-heel-service.csv",csvDe([["Servico",
 function backupJSON(){
   const limpa=o=>{const{senha,...r}=o;return r};
   const dados={exportadoEm:new Date().toISOString(),sistema:"Heel Service Gestão",
-    servicos:{config:{...S.vcfg,carimboImg:S.vcfg.carimboImg?"(imagem)":""},catalogo:S.servicos,clientes:S.vclientes,documentos:S.vdocs},
+    servicos:{config:{...S.vcfg,carimboImg:S.vcfg.carimboImg?"(imagem)":""},catalogo:S.servicos,clientes:S.vclientes,documentos:S.vdocs,contratos:S.vcontratos},
     iptv:{config:{...S.cfg,carimboImg:S.cfg.carimboImg?"(imagem)":""},clientes:S.clientes.map(limpa),documentos:S.docs},
-    microcredito:{config:{...S.mcfg,carimboImg:S.mcfg.carimboImg?"(imagem)":""},mutuarios:S.mutuarios,emprestimos:S.emprestimos}};
+    microcredito:{config:{...S.mcfg,carimboImg:S.mcfg.carimboImg?"(imagem)":""},mutuarios:S.mutuarios,emprestimos:S.emprestimos,contratos:S.mcontratos}};
   salvarFicheiro("backup-heel-service-"+hoje()+".json",JSON.stringify(dados,null,2));
 }
 
 /* ---------- importar cópia de segurança ---------- */
 const MAPA_IMPORT=[["servicos","catalogo","sv_servicos","Serviços"],["servicos","clientes","sv_clientes","Clientes de serviços"],["servicos","documentos","sv_documentos","Cotações e recibos"],
-  ["iptv","clientes","clientes","Clientes IPTV"],["iptv","documentos","documentos","Documentos IPTV"],["microcredito","mutuarios","mc_mutuarios","Mutuários"],["microcredito","emprestimos","mc_emprestimos","Empréstimos"]];
+  ["iptv","clientes","clientes","Clientes IPTV"],["iptv","documentos","documentos","Documentos IPTV"],["microcredito","mutuarios","mc_mutuarios","Mutuários"],["microcredito","emprestimos","mc_emprestimos","Empréstimos"],["servicos","contratos","sv_contratos","Contratos de serviços"],["microcredito","contratos","mc_contratos","Contratos de mútuo"]];
 const CFG_IMPORT=[["servicos","config/servicos","vcfg"],["iptv","config/negocio","cfg"],["microcredito","config/microcredito","mcfg"]];
 function abrirImportar(b){
   if(!b||b.sistema!=="Heel Service Gestão"){toast("Este ficheiro não é uma cópia de segurança da Heel Service Gestão.");return}
@@ -1881,7 +1882,7 @@ function defsServHTML(){const c=S.vcfg;return`
   </form>
   <section class="panel" style="padding:16px;display:grid;gap:12px">
     <div><h2>Base de dados</h2><p class="sub">Toda a informação fica guardada na base de dados desta página, privada para si. Pode também guardar cópias no seu computador.</p></div>
-    <div class="summary"><div><em>Serviços</em><b>${S.servicos.length}</b></div><div><em>Clientes de serviços</em><b>${S.vclientes.length}</b></div><div><em>Cotações e recibos</em><b>${S.vdocs.length}</b></div><div><em>Clientes IPTV</em><b>${S.clientes.length}</b></div><div><em>Documentos IPTV</em><b>${S.docs.length}</b></div><div><em>Empréstimos</em><b>${S.emprestimos.length}</b></div></div>
+    <div class="summary"><div><em>Serviços</em><b>${S.servicos.length}</b></div><div><em>Clientes de serviços</em><b>${S.vclientes.length}</b></div><div><em>Cotações e recibos</em><b>${S.vdocs.length}</b></div><div><em>Contratos</em><b>${S.vcontratos.length+S.mcontratos.length}</b></div><div><em>Clientes IPTV</em><b>${S.clientes.length}</b></div><div><em>Documentos IPTV</em><b>${S.docs.length}</b></div><div><em>Empréstimos</em><b>${S.emprestimos.length}</b></div></div>
     <div class="row"><button type="button" class="btn pri" data-act="sv-backup">Cópia de segurança completa (JSON)</button><label class="btn" style="cursor:pointer">Importar cópia de segurança<input type="file" id="impFile" accept=".json,application/json" hidden></label><button type="button" class="btn" data-act="sv-csv-docs">Cotações (CSV)</button><button type="button" class="btn" data-act="sv-csv-serv">Serviços (CSV)</button></div>
     <p class="note" style="margin:0">A cópia de segurança inclui os três negócios. As senhas IPTV dos clientes ficam de fora por segurança.</p>
   </section>
@@ -1962,7 +1963,7 @@ function cronograma(){
 }
 
 const MICRO={
-  nome:"Microcrédito",tabs:[["painel","Painel"],["clientes","Clientes"],["mes","Mês a mês"],["simulador","Simulador"],["mutuarios","Mutuários"],["definicoes","Definições"]],
+  nome:"Microcrédito",tabs:[["painel","Painel"],["clientes","Clientes"],["contratos","Contratos"],["mes","Mês a mês"],["simulador","Simulador"],["mutuarios","Mutuários"],["definicoes","Definições"]],
   novo:["+ Novo empréstimo",()=>abrirNovoEmp()],
   build(t){const v=$("#view");
     if(t==="painel")v.innerHTML=banner()+`
@@ -1999,11 +2000,12 @@ const MICRO={
     if(t==="mutuarios")v.innerHTML=banner()+`
       <div class="row spread"><div><h1>Mutuários</h1><p class="sub">Dados pessoais e fiadores de quem pede empréstimo.</p></div><button class="btn" data-act="novo-mut">+ Novo mutuário</button></div>
       <section class="panel"><div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>Contacto</th><th>BI</th><th>Fiador</th><th style="text-align:right">Em dívida</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbMut"></tbody></table></div></section>`;
+    if(t==="contratos")v.innerHTML=ctrListaHTML("micro");
     if(t==="definicoes"){v.innerHTML=banner()+defsMicroHTML();ligarDefsMicro()}
     const q=$("#mq");if(q)q.addEventListener("input",e=>{S.mq=e.target.value;MICRO.ref("clientes")});
     const cp=$("#mCapital");if(cp){let tm;cp.addEventListener("input",()=>{const v=Number(cp.value)||0;S.mcfg={...S.mcfg,capital:v};alocTxt();clearTimeout(tm);tm=setTimeout(()=>store.cfg("mcfg","config/microcredito",{...S.mcfg,capital:v}),700)})}
   },
-  ref(t){if(t==="painel")refMPainel();if(t==="clientes")refEmp();if(t==="mes")refMes();if(t==="mutuarios")refMut()},
+  ref(t){if(t==="contratos")refCtr("micro");if(t==="painel")refMPainel();if(t==="clientes")refEmp();if(t==="mes")refMes();if(t==="mutuarios")refMut()},
   stats(){const r=resumo();return{porReceber:r.saldo,atraso:r.atraso,nAtraso:r.nAtraso,ativos:r.n,recebido:r.recebidoMes,lucro:r.prof,jurosPorReceber:r2(r.prof-r.jurosRec),receberMes:r.sP}}
 };
 
@@ -2305,7 +2307,7 @@ function abrirEmp(id){
   </div>
   <footer>
     ${e.estado!=="anulado"?(!(e.pagamentos||[]).length?`<button type="button" class="btn danger" data-act="anular-emp" data-id="${e.id}" style="margin-right:auto">Anular</button>`:""):`<button type="button" class="btn danger" data-act="apagar-emp" data-id="${e.id}" style="margin-right:auto">Eliminar</button>`}
-    <button type="button" class="btn" data-act="mc-plano-pdf" data-id="${e.id}">Plano em PDF</button>
+    ${e.estado!=="anulado"?`<button type="button" class="btn" data-act="ctr-de-emp" data-id="${e.id}">Contrato</button>`:""}<button type="button" class="btn" data-act="mc-plano-pdf" data-id="${e.id}">Plano em PDF</button>
     ${live?`<button type="button" class="btn" data-act="multa" data-id="${e.id}">Multa</button><button type="button" class="btn" data-act="lembrete" data-id="${e.id}">Lembrete</button><button type="button" class="btn pri" data-act="pagar" data-id="${e.id}">Registar pagamento</button>`:""}
   </footer>`,{wide:true,nofocus:true});
 }
@@ -2434,6 +2436,330 @@ function ligarDefsMicro(){
   ligarCarimbo(S.mcfg);ligarConta();ligarSmsCfg();
   $("#fDefsM").onsubmit=async e=>{e.preventDefault();const fd=Object.fromEntries(new FormData(e.target));
     await store.cfg("mcfg","config/microcredito",{...S.mcfg,...fd,capital:Number(fd.capital)||0,taxa:Number(fd.taxa)||0,n:Math.max(1,Number(fd.n)||1),multa:Number(fd.multa)||0,carimboImg:defsImg});toast("Definições guardadas")};
+}
+
+/* ================= contratos: prestação de serviços e mútuo (microcrédito) ================= */
+Object.assign(COL,{sv_contratos:"vcontratos",mc_contratos:"mcontratos"});
+Object.assign(S,{vcontratos:[],mcontratos:[],cfiltro:"todos"});
+const CTR={
+  serv:{col:"sv_contratos",arr:()=>S.vcontratos,pref:"CPS",cfg:()=>S.vcfg,titulo:"Contrato de Prestação de Serviços",curto:"Prestação de serviços"},
+  micro:{col:"mc_contratos",arr:()=>S.mcontratos,pref:"CMT",cfg:()=>S.mcfg,titulo:"Contrato de Mútuo",curto:"Mútuo (empréstimo)"}};
+
+/* ---- valores por extenso (meticais) ---- */
+const EX_U=["zero","um","dois","três","quatro","cinco","seis","sete","oito","nove","dez","onze","doze","treze","catorze","quinze","dezasseis","dezassete","dezoito","dezanove"];
+const EX_D=["","","vinte","trinta","quarenta","cinquenta","sessenta","setenta","oitenta","noventa"];
+const EX_C=["","cento","duzentos","trezentos","quatrocentos","quinhentos","seiscentos","setecentos","oitocentos","novecentos"];
+function ex999(n){if(n===100)return"cem";const c=Math.floor(n/100),r=n%100,p=[];if(c)p.push(EX_C[c]);if(r)p.push(r<20?EX_U[r]:EX_D[Math.floor(r/10)]+(r%10?" e "+EX_U[r%10]:""));return p.join(" e ")}
+function exInt(n){
+  if(!n)return"zero";const g=[];let x=n;while(x>0){g.push(x%1000);x=Math.floor(x/1000)}
+  const nomes=[v=>ex999(v),v=>v===1?"mil":ex999(v)+" mil",v=>ex999(v)+(v===1?" milhão":" milhões"),v=>v===1?"mil milhões":ex999(v)+" mil milhões"];
+  const partes=[];for(let i=g.length-1;i>=0;i--)if(g[i])partes.push({v:g[i],t:(nomes[i]||nomes[0])(g[i])});
+  return partes.map((p,i)=>i===0?p.t:((i===partes.length-1&&(p.v<100||p.v%100===0))?" e ":" ")+p.t).join("");
+}
+function extensoMT(v){
+  const cts=Math.round((Number(v)||0)*100),i=Math.floor(cts/100),c=cts%100;
+  let s=exInt(i)+(i>=1e6&&i%1e6===0?" de":"")+(i===1?" metical":" meticais");
+  if(c)s+=" e "+exInt(c)+(c===1?" centavo":" centavos");return s;
+}
+const dataLonga=d=>{if(!d)return"____ de ______________ de ______";const[y,m,dd]=d.split("-").map(Number);return new Date(y,m-1,dd).toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"})};
+const ORD=["","Primeira","Segunda","Terceira","Quarta","Quinta","Sexta","Sétima","Oitava","Nona","Décima","Décima Primeira","Décima Segunda","Décima Terceira","Décima Quarta","Décima Quinta","Décima Sexta","Décima Sétima","Décima Oitava","Décima Nona","Vigésima"];
+
+function proxContrato(k){
+  const y=new Date().getFullYear(),re=new RegExp("^"+CTR[k].pref+"-"+y+"-(\\d+)$");let max=0;
+  CTR[k].arr().forEach(c=>{const m=re.exec(c.numero||"");if(m)max=Math.max(max,+m[1])});
+  return CTR[k].pref+"-"+y+"-"+String(max+1).padStart(4,"0");
+}
+const estadoCtr=c=>c.estado==="anulado"?"anulado":c.estado==="assinado"?"assinado":"pendente";
+const pillCtr={pendente:'<span class="pill warn">Por assinar</span>',assinado:'<span class="pill ok">Assinado</span>',anulado:'<span class="pill sem">Anulado</span>'};
+const ctrValor=c=>c.tipo==="mutuo"?Number(c.emp?.valor)||0:Number(c.valor)||0;
+const ctrParte=c=>c.tipo==="mutuo"?c.mutuario?.nome:c.cliente?.nome;
+
+/* ---- lista ---- */
+function ctrListaHTML(k){
+  const serv=k==="serv";
+  return banner()+`<div class="row spread"><div><h1>Contratos</h1><p class="sub" id="cCount">${serv?"Contratos de prestação de serviços, criados a partir das suas cotações.":"Contratos de mútuo, criados a partir dos empréstimos registados."}</p></div>
+    <button class="btn pri" data-act="ctr-novo" data-k="${k}">+ Novo contrato</button></div>
+  <section class="panel"><div class="toolbar"><div class="chips" id="cChips">${[["todos","Todos"],["pendente","Por assinar"],["assinado","Assinados"],["anulado","Anulados"]].map(([f,l])=>`<button class="chip" data-act="ctr-filtro" data-f="${f}" data-k="${k}" aria-pressed="${S.cfiltro===f}">${l}</button>`).join("")}</div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Número</th><th>Data</th><th>${serv?"Contratante":"Mutuário"}</th><th>${serv?"Objeto":"Empréstimo"}</th><th class="num">Valor</th><th>Estado</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbCtr"></tbody></table></div></section>
+  <p class="note">Modelo de contrato com cláusulas-padrão ao abrigo da lei moçambicana. Reveja o texto antes de assinar e, para valores elevados, peça a revisão de um jurista.</p>`;
+}
+function refCtr(k){
+  const tb=$("#tbCtr");if(!tb)return;
+  const l=CTR[k].arr().filter(c=>S.cfiltro==="todos"||estadoCtr(c)===S.cfiltro).sort((a,b)=>(b.criadoEm||"").localeCompare(a.criadoEm||""));
+  document.querySelectorAll("#cChips .chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===S.cfiltro));
+  const n=CTR[k].arr().length,ass=CTR[k].arr().filter(c=>estadoCtr(c)==="assinado").length;
+  if(n)$("#cCount").textContent=n+" contrato"+(n>1?"s":"")+" · "+ass+" assinado"+(ass===1?"":"s");
+  tb.innerHTML=!S.ready?'<tr><td colspan="7" class="empty">A carregar…</td></tr>':l.length?l.map(c=>`<tr>
+    <td><span class="mono">${esc(c.numero)}</span></td><td>${fmtD(c.data)}</td>
+    <td class="cname"><b>${esc(ctrParte(c)||"—")}</b><small>${esc((c.tipo==="mutuo"?c.mutuario?.telefone:c.cliente?.telefone)||"")}</small></td>
+    <td style="max-width:280px;white-space:normal">${c.tipo==="mutuo"?`<span class="mono">${esc(c.emp?.numero||"")}</span> · ${c.emp?.meses||"?"} meses a ${pct(c.emp?.taxa)}`:esc(String(c.objeto||"").slice(0,90))+(String(c.objeto||"").length>90?"…":"")}</td>
+    <td class="num"><b>${mt(ctrValor(c))}</b></td><td>${pillCtr[estadoCtr(c)]}</td>
+    <td><div class="acts"><button class="btn sm" data-act="ctr-abrir" data-k="${k}" data-id="${c.id}">Abrir</button><button class="btn sm pri" data-act="ctr-pdf" data-k="${k}" data-id="${c.id}">PDF</button></div></td></tr>`).join("")
+    :`<tr><td colspan="7" class="empty">${n?"Nenhum contrato neste filtro.":k==="serv"?"Ainda sem contratos. Clique em “+ Novo contrato” ou no botão “Contrato” de uma cotação.":"Ainda sem contratos. Clique em “+ Novo contrato” ou abra um empréstimo e escolha “Contrato”."}</td></tr>`;
+}
+
+/* ---- formulário ---- */
+const semPh=v=>/^\s*\(preencher/i.test(String(v||""))?"":(v||"");
+const ctrIn=(id,l,v,o={})=>`<label class="f${o.full?" full":""}">${l}${o.area?`<textarea id="${id}" rows="${o.rows||3}">${esc(v??"")}</textarea>`:`<input id="${id}" type="${o.type||"text"}" value="${esc(v??"")}"${o.step?` step="${o.step}"`:""}${o.min!=null?` min="${o.min}"`:""}${o.ph?` placeholder="${esc(o.ph)}"`:""}>`}</label>`;
+const ctrV=id=>{const e=$("#"+id);return e?e.value.trim():""};
+function abrirContrato(k,id,origem){
+  if(!S.ready){toast("Aguarde: os dados ainda estão a carregar.");return}
+  const ed=id?CTR[k].arr().find(x=>x.id===id):null;
+  return k==="serv"?formServ(ed,origem):formMutuo(ed,origem);
+}
+function cotsParaContrato(){return S.vdocs.filter(d=>d.tipo==="cotacao"&&d.estado!=="anulado").sort((a,b)=>(b.criadoEm||"").localeCompare(a.criadoEm||""))}
+function formServ(ed,cotId){
+  const c=S.vcfg,cot0=ed?S.vdocs.find(d=>d.id===ed.cotacaoId):cotId?S.vdocs.find(d=>d.id===cotId):null;
+  const cl0=cot0?(S.vclientes.find(v=>v.id===cot0.clienteId)||{}):{};
+  const x=ed||{numero:proxContrato("serv"),data:hoje(),cotacaoId:cot0?.id||"",
+    cliente:{nome:cot0?.cliente?.nome||"",nuit:cl0.nuit||"",doc:"",morada:cot0?.cliente?.morada||cl0.morada||"",representante:"",cargo:"",telefone:cot0?.cliente?.telefone||"",email:cot0?.cliente?.email||""},
+    objeto:cot0?`Prestação, pelo Prestador ao Contratante, dos serviços descritos no Anexo I, conforme a cotação n.º ${cot0.numero}.`:"",
+    inicio:hoje(),prazo:semPh(cot0?.condPrazo)||semPh(c.cotPrazo),localExec:"",valor:cot0?.total||0,
+    pagamento:cot0?.condPagamento||c.cotPagamento||"",conta:semPh(cot0?.condBanco)||semPh(c.pagamento),garantia:30,multa:2,aviso:15,extra:"",cidade:c.cidade||"Maputo"};
+  const cots=cotsParaContrato();
+  abrir(hdr(ed?"Contrato "+esc(x.numero):"Novo contrato de prestação de serviços",ed?esc(x.cliente?.nome||""):"Preencha os dados. O PDF segue o modelo Heel Service, com cláusulas e anexo de serviços.")+`
+  <div class="body">
+    <fieldset><legend>Origem</legend><div class="fgrid">
+      <label class="f full">Cotação<select id="kCot"><option value="">— Sem cotação (descrever o objeto e o valor) —</option>${cots.map(d=>`<option value="${d.id}" ${d.id===x.cotacaoId?"selected":""}>${esc(d.numero)} · ${esc(d.cliente?.nome||"")} · ${mt(d.total)}${d.estado==="aceite"?" · aceite":""}</option>`).join("")}</select></label>
+      ${ctrIn("kNum","N.º do contrato",x.numero)}${ctrIn("kData","Data de assinatura",x.data,{type:"date"})}</div></fieldset>
+    <fieldset><legend>Contratante (cliente)</legend><div class="fgrid">
+      ${ctrIn("kNome","Nome ou empresa",x.cliente.nome,{full:true})}${ctrIn("kNuit","NUIT",x.cliente.nuit)}${ctrIn("kDoc","BI / Alvará / Certidão",x.cliente.doc)}
+      ${ctrIn("kMor","Morada / sede",x.cliente.morada,{full:true})}${ctrIn("kRep","Representante (se empresa)",x.cliente.representante)}${ctrIn("kCargo","Cargo do representante",x.cliente.cargo)}
+      ${ctrIn("kTel","Telefone",x.cliente.telefone)}${ctrIn("kEmail","E-mail",x.cliente.email,{type:"email"})}</div></fieldset>
+    <fieldset><legend>Objeto, prazo e preço</legend><div class="fgrid">
+      ${ctrIn("kObj","Objeto do contrato",x.objeto,{full:true,area:true})}
+      ${ctrIn("kIni","Data de início",x.inicio,{type:"date"})}${ctrIn("kPrazo","Prazo de execução",x.prazo,{ph:"ex.: 30 dias após o início"})}
+      ${ctrIn("kLocal","Local de execução",x.localExec,{full:true,ph:"ex.: instalações do Contratante, em Maputo"})}
+      <label class="f full">Valor do contrato (MT, IVA incluído)<input id="kValor" type="number" step="0.01" min="0" value="${esc(x.valor)}" ${x.cotacaoId?"readonly":""}></label>
+      <p class="note full" id="kExt" style="margin:0"></p></div></fieldset>
+    <fieldset><legend>Pagamento e garantias</legend><div class="fgrid">
+      ${ctrIn("kPag","Condições de pagamento",x.pagamento,{full:true})}${ctrIn("kConta","Conta / M-Pesa / e-Mola para pagamento",x.conta,{full:true})}
+      ${ctrIn("kGar","Garantia dos serviços (dias)",x.garantia,{type:"number",min:0})}${ctrIn("kMulta","Juros de mora por mês de atraso (%)",x.multa,{type:"number",min:0,step:"any"})}
+      ${ctrIn("kAviso","Aviso prévio para rescisão (dias)",x.aviso,{type:"number",min:0})}${ctrIn("kCid","Local de assinatura",x.cidade)}
+      ${ctrIn("kExtra","Cláusulas adicionais (opcional — uma por parágrafo)",x.extra,{full:true,area:true,rows:3})}</div></fieldset>
+  </div>
+  <footer>${ed?`<button type="button" class="btn danger" data-act="ctr-apagar" data-k="serv" data-id="${ed.id}" style="margin-right:auto">Eliminar</button>`:""}
+    ${ed&&estadoCtr(ed)!=="anulado"?`<button type="button" class="btn" data-act="ctr-estado" data-k="serv" data-id="${ed.id}" data-e="${estadoCtr(ed)==="assinado"?"pendente":"assinado"}">${estadoCtr(ed)==="assinado"?"Marcar por assinar":"Marcar como assinado"}</button>`:""}
+    <button type="button" class="btn" id="kGuardar">Guardar</button><button type="submit" class="btn pri">Guardar e gerar PDF</button></footer>`,{wide:true});
+  const ext=()=>{$("#kExt").textContent="Por extenso: "+extensoMT(Number($("#kValor").value)||0)+"."};ext();$("#kValor").oninput=ext;
+  $("#kCot").onchange=e=>{const d=S.vdocs.find(z=>z.id===e.target.value),v=$("#kValor");
+    if(!d){v.readOnly=false;return}
+    const cl=S.vclientes.find(z=>z.id===d.clienteId)||{};
+    $("#kNome").value=d.cliente?.nome||"";$("#kMor").value=d.cliente?.morada||cl.morada||"";$("#kTel").value=d.cliente?.telefone||"";$("#kEmail").value=d.cliente?.email||"";if(cl.nuit)$("#kNuit").value=cl.nuit;
+    $("#kObj").value=`Prestação, pelo Prestador ao Contratante, dos serviços descritos no Anexo I, conforme a cotação n.º ${d.numero}.`;
+    if(d.condPrazo)$("#kPrazo").value=d.condPrazo;if(d.condPagamento)$("#kPag").value=d.condPagamento;if(d.condBanco)$("#kConta").value=d.condBanco;
+    v.value=d.total;v.readOnly=true;ext()};
+  const guardar=async()=>{
+    const nome=ctrV("kNome");if(!nome){toast("Indique o nome do contratante.");$("#kNome").focus();return null}
+    if(!ctrV("kObj")){toast("Descreva o objeto do contrato.");$("#kObj").focus();return null}
+    const cot=S.vdocs.find(z=>z.id===$("#kCot").value);
+    const o={...(ed||{id:novoId("k"),tipo:"servicos",estado:"pendente",criadoEm:new Date().toISOString()}),numero:ctrV("kNum")||x.numero,data:$("#kData").value||hoje(),cotacaoId:cot?.id||"",
+      cliente:{nome,nuit:ctrV("kNuit"),doc:ctrV("kDoc"),morada:ctrV("kMor"),representante:ctrV("kRep"),cargo:ctrV("kCargo"),telefone:ctrV("kTel"),email:ctrV("kEmail")},clienteId:cot?.clienteId||ed?.clienteId||"",
+      objeto:ctrV("kObj"),inicio:$("#kIni").value,prazo:ctrV("kPrazo"),localExec:ctrV("kLocal"),valor:cot?cot.total:r2(Number($("#kValor").value)||0),
+      itens:cot?JSON.parse(JSON.stringify(cot.itens||[])):[],cotNumero:cot?.numero||"",descGlobal:cot?.descGlobal||0,iva:cot?.iva||0,
+      pagamento:ctrV("kPag"),conta:ctrV("kConta"),garantia:Number($("#kGar").value)||0,multa:Number($("#kMulta").value)||0,aviso:Number($("#kAviso").value)||0,cidade:ctrV("kCid")||"Maputo",extra:$("#kExtra").value.trim(),atualizadoEm:new Date().toISOString()};
+    await store.put("sv_contratos",o);return o};
+  $("#kGuardar").onclick=async()=>{const o=await guardar();if(o){fechar();toast("Contrato guardado");if(S.biz==="serv"&&S.tab!=="contratos")showTab("contratos")}};
+  $("#dform").onsubmit=async e=>{e.preventDefault();const o=await guardar();if(o){fechar();toast("Contrato guardado");if(S.biz==="serv"&&S.tab!=="contratos")showTab("contratos");guardarPDF(()=>pdfContrato(o))}};
+}
+function empsParaContrato(){return S.emprestimos.filter(e=>e.estado!=="anulado").sort((a,b)=>(b.criadoEm||"").localeCompare(a.criadoEm||""))}
+function formMutuo(ed,empId){
+  const c=S.mcfg,e0=S.emprestimos.find(e=>e.id===(ed?ed.emprestimoId:empId))||null;
+  const m0=e0?(S.mutuarios.find(m=>m.id===e0.mutuarioId)||e0.mutuario||{}):{};
+  const x=ed||{numero:proxContrato("micro"),data:hoje(),emprestimoId:e0?.id||"",
+    mutuario:{nome:m0.nome||"",bi:m0.bi||"",nuit:"",morada:m0.morada||"",ocupacao:m0.ocupacao||"",telefone:m0.telefone||"",email:m0.email||""},
+    fiador:{nome:m0.fiadorNome||"",bi:"",morada:"",telefone:m0.fiadorTel||""},
+    entrega:"M-Pesa",dataEntrega:e0?.inicio||hoje(),multa:Number(c.multa)||0,vencAnt:2,garantia:e0?.garantia||"",conta:semPh(c.pagamento),extra:"",cidade:c.cidade||"Maputo"};
+  const emps=empsParaContrato();
+  abrir(hdr(ed?"Contrato "+esc(x.numero):"Novo contrato de mútuo",ed?esc(x.mutuario?.nome||""):"O contrato usa o valor, a taxa e o plano de pagamentos do empréstimo escolhido.")+`
+  <div class="body">
+    <fieldset><legend>Empréstimo</legend><div class="fgrid">
+      <label class="f full">Empréstimo<select id="kEmp"><option value="">— Escolha o empréstimo —</option>${emps.map(e=>`<option value="${e.id}" ${e.id===x.emprestimoId?"selected":""}>${esc(e.numero)} · ${esc(e.mutuario?.nome||"")} · ${mt(e.valor)} · ${e.meses} meses</option>`).join("")}</select></label>
+      <div class="full summary" id="kResumo"></div>
+      ${ctrIn("kNum","N.º do contrato",x.numero)}${ctrIn("kData","Data de assinatura",x.data,{type:"date"})}</div></fieldset>
+    <fieldset><legend>Mutuário (quem recebe o empréstimo)</legend><div class="fgrid">
+      ${ctrIn("kNome","Nome completo",x.mutuario.nome,{full:true})}${ctrIn("kBi","N.º do BI",x.mutuario.bi)}${ctrIn("kNuit","NUIT (opcional)",x.mutuario.nuit)}
+      ${ctrIn("kMor","Morada",x.mutuario.morada,{full:true})}${ctrIn("kOcup","Ocupação / local de trabalho",x.mutuario.ocupacao)}${ctrIn("kTel","Telefone",x.mutuario.telefone)}
+      ${ctrIn("kEmail","E-mail",x.mutuario.email,{type:"email",full:true})}</div></fieldset>
+    <fieldset><legend>Fiador (opcional)</legend><div class="fgrid">
+      ${ctrIn("kFNome","Nome do fiador",x.fiador.nome)}${ctrIn("kFBi","BI do fiador",x.fiador.bi)}${ctrIn("kFMor","Morada do fiador",x.fiador.morada)}${ctrIn("kFTel","Telefone do fiador",x.fiador.telefone)}</div></fieldset>
+    <fieldset><legend>Condições</legend><div class="fgrid">
+      <label class="f">Entrega do dinheiro por<select id="kEnt">${[...METODOS].map(mm=>`<option ${mm===x.entrega?"selected":""}>${mm}</option>`).join("")}</select></label>${ctrIn("kDEnt","Data da entrega",x.dataEntrega,{type:"date"})}
+      ${ctrIn("kConta","Conta / M-Pesa / e-Mola para os pagamentos",x.conta,{full:true})}
+      ${ctrIn("kMulta","Multa por prestação em atraso (%)",x.multa,{type:"number",min:0,step:"any"})}${ctrIn("kVA","Vencimento antecipado após (prestações em atraso)",x.vencAnt,{type:"number",min:1})}
+      ${ctrIn("kGar","Garantia oferecida (opcional)",x.garantia,{full:true,ph:"ex.: penhor de um telemóvel Samsung A15, IMEI …"})}
+      ${ctrIn("kCid","Local de assinatura",x.cidade)}
+      ${ctrIn("kExtra","Cláusulas adicionais (opcional — uma por parágrafo)",x.extra,{full:true,area:true,rows:3})}</div></fieldset>
+  </div>
+  <footer>${ed?`<button type="button" class="btn danger" data-act="ctr-apagar" data-k="micro" data-id="${ed.id}" style="margin-right:auto">Eliminar</button>`:""}
+    ${ed&&estadoCtr(ed)!=="anulado"?`<button type="button" class="btn" data-act="ctr-estado" data-k="micro" data-id="${ed.id}" data-e="${estadoCtr(ed)==="assinado"?"pendente":"assinado"}">${estadoCtr(ed)==="assinado"?"Marcar por assinar":"Marcar como assinado"}</button>`:""}
+    <button type="button" class="btn" id="kGuardar">Guardar</button><button type="submit" class="btn pri">Guardar e gerar PDF</button></footer>`,{wide:true});
+  const resumo=()=>{const e=S.emprestimos.find(z=>z.id===$("#kEmp").value);
+    $("#kResumo").innerHTML=e?`<div><em>Valor emprestado</em><b>${mt(e.valor)}</b></div><div><em>Juros</em><b>${pct(e.taxa)} ao mês</b></div><div><em>Prestações</em><b>${(e.prestacoes||[]).length} × ${mt(e.prestacao||e.pagaMes)}</b></div><div><em>Total a pagar</em><b>${mt(e.total)}</b></div><div><em>1.º pagamento</em><b>${fmtD((e.prestacoes||[])[0]?.venc)}</b></div><div><em>Último</em><b>${fmtD((e.prestacoes||[]).slice(-1)[0]?.venc)}</b></div>`:'<div><em>Sem empréstimo</em><b>Escolha um acima</b></div>'};
+  resumo();
+  $("#kEmp").onchange=ev=>{resumo();const e=S.emprestimos.find(z=>z.id===ev.target.value);if(!e)return;const m=S.mutuarios.find(z=>z.id===e.mutuarioId)||e.mutuario||{};
+    $("#kNome").value=m.nome||"";$("#kBi").value=m.bi||"";$("#kMor").value=m.morada||"";$("#kOcup").value=m.ocupacao||"";$("#kTel").value=m.telefone||"";$("#kEmail").value=m.email||"";
+    $("#kFNome").value=m.fiadorNome||"";$("#kFTel").value=m.fiadorTel||"";$("#kDEnt").value=e.inicio||hoje();if(e.garantia)$("#kGar").value=e.garantia};
+  const guardar=async()=>{
+    const e=S.emprestimos.find(z=>z.id===$("#kEmp").value);if(!e){toast("Escolha o empréstimo do contrato.");$("#kEmp").focus();return null}
+    const nome=ctrV("kNome");if(!nome){toast("Indique o nome do mutuário.");$("#kNome").focus();return null}
+    const o={...(ed||{id:novoId("k"),tipo:"mutuo",estado:"pendente",criadoEm:new Date().toISOString()}),numero:ctrV("kNum")||x.numero,data:$("#kData").value||hoje(),emprestimoId:e.id,
+      emp:{numero:e.numero,valor:e.valor,taxa:e.taxa,meses:e.meses,juros:e.juros,total:e.total,prestacao:e.prestacao||e.pagaMes,inicio:e.inicio,prestacoes:JSON.parse(JSON.stringify(e.prestacoes||[]))},
+      mutuario:{nome,bi:ctrV("kBi"),nuit:ctrV("kNuit"),morada:ctrV("kMor"),ocupacao:ctrV("kOcup"),telefone:ctrV("kTel"),email:ctrV("kEmail")},
+      fiador:{nome:ctrV("kFNome"),bi:ctrV("kFBi"),morada:ctrV("kFMor"),telefone:ctrV("kFTel")},
+      entrega:$("#kEnt").value,dataEntrega:$("#kDEnt").value,conta:ctrV("kConta"),multa:Number($("#kMulta").value)||0,vencAnt:Math.max(1,Number($("#kVA").value)||2),
+      garantia:ctrV("kGar"),cidade:ctrV("kCid")||"Maputo",extra:$("#kExtra").value.trim(),atualizadoEm:new Date().toISOString()};
+    await store.put("mc_contratos",o);return o};
+  $("#kGuardar").onclick=async()=>{const o=await guardar();if(o){fechar();toast("Contrato guardado");if(S.biz==="micro"&&S.tab!=="contratos")showTab("contratos")}};
+  $("#dform").onsubmit=async ev=>{ev.preventDefault();const o=await guardar();if(o){fechar();toast("Contrato guardado");if(S.biz==="micro"&&S.tab!=="contratos")showTab("contratos");guardarPDF(()=>pdfContrato(o))}};
+}
+
+/* ---- texto das cláusulas ---- */
+function clausulasServ(k,c){
+  const p=c.cliente||{},prz=c.prazo?` O prazo de execução é de ${c.prazo}`:" O prazo de execução será o acordado entre as Partes",ini=c.inicio?`, com início em ${dataLonga(c.inicio)}`:"";
+  const L=[
+    ["Objeto",[c.objeto,c.itens?.length?"A descrição, as quantidades e os preços dos serviços constam do Anexo I, que faz parte integrante deste contrato.":""]],
+    ["Prazo e local de execução",[prz+ini+".",c.localExec?`Os serviços serão prestados em ${c.localExec}.`:"Os serviços serão prestados no local indicado pelo Contratante.","O prazo pode ser prorrogado por acordo escrito entre as Partes, ou quando o atraso resulte de facto imputável ao Contratante ou de força maior."]],
+    ["Preço",[`Pela prestação dos serviços, o Contratante pagará ao Prestador o valor total de ${mt(c.valor)} (${extensoMT(c.valor)})${c.iva?", com IVA incluído à taxa de "+pct(c.iva):""}.`,"O preço inclui todos os custos necessários à execução dos serviços descritos no Anexo I, salvo os expressamente excluídos por escrito."]],
+    ["Condições de pagamento",[c.pagamento?`O pagamento será feito nas seguintes condições: ${c.pagamento}.`:"O pagamento será feito nas condições acordadas entre as Partes.",c.conta?`Os pagamentos serão feitos para: ${c.conta}.`:"","Por cada pagamento recebido, o Prestador emitirá o respetivo recibo."]],
+    ["Obrigações do Prestador",["Constituem obrigações do Prestador: a) executar os serviços com zelo, qualidade e dentro do prazo acordado; b) usar pessoal e meios técnicos adequados; c) informar o Contratante de qualquer facto que possa afetar a execução dos serviços; d) cumprir as normas de segurança e as regras internas do local de execução que lhe sejam comunicadas."]],
+    ["Obrigações do Contratante",["Constituem obrigações do Contratante: a) pagar o preço nos prazos acordados; b) facultar o acesso ao local e as informações necessárias à execução dos serviços; c) designar uma pessoa de contacto para acompanhar os trabalhos; d) comunicar por escrito, no prazo de 5 (cinco) dias após a conclusão, qualquer desconformidade detetada."]],
+    ["Garantia",[c.garantia?`O Prestador garante os serviços prestados pelo período de ${c.garantia} (${exInt(c.garantia)}) dias a contar da sua conclusão, corrigindo sem custos adicionais os defeitos que lhe sejam imputáveis.`:"Os serviços não incluem período de garantia, salvo acordo escrito em contrário.","A garantia não cobre danos resultantes de mau uso, intervenção de terceiros ou casos de força maior."]],
+    ["Mora no pagamento",[c.multa?`O atraso no pagamento de qualquer valor devido confere ao Prestador o direito a juros de mora de ${pct(c.multa)} ao mês sobre o montante em atraso, até ao seu integral pagamento.`:"O atraso no pagamento constitui o Contratante em mora, nos termos da lei.","Em caso de atraso superior a 30 (trinta) dias, o Prestador pode suspender a execução dos serviços até à regularização dos pagamentos, sem que tal constitua incumprimento da sua parte."]],
+    ["Confidencialidade",["As Partes obrigam-se a manter confidenciais todas as informações a que tenham acesso por causa deste contrato, não as divulgando a terceiros sem autorização escrita da outra Parte. Esta obrigação mantém-se após o fim do contrato."]],
+    ["Alterações",["Qualquer alteração a este contrato, incluindo serviços adicionais, só é válida se for feita por escrito e assinada por ambas as Partes. Os serviços adicionais são orçamentados à parte."]],
+    ["Rescisão",[`Qualquer das Partes pode rescindir este contrato em caso de incumprimento grave da outra Parte que não seja corrigido no prazo de ${c.aviso||15} (${exInt(c.aviso||15)}) dias após notificação escrita.`,"Em caso de rescisão, o Contratante pagará os serviços já prestados até à data da cessação."]],
+    ["Força maior",["Nenhuma das Partes será responsável pelo incumprimento causado por factos de força maior, imprevisíveis e alheios à sua vontade, devendo a Parte afetada informar a outra logo que possível. Os prazos ficam suspensos enquanto durar o impedimento."]],
+    ["Comunicações",[`As comunicações entre as Partes são feitas por escrito, para os endereços, telefones e e-mails indicados neste contrato: Prestador — ${[k.email,k.telefone].filter(Boolean).join(", ")}; Contratante — ${[p.email,p.telefone].filter(Boolean).join(", ")||"os contactos indicados na identificação"}.`]]];
+  (c.extra||"").split(/\n\s*\n|\n/).map(s=>s.trim()).filter(Boolean).forEach((t,i,a)=>{if(i===0)L.push(["Disposições especiais",a])});
+  L.push(["Lei aplicável e foro",["Este contrato rege-se pela lei da República de Moçambique, nomeadamente pelo Código Civil.",`Para resolver qualquer litígio emergente deste contrato, as Partes procurarão primeiro uma solução amigável e, não sendo possível, elegem o foro do Tribunal Judicial da Cidade de ${c.cidade||"Maputo"}, com renúncia a qualquer outro.`]]);
+  L.push(["Disposições finais",["Este contrato entra em vigor na data da sua assinatura e é feito em 2 (dois) exemplares de igual valor, ficando um com cada Parte."+(c.itens?.length?" O Anexo I faz parte integrante deste contrato.":"")]]);
+  return L;
+}
+function clausulasMutuo(k,c){
+  const e=c.emp||{},n=(e.prestacoes||[]).length,pr=e.prestacoes||[],f=c.fiador||{};
+  const L=[
+    ["Objeto",[`Pelo presente contrato, o Mutuante empresta ao Mutuário a quantia de ${mt(e.valor)} (${extensoMT(e.valor)}), que este aceita, obrigando-se a restituí-la acrescida dos juros acordados, nos termos das cláusulas seguintes.`,`A quantia é entregue ao Mutuário por ${c.entrega||"meio acordado"}${c.dataEntrega?" em "+dataLonga(c.dataEntrega):""}, servindo a assinatura deste contrato de quitação da sua receção.`]],
+    ["Juros",[`O empréstimo vence juros à taxa de ${pct(e.taxa)} (${exInt(Math.round(Number(e.taxa)||0))} por cento) ao mês, calculados sobre o valor emprestado, o que corresponde a ${mt(r2((e.valor||0)*(e.taxa||0)/100))} por mês.`,`O total de juros do contrato é de ${mt(e.juros)} (${extensoMT(e.juros)}), sendo o total a restituir de ${mt(e.total)} (${extensoMT(e.total)}).`]],
+    ["Prazo e reembolso",[`O Mutuário restituirá o total em ${n} (${exInt(n)}) prestaç${n===1?"ão":"ões"} mensa${n===1?"l":"is"} de ${mt(e.prestacao)}, vencendo-se a primeira em ${dataLonga(pr[0]?.venc)} e a última em ${dataLonga(pr[n-1]?.venc)}.`,"As datas e os valores de cada prestação constam do plano de pagamentos do Anexo I, que faz parte integrante deste contrato."]],
+    ["Forma de pagamento",[c.conta?`Os pagamentos serão feitos para: ${c.conta}.`:"Os pagamentos serão feitos pelo meio acordado com o Mutuante.","Por cada pagamento, o Mutuante emitirá um recibo, que é o único comprovativo válido de pagamento.","O Mutuário pode antecipar o pagamento, total ou parcial, devendo acordar com o Mutuante, por escrito, os juros a pagar nesse caso."]],
+    ["Mora e vencimento antecipado",[c.multa?`O atraso no pagamento de qualquer prestação dá lugar a uma multa de ${pct(c.multa)} sobre o valor da prestação em atraso, que acresce ao saldo em dívida.`:"O atraso no pagamento de qualquer prestação constitui o Mutuário em mora, nos termos da lei.",`A falta de pagamento de ${c.vencAnt||2} (${exInt(c.vencAnt||2)}) prestações, seguidas ou não, implica o vencimento imediato de toda a dívida, podendo o Mutuante exigir de uma só vez o saldo total em dívida.`]],
+  ];
+  if(c.garantia||f.nome){const g=[];
+    if(c.garantia)g.push(`Em garantia do cumprimento deste contrato, o Mutuário oferece: ${c.garantia}.`);
+    if(f.nome)g.push(`${f.nome}${f.bi?", portador(a) do BI n.º "+f.bi:""}${f.morada?", residente em "+f.morada:""}, constitui-se fiador(a) e principal pagador(a) de todas as obrigações do Mutuário emergentes deste contrato, renunciando ao benefício da excussão prévia.`);
+    L.push(["Garantias",g])}
+  L.push(["Declarações do Mutuário",["O Mutuário declara que as informações e documentos que prestou são verdadeiros, que tem capacidade para cumprir as obrigações assumidas e que leu e compreendeu todas as cláusulas deste contrato e o plano de pagamentos.","O Mutuário obriga-se a comunicar ao Mutuante, no prazo de 5 (cinco) dias, qualquer mudança de morada, telefone ou local de trabalho."]]);
+  L.push(["Tratamento de dados",["Os dados pessoais das Partes são usados apenas para a gestão e a execução deste contrato, incluindo o envio de avisos e recibos por SMS e e-mail, e não são cedidos a terceiros, salvo obrigação legal."]]);
+  (c.extra||"").split(/\n\s*\n|\n/).map(s=>s.trim()).filter(Boolean).forEach((t,i,a)=>{if(i===0)L.push(["Disposições especiais",a])});
+  L.push(["Lei aplicável e foro",["Este contrato rege-se pela lei da República de Moçambique, nomeadamente pelas disposições do Código Civil relativas ao contrato de mútuo.",`Para resolver qualquer litígio emergente deste contrato, as Partes procurarão primeiro uma solução amigável e, não sendo possível, elegem o foro do Tribunal Judicial da Cidade de ${c.cidade||"Maputo"}, com renúncia a qualquer outro.`]]);
+  L.push(["Disposições finais",["Este contrato entra em vigor na data da sua assinatura e é feito em "+(f.nome?"3 (três)":"2 (dois)")+" exemplares de igual valor, ficando um com cada Parte. O Anexo I faz parte integrante deste contrato."]]);
+  return L;
+}
+
+/* ---- PDF ---- */
+async function pdfContrato(c){
+  const pdf=novoPDF();if(!pdf)return null;await precarregar();
+  const serv=c.tipo!=="mutuo",k=serv?S.vcfg:S.mcfg,M={l:20,r:190,w:170,top:24,bot:272};let y;
+  const lh=s=>s*.42;
+  const nova=()=>{pdf.addPage();y=M.top};
+  const precisa=h=>{if(y+h>M.bot)nova()};
+  const justificar=(t,x,yy,w)=>{const ws=t.split(/\s+/).filter(Boolean);if(ws.length<2){pdf.text(t,x,yy);return}
+    const tw=ws.reduce((a,b)=>a+pdf.getTextWidth(b),0),gap=(w-tw)/(ws.length-1);if(gap>4){pdf.text(t,x,yy);return}let xx=x;ws.forEach(wd=>{pdf.text(wd,xx,yy);xx+=pdf.getTextWidth(wd)+gap})};
+  const par=(t,{bold=false,size=9.6,ind=0,after=2.2,center=false,color=INK}={})=>{
+    if(!t)return;pdf.setFont("helvetica",bold?"bold":"normal");pdf.setFontSize(size);pdf.setTextColor(...color);
+    const w=M.w-ind,ls=pdf.splitTextToSize(String(t),w),h=lh(size)*1.32;
+    ls.forEach((l,i)=>{precisa(h);const yy=y+lh(size);
+      if(center)pdf.text(l,105,yy,{align:"center"});else if(i<ls.length-1)justificar(l,M.l+ind,yy,w);else pdf.text(l,M.l+ind,yy);y+=h});
+    y+=after;pdf.setTextColor(...INK)};
+  const clausula=(i,tit,ps)=>{precisa(22);y+=2.5;
+    pdf.setFont("helvetica","bold");pdf.setFontSize(9.8);pdf.setTextColor(...NAVY);pdf.text(`CLÁUSULA ${ORD[i].toUpperCase()}`,105,y+4,{align:"center"});y+=5.2;
+    pdf.setFont("helvetica","bold");pdf.setFontSize(9.4);pdf.setTextColor(...RED);pdf.text(`(${tit})`,105,y+4,{align:"center"});y+=6.6;pdf.setTextColor(...INK);
+    const pp=ps.filter(Boolean);pp.forEach((p,j)=>par(pp.length>1?`${j+1}. ${p}`:p,{ind:0}))};
+
+  /* capa / cabeçalho */
+  y=await pdfTopo(pdf,serv?"CONTRATO DE PRESTAÇÃO DE SERVIÇOS":"CONTRATO DE MÚTUO (EMPRÉSTIMO)");
+  y+=9;pdf.setFont("helvetica","bold");pdf.setFontSize(15);pdf.setTextColor(...NAVY);pdf.text(serv?"CONTRATO DE PRESTAÇÃO DE SERVIÇOS":"CONTRATO DE MÚTUO",105,y,{align:"center"});
+  y+=6;pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.setTextColor(...GREY);pdf.text("N.º "+c.numero+(serv&&c.cotNumero?"  ·  Ref.ª cotação "+c.cotNumero:"")+(!serv&&c.emp?.numero?"  ·  Ref.ª empréstimo "+c.emp.numero:""),105,y,{align:"center"});
+  y+=4;pdf.setDrawColor(...RED);pdf.setLineWidth(.6);pdf.line(90,y,120,y);y+=8;pdf.setTextColor(...INK);
+  if(c.estado==="anulado"){pdf.setFont("helvetica","bold");pdf.setFontSize(11);pdf.setTextColor(...RED);pdf.text("CONTRATO ANULADO",105,y,{align:"center"});y+=8;pdf.setTextColor(...INK)}
+  par("Entre:",{bold:true,after:2});
+  const ident1=`${k.nome||"Heel Service"}${k.nuit?", NUIT "+k.nuit:""}, com sede em ${k.morada||"Maputo"}, com o telefone ${k.telefone||"—"} e o e-mail ${k.email||"—"}, neste ato representada por ${k.signatario||"o seu representante legal"}, adiante designada por `;
+  if(serv){const p=c.cliente||{};
+    par(ident1+"PRESTADOR;",{after:2.5});par("E",{bold:true,after:2});
+    par(`${p.nome}${p.nuit?", NUIT "+p.nuit:""}${p.doc?", "+(/^\d/.test(p.doc)?"documento n.º ":"")+p.doc:""}${p.morada?", com sede/residência em "+p.morada:""}${p.telefone?", telefone "+p.telefone:""}${p.email?", e-mail "+p.email:""}${p.representante?", neste ato representado(a) por "+p.representante+(p.cargo?", na qualidade de "+p.cargo:""):""}, adiante designado(a) por CONTRATANTE;`,{after:2.5});
+    par("Prestador e Contratante, em conjunto designados por Partes, celebram, de boa-fé e de livre vontade, o presente Contrato de Prestação de Serviços, que se rege pelas cláusulas seguintes:",{after:2})}
+  else{const p=c.mutuario||{};
+    par(ident1+"MUTUANTE;",{after:2.5});par("E",{bold:true,after:2});
+    par(`${p.nome}${p.bi?", portador(a) do Bilhete de Identidade n.º "+p.bi:""}${p.nuit?", NUIT "+p.nuit:""}${p.morada?", residente em "+p.morada:""}${p.ocupacao?", "+p.ocupacao:""}${p.telefone?", telefone "+p.telefone:""}${p.email?", e-mail "+p.email:""}, adiante designado(a) por MUTUÁRIO;`,{after:2.5});
+    par("Mutuante e Mutuário, em conjunto designados por Partes, celebram, de boa-fé e de livre vontade, o presente Contrato de Mútuo, que se rege pelas cláusulas seguintes:",{after:2})}
+  (serv?clausulasServ(k,c):clausulasMutuo(k,c)).forEach(([t,ps],i)=>clausula(i+1,t,ps));
+
+  /* assinaturas */
+  precisa(serv?84:(c.fiador?.nome?118:92));y+=4;
+  par(`Feito em ${c.cidade||"Maputo"}, aos ${dataLonga(c.data)}.`,{after:7});
+  const bloco=(x,tit,nome,sub,{img=false}={})=>{const y0=y;
+    pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.setTextColor(...NAVY);pdf.text(tit,x+37.5,y0,{align:"center"});
+    if(img){try{pdf.addImage(imgData_sync[ASSET.assinatura],"PNG",x+19,y0+5,36,6.7)}catch(e){}
+      if(k.carimboImg){try{pdf.addImage(k.carimboImg,"PNG",x+52,y0+1,22,22)}catch(e){}}}
+    pdf.setDrawColor(...INK);pdf.setLineWidth(.3);pdf.line(x,y0+14,x+75,y0+14);
+    pdf.setFont("helvetica","bold");pdf.setFontSize(8.8);pdf.setTextColor(...INK);pdf.text(fit(pdf,nome||"",75),x+37.5,y0+18.5,{align:"center"});
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.setTextColor(...GREY);pdf.text(fit(pdf,sub||"",75),x+37.5,y0+22.5,{align:"center"});pdf.setTextColor(...INK)};
+  if(serv){const p=c.cliente||{};
+    bloco(M.l,"O PRESTADOR",k.signatario||k.nome,k.nome,{img:true});bloco(M.r-75,"O CONTRATANTE",p.representante||p.nome,p.representante?p.nome+(p.cargo?" · "+p.cargo:""):(p.doc||p.nuit?"Doc. "+(p.doc||p.nuit):""));y+=32}
+  else{const p=c.mutuario||{},f=c.fiador||{};
+    bloco(M.l,"O MUTUANTE",k.signatario||k.nome,k.nome,{img:true});bloco(M.r-75,"O MUTUÁRIO",p.nome,p.bi?"BI "+p.bi:"");y+=32;
+    if(f.nome){bloco(M.l+47.5,"O(A) FIADOR(A)",f.nome,f.bi?"BI "+f.bi:"");y+=30}}
+  precisa(30);pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.setTextColor(...NAVY);pdf.text("TESTEMUNHAS",105,y,{align:"center"});y+=4;
+  [M.l,M.r-75].forEach((x,i)=>{pdf.setDrawColor(...INK);pdf.setLineWidth(.3);pdf.line(x,y+12,x+75,y+12);pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.setTextColor(...GREY);pdf.text(`${i+1}.ª Testemunha — nome e n.º do BI`,x+37.5,y+16.5,{align:"center"})});
+  y+=22;pdf.setTextColor(...INK);
+
+  /* Anexo I */
+  if(serv&&c.itens?.length){
+    nova();pdf.setFont("helvetica","bold");pdf.setFontSize(12);pdf.setTextColor(...NAVY);pdf.text("ANEXO I",105,y,{align:"center"});y+=5.5;
+    pdf.setFontSize(9.5);pdf.setTextColor(...RED);pdf.text("DESCRIÇÃO DOS SERVIÇOS E PREÇOS",105,y,{align:"center"});y+=4;pdf.setTextColor(...INK);
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8.5);pdf.setTextColor(...GREY);pdf.text(`Contrato n.º ${c.numero}${c.cotNumero?" · conforme a cotação n.º "+c.cotNumero:""}`,105,y+1,{align:"center"});y+=6;pdf.setTextColor(...INK);
+    const cols=[{t:"#",x:X.B,w:X.C-X.B,al:"center"},{t:"Serviço / Descrição",x:X.C,w:X.D-X.C,wrap:true},{t:"Qtd",x:X.D,w:X.E-X.D,al:"center"},{t:"Unidade",x:X.E,w:X.F-X.E,al:"center",shrink:true},{t:"Preço unit. (MT)",x:X.F,w:X.G-X.F,al:"right"},{t:"Desc. %",x:X.G,w:X.H-X.G,al:"center"},{t:"Total (MT)",x:X.H,w:X.END-X.H,al:"right"}];
+    const rows=c.itens.map((it,i)=>{const q=itemCot(it);return[String(i+1),it.desc,String(q.qtd),it.un||"un",mt(q.preco),pct(q.desc),mt(linhaTot(q))]});
+    y=pdfTabela(pdf,y,cols,rows,0);const t=totaisCot(c);
+    if(y+8*RH>282){pdf.addPage();y=20}
+    y=pdfTotais(pdf,y+RH,[["Subtotal",mt(t.sub)],["Desconto global",mt(t.dgMT)],["Base tributável",mt(t.base)],["IVA ("+pct(c.iva)+")",mt(t.ivaMT)]],["VALOR DO CONTRATO",mt(t.total)]);
+  }
+  if(!serv){const e=c.emp||{};
+    nova();pdf.setFont("helvetica","bold");pdf.setFontSize(12);pdf.setTextColor(...NAVY);pdf.text("ANEXO I",105,y,{align:"center"});y+=5.5;
+    pdf.setFontSize(9.5);pdf.setTextColor(...RED);pdf.text("PLANO DE PAGAMENTOS",105,y,{align:"center"});y+=4;pdf.setTextColor(...INK);
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8.5);pdf.setTextColor(...GREY);pdf.text(`Contrato n.º ${c.numero} · empréstimo ${e.numero||""} · ${mt(e.valor)} a ${pct(e.taxa)} ao mês`,105,y+1,{align:"center"});y+=6;pdf.setTextColor(...INK);
+    const W=X.END-X.B,cw=[.08,.2,.18,.18,.18,.18].map(f=>f*W);let xx=X.B;
+    const cols=[["N.º","center"],["Vencimento","center"],["Capital (MT)","right"],["Juros (MT)","right"],["Prestação (MT)","right"],["Saldo após (MT)","right"]].map(([t,al],i)=>{const o={t,x:xx,w:cw[i],al};xx+=cw[i];return o});
+    let saldo=Number(e.total)||0;
+    const rows=(e.prestacoes||[]).map((p,i)=>{const cap=p.capital!=null?p.capital:r2(p.valor*e.valor/e.total);saldo=r2(saldo-p.valor);return[String(i+1),fmtD(p.venc),mt(cap),mt(r2(p.valor-cap)),mt(p.valor),mt(Math.max(0,saldo))]});
+    y=pdfTabela(pdf,y,cols,rows,0);
+    if(y+6*RH>282){pdf.addPage();y=20}
+    y=pdfTotais(pdf,y+RH,[["Valor emprestado",mt(e.valor)],["Total de juros",mt(e.juros)]],["TOTAL A RESTITUIR",mt(e.total)]);
+  }
+
+  /* cabeçalhos e rodapés */
+  const N=pdf.getNumberOfPages();
+  for(let i=1;i<=N;i++){pdf.setPage(i);
+    if(i>1){pdf.setFont("helvetica","bold");pdf.setFontSize(8);pdf.setTextColor(...NAVY);pdf.text(k.nome||"Heel Service",M.l,13);
+      pdf.setFont("helvetica","normal");pdf.setTextColor(...GREY);pdf.text((serv?"Contrato de Prestação de Serviços":"Contrato de Mútuo")+" n.º "+c.numero,M.r,13,{align:"right"});
+      pdf.setDrawColor(...RED);pdf.setLineWidth(.4);pdf.line(M.l,15,M.r,15)}
+    pdf.setDrawColor(...LINE);pdf.setLineWidth(.2);pdf.line(M.l,280,M.r,280);
+    pdf.setFont("helvetica","normal");pdf.setFontSize(7.5);pdf.setTextColor(...GREY);
+    pdf.text(`${c.numero} · Página ${i} de ${N}`,M.l,284.5);pdf.text("Rubricas: ________  ________"+(!serv&&c.fiador?.nome?"  ________":""),M.r,284.5,{align:"right"});
+    pdf.text([k.nome,k.telefone,k.email].filter(Boolean).join("  ·  "),105,289,{align:"center"})}
+  return pdfOut(pdf,c.numero+".pdf");
+}
+
+/* ---- ações ---- */
+async function ctrAcao(a,k,id,b){
+  const arr=CTR[k].arr(),c=arr.find(x=>x.id===id);
+  if(a==="ctr-novo")return abrirContrato(k);
+  if(a==="ctr-abrir")return abrirContrato(k,id);
+  if(a==="ctr-pdf"){if(c)guardarPDF(()=>pdfContrato(c));return}
+  if(a==="ctr-filtro"){S.cfiltro=b.dataset.f;refCtr(k);return}
+  if(a==="ctr-estado"&&c){await store.put(CTR[k].col,{...c,estado:b.dataset.e,assinadoEm:b.dataset.e==="assinado"?hoje():""});fechar();toast(b.dataset.e==="assinado"?"Contrato marcado como assinado":"Contrato marcado como por assinar");return}
+  if(a==="ctr-apagar"&&c){if(confirmar(b,"Confirmar eliminação")){await store.del(CTR[k].col,id);fechar();toast("Contrato eliminado")}return}
 }
 
 /* ================= site próprio: Supabase (base de dados + logins por e-mail) ================= */
@@ -2947,7 +3273,7 @@ function armarInatividade(){
 function subscrever(){
   const err=e=>{console.error(e);if(e&&e.code==="revoked")toast("O acesso aos dados foi retirado nesta vista.")};
   const fixCfg=(base,d)=>{const c={...base,...d};if(base.planos&&(!Array.isArray(c.planos)||!c.planos.length))c.planos=PLANOS_PADRAO;return c};
-  let pend=7;const pronto=()=>{if(--pend===0){S.ready=true;refresh();notifAuto();return}refresh()};
+  let pend=9;const pronto=()=>{if(--pend===0){S.ready=true;refresh();notifAuto();return}refresh()};
   const once=f=>{let first=true;return s=>{f(s);if(first){first=false;pronto()}else refresh()}};
   unsubs.push(db.doc("config/negocio").onSnapshot(s=>{S.cfg=fixCfg(CFG_IPTV,s.exists?s.data():{});refresh()},err));
   unsubs.push(db.doc("config/servicos").onSnapshot(s=>{S.vcfg={...CFG_SERV,...(s.exists?s.data():{})};refresh()},err));
@@ -2960,6 +3286,8 @@ function subscrever(){
   unsubs.push(db.collection("documentos").onSnapshot(once(s=>{S.docs=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
   unsubs.push(db.collection("mc_mutuarios").onSnapshot(once(s=>{S.mutuarios=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
   unsubs.push(db.collection("mc_emprestimos").onSnapshot(once(s=>{S.emprestimos=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
+  unsubs.push(db.collection("sv_contratos").onSnapshot(once(s=>{S.vcontratos=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
+  unsubs.push(db.collection("mc_contratos").onSnapshot(once(s=>{S.mcontratos=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
 }
 function entrar(){
   guardarSessao();document.body.classList.remove("locked");$("#hdrUser").textContent=admin.usuario;
@@ -2969,7 +3297,7 @@ function entrar(){
 }
 function sair(msg){
   fecharNotif();store_("sessionStorage","hs_notif_visto",null);nfUlt=-1;store_("sessionStorage",SESS,null);store_("sessionStorage","hs_negocio",null);unsubs.forEach(u=>{try{u()}catch(_){}});unsubs=[];
-  S.clientes=[];S.docs=[];S.mutuarios=[];S.emprestimos=[];S.servicos=[];S.vclientes=[];S.vdocs=[];S.ready=false;S.biz=null;clearTimeout(idleT);$("#hdrUser").textContent="";$("#tabs").innerHTML="";if(S.modo==="supa")supaSair(msg);else telaLogin(msg);
+  S.clientes=[];S.docs=[];S.mutuarios=[];S.emprestimos=[];S.servicos=[];S.vclientes=[];S.vdocs=[];S.vcontratos=[];S.mcontratos=[];S.ready=false;S.biz=null;clearTimeout(idleT);$("#hdrUser").textContent="";$("#tabs").innerHTML="";if(S.modo==="supa")supaSair(msg);else telaLogin(msg);
 }
 async function gate(){
   telaAuth("A verificar acesso…","");
@@ -2998,6 +3326,9 @@ document.addEventListener("click",async e=>{
   switch(a){
     case"fechar":e.preventDefault();fechar();break;
     case"tema":trocarTema();break;
+    case"ctr-novo":case"ctr-abrir":case"ctr-pdf":case"ctr-filtro":case"ctr-estado":case"ctr-apagar":ctrAcao(a,b.dataset.k,id,b);break;
+    case"ctr-de-cot":{const ex=S.vcontratos.find(c=>c.cotacaoId===id&&c.estado!=="anulado");abrirContrato("serv",ex?.id,ex?null:id);break}
+    case"ctr-de-emp":{const ex=S.mcontratos.find(c=>c.emprestimoId===id&&c.estado!=="anulado");abrirContrato("micro",ex?.id,ex?null:id);break}
     case"notif":{const p=$("#notif");if(p&&!p.hidden&&p.classList.contains("in"))fecharNotif();else abrirNotif(false);break}
     case"notif-fechar":fecharNotif();break;
     case"notif-ir":notifIr(+b.dataset.i);break;
