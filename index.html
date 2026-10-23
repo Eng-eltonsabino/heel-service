@@ -922,6 +922,68 @@ label.f[hidden],div.f[hidden],.f[hidden]{display:none!important}
 .pf-qr svg{width:100%;height:100%;display:block}
 .pf-linkt{display:grid;gap:8px;min-width:0;font-size:14px}.pf-linkt .pill{justify-self:start}.pf-linkt small{color:var(--muted);font-size:13px}
 @media (max-width:560px){.pf-link{grid-template-columns:minmax(0,1fr)}.pf-qr{justify-self:center}}
+
+/* ===== o tempo no cabeçalho ===== */
+.hero{position:relative;overflow:hidden;isolation:isolate;transition:background-color .6s}
+.hero .top{position:relative;z-index:2}
+.hero[data-ceu]{--ceu-a:#cfe6ff;--ceu-b:#eef6ff;--ceu-ink:#0e2140;--ceu-mut:#3c5272;--nuvem:#ffffff;--nuvem-b:rgba(14,33,64,.08);background:linear-gradient(180deg,var(--ceu-a),var(--ceu-b))}
+.hero[data-ceu="nuvens"],.hero[data-ceu="poucas"]{--ceu-a:#d6e7f7;--ceu-b:#f0f6fc}
+.hero[data-ceu="nublado"],.hero[data-ceu="nevoeiro"]{--ceu-a:#d3dae3;--ceu-b:#eef1f5;--ceu-ink:#14202f;--ceu-mut:#455468;--nuvem:#f4f6f9;--nuvem-b:rgba(20,32,47,.12)}
+.hero[data-ceu="chuvisco"],.hero[data-ceu="chuva"],.hero[data-ceu="chuva-forte"],.hero[data-ceu="trovoada"]{--ceu-a:#8fa3b8;--ceu-b:#c9d3de;--ceu-ink:#0c1724;--ceu-mut:#2c3c50;--nuvem:#e3e8ee;--nuvem-b:rgba(12,23,36,.18)}
+.hero[data-periodo="noite"]{--ceu-a:#071328;--ceu-b:#1a2c4f;--ceu-ink:#f2f5fb;--ceu-mut:#b6c2d8;--nuvem:#2e4066;--nuvem-b:rgba(0,0,0,.25)}
+.hero[data-periodo="noite"][data-ceu="chuva"],.hero[data-periodo="noite"][data-ceu="chuva-forte"],.hero[data-periodo="noite"][data-ceu="trovoada"],.hero[data-periodo="noite"][data-ceu="nublado"]{--ceu-a:#0c1522;--ceu-b:#24324a;--nuvem:#38475f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hero[data-periodo="dia"]{--ceu-a:#0f2a4a;--ceu-b:#1b3d63;--ceu-ink:#f2f6fc;--ceu-mut:#b9c8dc;--nuvem:#5d7699;--nuvem-b:rgba(0,0,0,.2)}
+  :root:not([data-theme="light"]) .hero[data-periodo="dia"][data-ceu="nublado"],:root:not([data-theme="light"]) .hero[data-periodo="dia"][data-ceu^="chuv"],:root:not([data-theme="light"]) .hero[data-periodo="dia"][data-ceu="trovoada"],:root:not([data-theme="light"]) .hero[data-periodo="dia"][data-ceu="nevoeiro"]{--ceu-a:#1a2533;--ceu-b:#2b3a4e;--nuvem:#56657c}}
+:root[data-theme="dark"] .hero[data-periodo="dia"]{--ceu-a:#0f2a4a;--ceu-b:#1b3d63;--ceu-ink:#f2f6fc;--ceu-mut:#b9c8dc;--nuvem:#5d7699;--nuvem-b:rgba(0,0,0,.2)}
+:root[data-theme="dark"] .hero[data-periodo="dia"][data-ceu="nublado"],:root[data-theme="dark"] .hero[data-periodo="dia"][data-ceu^="chuv"],:root[data-theme="dark"] .hero[data-periodo="dia"][data-ceu="trovoada"],:root[data-theme="dark"] .hero[data-periodo="dia"][data-ceu="nevoeiro"]{--ceu-a:#1a2533;--ceu-b:#2b3a4e;--nuvem:#56657c}
+.hero[data-ceu] h1{color:var(--ceu-ink)}.hero[data-ceu] .eyebrow,.hero[data-ceu] .sub{color:var(--ceu-mut)}
+.ceu{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.ceu-astro{position:absolute;right:max(24px,calc(50% - 560px));top:26px;width:110px;height:110px;transition:opacity .6s}
+.ceu-astro .disco{position:absolute;inset:22px;border-radius:50%;background:radial-gradient(circle at 40% 38%,#fff6c9,#ffd23f 55%,#f7a823);box-shadow:0 0 40px 12px rgba(255,200,60,.45)}
+.ceu-astro .raios{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,206,64,.55) 0 6deg,transparent 6deg 30deg);-webkit-mask:radial-gradient(circle,transparent 40%,#000 41%,#000 70%,transparent 71%);mask:radial-gradient(circle,transparent 40%,#000 41%,#000 70%,transparent 71%)}
+.ceu-astro.lua .disco{inset:28px;background:radial-gradient(circle at 60% 40%,#fdfbf3,#d9dde8 70%);box-shadow:0 0 36px 8px rgba(220,230,255,.28)}
+.ceu-astro.lua .disco::after{content:"";position:absolute;width:30%;height:30%;left:22%;top:50%;border-radius:50%;background:rgba(150,160,185,.35);box-shadow:20px -22px 0 -4px rgba(150,160,185,.3)}
+.ceu-astro.tapado{opacity:.55}
+.estrelas i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:#fff;opacity:.8}
+.nuvem{position:absolute;left:0;width:var(--w);opacity:var(--op);will-change:transform}
+.nuvem svg{width:100%;height:auto;display:block;overflow:visible}
+.nuvem path{fill:var(--nuvem);stroke:var(--nuvem-b);stroke-width:1.5}
+.nuvem.cinza path{filter:drop-shadow(0 6px 10px rgba(0,0,0,.08))}
+.chuva i{position:absolute;top:-30px;width:1.6px;height:var(--h);border-radius:2px;background:linear-gradient(transparent,rgba(40,80,140,.75));opacity:.8}
+.hero[data-periodo="noite"] .chuva i{background:linear-gradient(transparent,rgba(170,200,255,.7))}
+.chuva.fina i{width:1.1px;opacity:.55}
+.relampago{position:absolute;inset:0;background:#fff;opacity:0}
+.nevoa i{position:absolute;left:-20%;width:140%;height:26%;border-radius:50%;background:radial-gradient(ellipse at center,rgba(255,255,255,.65),transparent 70%)}
+.nevoa i:nth-child(1){top:18%}.nevoa i:nth-child(2){top:46%}.nevoa i:nth-child(3){top:72%}
+@media (prefers-reduced-motion:no-preference){
+  .ceu-astro .raios{animation:girar 60s linear infinite}
+  .ceu-astro .disco{animation:pulsar 6s ease-in-out infinite}
+  .estrelas i{animation:brilhar 3.2s ease-in-out infinite;animation-delay:var(--d)}
+  .nuvem{animation:passar var(--dur) linear infinite;animation-delay:var(--del)}
+  .chuva i{animation:cair var(--d) linear infinite;animation-delay:var(--del)}
+  .relampago{animation:relampago 7s infinite}
+  .nevoa i{animation:nevoa 26s ease-in-out infinite alternate}.nevoa i:nth-child(2){animation-duration:34s;animation-direction:alternate-reverse}.nevoa i:nth-child(3){animation-duration:30s}
+}
+@media (prefers-reduced-motion:reduce){.nuvem{transform:translateX(calc(var(--del) * -1px * 6))}.chuva{display:none}}
+@keyframes girar{to{transform:rotate(360deg)}}
+@keyframes pulsar{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes brilhar{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes passar{from{transform:translateX(calc(-1 * var(--w) - 20px))}to{transform:translateX(calc(100vw + 20px))}}
+@keyframes cair{from{transform:translate(0,0)}to{transform:translate(-14px,520px)}}
+@keyframes relampago{0%,88%,92%,96%,100%{opacity:0}89%{opacity:.55}93%{opacity:.25}95%{opacity:.5}}
+@keyframes nevoa{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+.clima{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 18px;margin-top:20px;padding:10px 16px;border-radius:18px;background:color-mix(in srgb,var(--surface) 62%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid color-mix(in srgb,var(--ceu-ink,var(--ink)) 10%,transparent);color:var(--ink);text-align:left}
+.hero[data-periodo="noite"] .clima{background:rgba(10,20,40,.45);color:#f2f5fb;border-color:rgba(255,255,255,.12)}
+.cl-agora{display:flex;align-items:center;gap:10px}
+.cl-agora .cl-ic{width:34px;height:34px;color:#f5a623}
+.hero[data-ceu="nublado"] .cl-agora .cl-ic,.hero[data-ceu^="chuv"] .cl-agora .cl-ic,.hero[data-ceu="trovoada"] .cl-agora .cl-ic,.hero[data-ceu="nevoeiro"] .cl-agora .cl-ic,.hero[data-periodo="noite"] .cl-agora .cl-ic{color:currentColor}
+.cl-agora>b{font-size:34px;font-weight:600;letter-spacing:-.5px;font-variant-numeric:tabular-nums;line-height:1}
+.cl-agora span{display:grid;gap:1px}.cl-agora em{font-style:normal;font-size:15px;font-weight:600}.cl-agora small{font-size:12px;opacity:.75}
+.cl-horas{display:flex;gap:4px;border-left:1px solid color-mix(in srgb,currentColor 18%,transparent);padding-left:14px}
+.cl-horas span{display:grid;justify-items:center;gap:2px;min-width:44px;font-size:12px}
+.cl-horas small{opacity:.7}.cl-horas b{font-size:13px;font-variant-numeric:tabular-nums}
+.cl-horas .cl-ic{width:20px;height:20px}
+@media (max-width:640px){.ceu-astro{width:80px;height:80px;top:14px;right:10px}.clima{padding:10px 12px}.cl-horas{border-left:0;padding-left:0;width:100%;justify-content:space-between}.cl-agora>b{font-size:30px}}
 </style>
 
 <header class="top">
@@ -3790,6 +3852,76 @@ async function copiaAcao(a,b){
     toast(data+" registos repostos. A atualizar…");try{await db.carregar()}catch(e){console.error(e)}carregarCopias()}
 }
 
+/* ================= o tempo em Maputo, no cabeçalho do ecrã inicial ================= */
+/* Live weather from Open-Meteo (free, no key). The scene behind the greeting follows it: sun or moon,
+   clouds drifting across, rain, lightning or fog. Without network it falls back to day/night by the clock. */
+const CLIMA_LOCAL={nome:"Maputo",lat:-25.9653,lon:32.5892};
+const CLIMA_K="hs_clima_v1";
+let climaT=null,climaPedido=null;
+function climaTipo(code){const c=Number(code);
+  if(c===0)return["limpo","Céu limpo"];if(c===1)return["poucas","Quase limpo"];if(c===2)return["nuvens","Parcialmente nublado"];if(c===3)return["nublado","Nublado"];
+  if(c===45||c===48)return["nevoeiro","Nevoeiro"];if(c>=51&&c<=57)return["chuvisco","Chuvisco"];
+  if(c===61||c===80)return["chuva","Chuva fraca"];if(c===63||c===81||c===66)return["chuva","Chuva"];if(c===65||c===82||c===67)return["chuva-forte","Chuva forte"];
+  if(c>=71&&c<=77||c===85||c===86)return["nublado","Neve"];if(c===95)return["trovoada","Trovoada"];if(c===96||c===99)return["trovoada","Trovoada com granizo"];
+  return["nuvens","—"]}
+function climaLer(){try{const o=JSON.parse(localStorage.getItem(CLIMA_K)||"null");return o&&o.d?o:null}catch(_){return null}}
+function climaGravar(d){try{localStorage.setItem(CLIMA_K,JSON.stringify({t:Date.now(),d}))}catch(_){}}
+let climaMem=null;
+function climaAtual(){return climaMem||climaLer()}
+/* what to draw: from the weather when we have it, from the clock otherwise */
+function climaEstado(){const o=climaAtual(),h=new Date().getHours();
+  if(o&&o.d&&o.d.current&&Date.now()-o.t<3*3600e3){const c=o.d.current,[tipo,nome]=climaTipo(c.weather_code);return{tipo,nome,dia:c.is_day===1,temp:c.temperature_2m,sens:c.apparent_temperature,hum:c.relative_humidity_2m,vento:c.wind_speed_10m,max:o.d.daily?.temperature_2m_max?.[0],min:o.d.daily?.temperature_2m_min?.[0],horas:o.d.hourly,real:true}}
+  return{tipo:"poucas",nome:"",dia:h>=6&&h<18,real:false}}
+async function climaBuscar(forcar){
+  const o=climaAtual();if(!forcar&&o&&Date.now()-o.t<20*60e3)return o;
+  if(climaPedido)return climaPedido;if(typeof fetch!=="function")return null;
+  const u=`https://api.open-meteo.com/v1/forecast?latitude=${CLIMA_LOCAL.lat}&longitude=${CLIMA_LOCAL.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m&hourly=temperature_2m,weather_code,is_day&forecast_hours=6&daily=temperature_2m_max,temperature_2m_min&timezone=Africa%2FMaputo&forecast_days=1`;
+  climaPedido=fetch(u).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{climaMem={t:Date.now(),d};climaGravar(d);return climaMem}).catch(()=>null).finally(()=>{climaPedido=null});
+  return climaPedido}
+
+/* ---------- drawings ---------- */
+const NUVEM=`<svg viewBox="0 0 200 90" aria-hidden="true"><path d="M44 82h118a32 32 0 0 0 4-64 44 44 0 0 0-82-6A34 34 0 0 0 44 82z"/></svg>`;
+function climaIcone(tipo,dia){
+  const sol=`<circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>`;
+  const lua=`<path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z" fill="currentColor" stroke="none"/>`;
+  const nuv=`<path d="M7 18h10a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.4-1A4.5 4.5 0 0 0 7 18z"/>`;
+  const g={limpo:dia?sol:lua,poucas:(dia?`<g transform="translate(-3 -3) scale(.8)">${sol}</g>`:`<g transform="translate(-3 -3) scale(.8)">${lua}</g>`)+`<path d="M9 20h9a3.5 3.5 0 0 0 .3-7 4.8 4.8 0 0 0-9-.8A3.9 3.9 0 0 0 9 20z" fill="var(--surface)"/>`,
+    nuvens:(dia?`<g transform="translate(-4 -4) scale(.75)">${sol}</g>`:"")+`<path d="M9 20h9a3.5 3.5 0 0 0 .3-7 4.8 4.8 0 0 0-9-.8A3.9 3.9 0 0 0 9 20z" fill="var(--surface)"/>`,
+    nublado:nuv,nevoeiro:`<path d="M4 9h16M3 13h18M5 17h14"/>`,chuvisco:nuv.replace("18h","15h").replace("0 0 7 18z","0 0 7 15z")+`<path d="M9 18v1.5M13 18v1.5M17 18v1.5"/>`,
+    chuva:`<path d="M7 14h10a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.4-1A4.5 4.5 0 0 0 7 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/>`,
+    trovoada:`<path d="M7 13h10a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.4-1A4.5 4.5 0 0 0 7 13z"/><path d="M12.5 13l-2.5 4.5h3L11 22" stroke-width="2"/>`};
+  g["chuva-forte"]=g.chuva;
+  return`<svg class="cl-ic" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${g[tipo]||nuv}</svg>`}
+/* fixed pseudo-random positions so the scene does not jump on every redraw */
+const climaRnd=(i,s)=>{const x=Math.sin(i*12.9898+s*78.233)*43758.5453;return x-Math.floor(x)};
+function climaCenaHTML(){const e=climaEstado(),t=e.tipo,dia=e.dia;
+  const nN={limpo:1,poucas:3,nuvens:5,nublado:7,nevoeiro:3,chuvisco:6,chuva:7,"chuva-forte":8,trovoada:8}[t]||4;
+  const escuro=["nublado","chuvisco","chuva","chuva-forte","trovoada","nevoeiro"].includes(t);
+  let h=`<div class="ceu-astro ${dia?"sol":"lua"}${escuro?" tapado":""}">${dia?`<i class="raios"></i><i class="disco"></i>`:`<i class="disco"></i>`}</div>`;
+  if(!dia)h+=`<div class="estrelas">${Array.from({length:escuro?6:22},(_,i)=>`<i style="left:${(climaRnd(i,1)*100).toFixed(1)}%;top:${(climaRnd(i,2)*70).toFixed(1)}%;--d:${(climaRnd(i,3)*4).toFixed(2)}s;--s:${(1+climaRnd(i,4)*2).toFixed(1)}px"></i>`).join("")}</div>`;
+  h+=`<div class="nuvens">${Array.from({length:nN},(_,i)=>{const w=Math.round(120+climaRnd(i,5)*(escuro?260:180)),top=(4+climaRnd(i,6)*(escuro?55:62)).toFixed(1),dur=Math.round(70+climaRnd(i,7)*90),op=(escuro?.75+climaRnd(i,8)*.25:.55+climaRnd(i,8)*.4).toFixed(2);
+    return`<span class="nuvem${escuro?" cinza":""}" style="--w:${w}px;top:${top}%;--dur:${dur}s;--del:-${Math.round(climaRnd(i,9)*dur)}s;--op:${op}">${NUVEM}</span>`}).join("")}</div>`;
+  if(t==="chuvisco"||t==="chuva"||t==="chuva-forte"||t==="trovoada"){const n=t==="chuvisco"?40:t==="chuva"?80:120;
+    h+=`<div class="chuva${t==="chuvisco"?" fina":""}">${Array.from({length:n},(_,i)=>`<i style="left:${(climaRnd(i,10)*102-1).toFixed(1)}%;--d:${(.55+climaRnd(i,11)*.6).toFixed(2)}s;--del:-${(climaRnd(i,12)*2).toFixed(2)}s;--h:${Math.round(12+climaRnd(i,13)*16)}px"></i>`).join("")}</div>`}
+  if(t==="trovoada")h+=`<div class="relampago"></div>`;
+  if(t==="nevoeiro")h+=`<div class="nevoa"><i></i><i></i><i></i></div>`;
+  return`<div class="ceu" aria-hidden="true">${h}</div>`}
+function climaInfoHTML(){const e=climaEstado();if(!e.real)return"";
+  const hs=e.horas&&e.horas.time?e.horas.time.map((tm,i)=>({h:tm.slice(11,16),t:e.horas.temperature_2m[i],c:e.horas.weather_code[i],d:e.horas.is_day?e.horas.is_day[i]===1:e.dia})).filter(x=>x.h>new Date().toTimeString().slice(0,5)).slice(0,4):[];
+  const r=v=>Math.round(Number(v));
+  return`<div class="clima" title="Atualizado pelo Open-Meteo">
+    <div class="cl-agora">${climaIcone(e.tipo,e.dia)}<b>${r(e.temp)}°</b><span><em>${esc(e.nome)} · ${CLIMA_LOCAL.nome}</em><small>${e.max!=null?"Máx "+r(e.max)+"° · Mín "+r(e.min)+"°":""}${e.sens!=null?" · Sensação "+r(e.sens)+"°":""}${e.hum!=null?" · Humidade "+r(e.hum)+"%":""}</small></span></div>
+    ${hs.length?`<div class="cl-horas">${hs.map(x=>{const[tp]=climaTipo(x.c);return`<span><small>${x.h}</small>${climaIcone(tp,x.d)}<b>${r(x.t)}°</b></span>`}).join("")}</div>`:""}
+  </div>`}
+/* draws the sky for the current state; fetches fresh weather and redraws when it changes */
+function climaAplicar(){const hero=document.querySelector(".hero");if(!hero)return;const e=climaEstado();
+  hero.dataset.ceu=e.tipo;hero.dataset.periodo=e.dia?"dia":"noite";
+  const ceu=hero.querySelector(".ceu");if(ceu)ceu.outerHTML=climaCenaHTML();else hero.insertAdjacentHTML("afterbegin",climaCenaHTML());
+  const inf=hero.querySelector("#climaInfo");if(inf)inf.innerHTML=climaInfoHTML()}
+async function climaIniciar(){try{climaAplicar()}catch(e){console.error(e)}const antes=JSON.stringify(climaAtual()?.d?.current||null);
+  const o=await climaBuscar();if(o&&JSON.stringify(o.d.current)!==antes&&!S.biz)climaAplicar();
+  clearInterval(climaT);climaT=setInterval(async()=>{if(S.biz||document.hidden)return;const n=await climaBuscar();if(n)climaAplicar()},20*60e3)}
+
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
 Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
 const autoCfg=()=>({...AVISOS.AUTO_PADRAO,...(S.acfg||{})});
@@ -4349,12 +4481,12 @@ function ligarOv(){
 function refLauncher(){
   const h=new Date().getHours(),saud=h<12?"Bom dia":h<19?"Boa tarde":"Boa noite",nm=(admin?.nome||String(admin?.usuario||"").split("@")[0]).split(" ")[0],quem=nm?nm.charAt(0).toUpperCase()+nm.slice(1):"";
   $("#view").innerHTML=banner()+`
-  <section class="hero"><div class="top"><div><p class="eyebrow">${cap1(new Date().toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</p><h1>${saud}${quem?", "+esc(quem):""}.</h1><p class="sub">Escolha o negócio que quer gerir.</p></div></div></section>
+  <section class="hero" data-ceu="${climaEstado().tipo}" data-periodo="${climaEstado().dia?"dia":"noite"}">${climaCenaHTML()}<div class="top"><div><p class="eyebrow">${cap1(new Date().toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</p><h1>${saud}${quem?", "+esc(quem):""}.</h1><p class="sub">Escolha o negócio que quer gerir.</p><div id="climaInfo">${climaInfoHTML()}</div></div></div></section>
   ${faltasHTML()}
   <section class="bizsec"><div class="biz-grid">${NEG.map(n=>`<button class="biz biz-${n.k}" data-biz="${n.k}"><span class="ill">${ILL[n.k]}</span><span class="bt"><b>${n.nome}</b><span class="tl">${n.tl}</span></span><span class="feat">${n.f.map(x=>`<span>${x}</span>`).join("")}</span><span class="go">Abrir</span></button>`).join("")}</div></section>
   ${pfLauncherHTML()}
   <section class="ovsec" id="ov">${ovHTML()}</section>`;
-  ligarOv();
+  ligarOv();if(!climaT)climaIniciar();
 }
 /* ---- motion helpers ---- */
 const calmo=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
