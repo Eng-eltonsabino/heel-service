@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><title>Heel Service Gestão</title><link rel="icon" href="emblema-digital.png"><link rel="apple-touch-icon" href="emblema-digital.png"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><title>Heel Service Gestão</title><link rel="icon" href="emblema-digital.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Heel Service"><meta name="apple-mobile-web-app-status-bar-style" content="black"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script>window.HS_SUPA={url:"https://jyskfokyjptangytmopj.supabase.co",key:"sb_publishable_QF2rjbwRwfXJqcMBpV_dDg_3T6nB7-8"};</script>
 <script src="supabase.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:")addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </head><body>
 <title>Heel Service Gestão</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -903,6 +904,24 @@ small.bad{color:var(--bad);display:block}
 label.f[hidden],div.f[hidden],.f[hidden]{display:none!important}
 #psPrev td small,#tbPMov td small{display:block;font-size:12px;color:var(--muted)}
 @media (max-width:560px){#pPend .item{grid-template-columns:minmax(0,1fr)}#pPend .pf-qcat{max-width:none;width:100%}}
+
+/* ===== o que falta / ligação da carteira ===== */
+.falta-sec{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;display:grid;gap:14px}
+.falta-head h2{font-size:22px;letter-spacing:-.2px}
+.falta-list{display:grid;gap:8px}
+.falta{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--pearl,var(--sunk))}
+.falta>i{width:10px;height:10px;border-radius:50%;background:var(--muted);align-self:start;margin-top:5px}
+.falta.nv3>i{background:var(--bad)}.falta.nv2>i{background:var(--warn)}.falta.nv1>i{background:var(--accent)}
+.falta .ft{display:grid;gap:2px;min-width:0}.falta .ft b{font-size:15px}.falta .ft small{font-size:13px;color:var(--muted);line-height:1.4}
+.falta .fa{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:640px){.falta{grid-template-columns:10px minmax(0,1fr)}.falta .fa{grid-column:2;justify-content:flex-start}}
+.realce{animation:realce 2.2s ease}
+@keyframes realce{0%,60%{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 45%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
+.pf-link{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;background:var(--sunk);border-radius:12px;padding:14px}
+.pf-qr{width:150px;height:150px;background:#fff;border-radius:8px;padding:4px}
+.pf-qr svg{width:100%;height:100%;display:block}
+.pf-linkt{display:grid;gap:8px;min-width:0;font-size:14px}.pf-linkt .pill{justify-self:start}.pf-linkt small{color:var(--muted);font-size:13px}
+@media (max-width:560px){.pf-link{grid-template-columns:minmax(0,1fr)}.pf-qr{justify-self:center}}
 </style>
 
 <header class="top">
@@ -2067,9 +2086,9 @@ function defsServHTML(){const c=S.vcfg;return`
     <div class="row"><button type="button" class="btn pri" data-act="sv-backup">Cópia de segurança completa (JSON)</button><label class="btn" style="cursor:pointer">Importar cópia de segurança<input type="file" id="impFile" accept=".json,application/json" hidden></label><button type="button" class="btn" data-act="sv-csv-docs">Cotações (CSV)</button><button type="button" class="btn" data-act="sv-csv-serv">Serviços (CSV)</button></div>
     <p class="note" style="margin:0">A cópia de segurança inclui os três negócios. As senhas IPTV dos clientes ficam de fora por segurança.</p>
   </section>
-  ${smsCfgHTML()}${contaHTML()}`}
+  ${copiasHTML()}${smsCfgHTML()}${contaHTML()}`}
 function ligarDefsServ(){
-  ligarCarimbo(S.vcfg);ligarConta();ligarSmsCfg();
+  ligarCarimbo(S.vcfg);ligarConta();ligarSmsCfg();if($("#copiasLista"))carregarCopias();
   const f=$("#impFile");if(f)f.onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{abrirImportar(JSON.parse(r.result))}catch(_){toast("Este ficheiro não é uma cópia de segurança válida.")}};r.readAsText(file);e.target.value=""};
   $("#fDefsV").onsubmit=async e=>{e.preventDefault();const fd=Object.fromEntries(new FormData(e.target));
     await store.cfg("vcfg","config/servicos",{...S.vcfg,...fd,iva:Number(fd.iva)||0,validade:Number(fd.validade)||15,carimboImg:defsImg});toast("Definições guardadas")};
@@ -3634,18 +3653,40 @@ async function fnCarteira(corpo){
   const s=(await sb.auth.getSession()).data.session;const h={"Content-Type":"application/json",apikey:SUPA().key};if(s)h.Authorization="Bearer "+s.access_token;
   let r;try{r=await fetch(SUPA().url+"/functions/v1/carteira",{method:"POST",headers:h,body:JSON.stringify(corpo)})}catch(e){throw new Error("Sem ligação ao servidor. Verifique a Internet.")}
   let j={};try{j=await r.json()}catch(_){}if(!r.ok)throw new Error(j.erro||"O servidor respondeu com erro ("+r.status+").");return j}
+/* QR code with the secret address, so it goes from the computer to the phone without typing */
+let qrLib=null;
+function carregarQR(){if(window.qrcode)return Promise.resolve(window.qrcode);if(qrLib)return qrLib;
+  qrLib=new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js";sc.onload=()=>window.qrcode?ok(window.qrcode):ko(new Error("qr"));sc.onerror=()=>{qrLib=null;ko(new Error("qr"))};document.head.appendChild(sc)});return qrLib}
+async function pfQR(el,txt){try{const q=(await carregarQR())(0,"M");q.addData(txt);q.make();el.innerHTML=q.createSvgTag({cellSize:4,margin:2,scalable:true});el.hidden=false}catch(_){el.hidden=true}}
+let pfSO=null;
+const pfSoDetetado=()=>pfSO||(ehIOS()?"ios":"android");
 async function pfAutoEstado(acao){const el=$("#psAuto");if(!el)return;
   try{const e=await fnCarteira({acao:acao||"estado"});
-    el.innerHTML=e.ligado?`<div class="calc" style="display:grid;gap:8px"><b>Ligação ativa.</b><span>Endereço para o telemóvel (é secreto, não o partilhe):</span>
-      <span class="withbtn"><input class="mono" id="psUrl" readonly value="${esc(e.url)}"><button type="button" class="btn sm" id="psCopy">Copiar</button></span>
-      <span>${e.total?e.total+" mensagens recebidas · última a "+pfDataHora(e.ultimo):"Ainda não chegou nenhuma mensagem."}</span></div>
-      <ol class="pf-steps"><li>No telemóvel Android, instale a aplicação <b>SMS to URL Forwarder</b> (gratuita, pela F-Droid; não existe na Play Store porque a Google não permite apps que reencaminham SMS).</li>
-      <li>Crie uma regra: em <b>Remetente</b> escreva <span class="mono">(?i)(m-?pesa|e-?mola|m-?kesh)</span> e marque “é uma expressão regular” (ou o nome exato que aparece como remetente das mensagens da sua carteira).</li>
-      <li>Em <b>URL</b> cole o endereço acima. Deixe o modelo JSON como está (envia <span class="mono">from</span> e <span class="mono">text</span>).</li>
-      <li>Guarde e faça uma transação pequena: a mensagem aparece em “Mensagens recebidas” e o movimento entra no Painel, pronto a classificar.</li></ol>
-      <div class="row" style="gap:8px"><button type="button" class="btn sm" data-act="pf-auto" data-a="gerar">Criar endereço novo</button><button type="button" class="btn sm" data-act="pf-auto" data-a="desligar" style="color:var(--bad)">Desligar</button></div>`:
-      `<p class="note" style="margin:0">A ligação está desligada.</p><div><button type="button" class="btn pri" data-act="pf-auto" data-a="gerar">Criar ligação</button></div>`;
+    if(!e.ligado){el.innerHTML=`<p class="note" style="margin:0">A ligação está desligada.</p><div><button type="button" class="btn pri" data-act="pf-auto" data-a="gerar">Criar ligação</button></div>`;return}
+    const so=pfSoDetetado(),reais=S.psms.filter(x=>x.estado!=="ignorado"),ult=reais.map(x=>x.recebidoEm).sort().pop();
+    el.innerHTML=`<div class="pf-link">
+      <div class="pf-qr" id="psQR" hidden aria-label="Código QR com o endereço"></div>
+      <div class="pf-linkt"><span class="pill ${reais.length?"ok":"warn"}">${reais.length?"A receber mensagens":"À espera da primeira mensagem"}</span>
+        <span>Endereço secreto para o telemóvel. Não o partilhe: quem o tiver pode enviar mensagens para o seu sistema.</span>
+        <span class="withbtn"><input class="mono" id="psUrl" readonly value="${esc(e.url)}"><button type="button" class="btn sm" id="psCopy">Copiar</button></span>
+        <small>${reais.length?reais.length+(reais.length===1?" mensagem recebida":" mensagens recebidas")+" · última a "+pfDataHora(ult):"No computador, aponte a câmara do telemóvel ao código para abrir o endereço no telemóvel e copiá-lo."}</small></div></div>
+      <div class="seg" role="tablist" aria-label="Telemóvel">${[["android","Android"],["ios","iPhone"]].map(([k,l])=>`<label><input type="radio" name="pfso" value="${k}"${so===k?" checked":""}><span>${l}</span></label>`).join("")}</div>
+      ${so==="android"?`<ol class="pf-steps"><li>No telemóvel Android, instale a aplicação <b>SMS to URL Forwarder</b>. É gratuita e está na <a href="https://f-droid.org/packages/tech.bogomolov.incomingsmsgateway/" target="_blank" rel="noopener">F-Droid</a> (não existe na Play Store, porque a Google não deixa publicar aplicações que reencaminham SMS).</li>
+        <li>Abra a aplicação, dê permissão para ler SMS e toque em <b>+</b> para criar uma regra.</li>
+        <li>Em <b>Remetente</b> escreva <span class="mono">(?i)(m-?pesa|e-?mola|m-?kesh)</span> e marque “o remetente é uma expressão regular”. Se o nome do remetente das mensagens da sua carteira for outro, escreva-o exatamente como aparece.</li>
+        <li>Em <b>URL</b> cole o endereço acima. Deixe o modelo de mensagem (JSON) como está.</li>
+        <li>Guarde. Nas definições do Android, deixe a aplicação funcionar em segundo plano (sem otimização de bateria), para não ser fechada.</li>
+        <li>Faça uma transação pequena: em segundos a mensagem aparece aqui em baixo e o movimento entra no Painel.</li></ol>`:
+       `<ol class="pf-steps"><li>No iPhone, abra a aplicação <b>Atalhos</b> e toque em <b>Automação</b> → <b>+</b> (ou “Nova automação”).</li>
+        <li>Escolha <b>Mensagem</b>. Em <b>Remetente</b> escolha o contacto da carteira (por exemplo M-Pesa) e em <b>A mensagem contém</b> escreva <span class="mono">MT</span>. Marque <b>Executar imediatamente</b>.</li>
+        <li>Adicione a ação <b>Obter conteúdos do URL</b>. Em URL cole o endereço acima. Abra os detalhes: <b>Método</b> POST, <b>Corpo do pedido</b> JSON.</li>
+        <li>No JSON adicione o campo <span class="mono">text</span> com o valor <b>Entrada do atalho → Conteúdo</b> (o texto da mensagem) e o campo <span class="mono">from</span> com o remetente.</li>
+        <li>Guarde e faça uma transação pequena para confirmar que a mensagem aparece aqui em baixo.</li></ol>
+        <p class="note" style="margin:0">Repita a automação para cada carteira (M-Pesa, e-Mola, mKesh). Em versões antigas do iOS, o iPhone pode pedir confirmação antes de enviar.</p>`}
+      <div class="row" style="gap:8px"><button type="button" class="btn sm" data-act="pf-auto" data-a="gerar">Criar endereço novo</button><button type="button" class="btn sm" data-act="pf-auto" data-a="desligar" style="color:var(--bad)">Desligar</button></div>`;
     const cp=$("#psCopy");if(cp)cp.onclick=()=>copiar($("#psUrl").value);
+    el.querySelectorAll("[name=pfso]").forEach(r=>r.onchange=()=>{pfSO=r.value;pfAutoEstado()});
+    pfQR($("#psQR"),e.url);
   }catch(err){el.innerHTML=`<p class="note" style="color:var(--bad);margin:0">${esc(err.message)}</p>`}}
 
 /* ---------- categorias ---------- */
@@ -3673,6 +3714,80 @@ async function pfAcao(a,b){
   if(a==="pf-auto"){if(b.dataset.a==="desligar"&&!confirmar(b,"Confirmar: desligar"))return;b.disabled=true;return pfAutoEstado(b.dataset.a)}
   if(a==="pf-cat-del"){const k=b.dataset.k,n=b.dataset.n;if(!confirmar(b,"Confirmar"))return;await store.cfg("pcfg","config/pessoal",{...S.pcfg,[k]:S.pcfg[k].filter(x=>x!==n)});return showTab("categorias")}
   if(a==="pf-regra-del"){const rs=[...(S.pcfg.regras||[])];rs.splice(+b.dataset.i,1);await store.cfg("pcfg","config/pessoal",{...S.pcfg,regras:rs});return showTab("categorias")}
+}
+
+/* ================= o que falta, cópias no servidor, instalar como app ================= */
+const PH=v=>!v||/^\s*\(preencher/i.test(String(v));
+const FALTA_K="hs_faltas_ignoradas";
+function faltasIgnoradas(){try{return JSON.parse(localStorage.getItem(FALTA_K)||"[]")}catch(_){return[]}}
+function faltaIgnorar(k){const l=faltasIgnoradas();if(!l.includes(k))l.push(k);try{localStorage.setItem(FALTA_K,JSON.stringify(l))}catch(_){}}
+
+/* what still has to be set up for the system to work fully; each one says where to fix it */
+function faltas(){
+  if(!S.ready)return[];const out=[],sup=S.modo==="supa",ehAdmin=!sup||(admin&&admin.papel==="admin");
+  const pag=[["IPTV",S.cfg.pagamento,"iptv","#fDefs"],["Serviços",S.vcfg.pagamento,"serv","#fDefsV"],["Microcrédito",S.mcfg.pagamento,"micro","#fDefsM"]].filter(x=>PH(x[1]));
+  if(pag.length)out.push({k:"pagamento",nv:3,t:"Como os clientes lhe pagam",d:"Os recibos, cotações e avisos mostram “(preencher em Definições)” em "+pag.map(x=>x[0]).join(", ")+". Escreva os seus números M-Pesa/e-Mola ou conta bancária.",biz:pag[0][2],tab:"definicoes",foco:pag[0][3]+" [name=pagamento]",btn:"Preencher"});
+  const ativos=S.clientes.length,semEmail=S.clientes.filter(c=>!emailOk(c.email)).length,comTel=S.clientes.filter(c=>waNum(c.telefone).length>=11).length;
+  if(sup&&!S.srv){}
+  else if(sup?(!srvOk()&&!waOk()):!gmailOk()){
+    const d=ativos&&semEmail===ativos&&comTel?`Nenhum dos ${ativos} clientes IPTV tem e-mail, mas ${comTel===ativos?"todos têm":comTel+" têm"} telefone: ligue o WhatsApp para os avisos chegarem.`:"Ligue o Gmail ou o WhatsApp para os lembretes de pagamento e os recibos saírem sozinhos.";
+    out.push({k:"envio",nv:3,t:"Os avisos automáticos estão parados",d,biz:"iptv",tab:"definicoes",foco:"#pAuto",btn:"Ligar"});
+  }else if(sup&&srvOk()&&!waOk()&&ativos&&semEmail===ativos)out.push({k:"wa",nv:2,t:"Ligue também o WhatsApp",d:`O Gmail está ligado, mas nenhum dos ${ativos} clientes IPTV tem e-mail. Pelo WhatsApp os avisos chegam a todos.`,biz:"iptv",tab:"definicoes",foco:"#pAuto",btn:"Ligar"});
+  const semContacto=S.clientes.filter(c=>!emailOk(c.email)&&waNum(c.telefone).length<11).length;
+  if(semContacto)out.push({k:"contacto-"+semContacto,nv:2,t:semContacto+(semContacto===1?" cliente IPTV sem contacto":" clientes IPTV sem contacto"),d:"Sem e-mail nem telefone válido, não recebem avisos.",biz:"iptv",tab:"clientes",btn:"Ver clientes"});
+  if(PH(S.vcfg.cotPrazo))out.push({k:"prazo",nv:2,t:"Prazo das cotações de serviços",d:"As cotações de serviços mostram “(preencher)” no prazo de execução.",biz:"serv",tab:"definicoes",foco:"#fDefsV [name=cotPrazo]",btn:"Preencher"});
+  if(!S.cfg.servidor||/^https?:\/\/?$/i.test(String(S.cfg.servidor).trim()))out.push({k:"servidor",nv:1,t:"Servidor IPTV padrão",d:"Escreva o endereço do servidor para não o repetir em cada cliente novo.",biz:"iptv",tab:"definicoes",foco:"#fDefs [name=servidor]",btn:"Preencher"});
+  if(typeof pfPodeVer==="function"&&pfPodeVer()&&ehAdmin){
+    if(!S.pcarteiras.length)out.push({k:"carteiras",nv:1,t:"Crie as suas carteiras pessoais",d:"Indique o saldo de hoje no M-Pesa, e-Mola ou mKesh para acompanhar o seu dinheiro.",biz:"pessoal",tab:"carteiras",btn:"Criar"});
+    else if(sup&&!S.psms.some(s=>s.estado!=="ignorado"))out.push({k:"sms",nv:1,t:"Ligue as mensagens da carteira",d:"Configure o telemóvel uma vez e cada transação entra sozinha, com o novo saldo.",biz:"pessoal",tab:"sms",foco:"#psAuto",btn:"Configurar"});
+  }
+  if(podeInstalar())out.push({k:"instalar",nv:1,t:"Instale o sistema no telemóvel",d:ehIOS()?"No Safari, toque em Partilhar e depois em “Adicionar ao ecrã principal”.":"Fica com um ícone no ecrã inicial e abre como uma aplicação.",act:"instalar",btn:ehIOS()?"Como fazer":"Instalar"});
+  const ign=faltasIgnoradas();return out.filter(x=>!ign.includes(x.k)).sort((a,b)=>b.nv-a.nv);
+}
+function faltasHTML(){const l=faltas();if(!l.length)return"";S._faltas=l;
+  return`<section class="falta-sec" aria-labelledby="tFalta"><div class="falta-head"><div><h2 id="tFalta">Para tudo funcionar</h2><p class="sub">${l.length===1?"Falta 1 coisa":"Faltam "+l.length+" coisas"} por configurar.</p></div></div>
+    <div class="falta-list">${l.map((x,i)=>`<div class="falta nv${x.nv}"><i aria-hidden="true"></i><div class="ft"><b>${esc(x.t)}</b>${x.d?`<small>${esc(x.d)}</small>`:""}</div>
+      <div class="fa"><button type="button" class="btn sm${x.nv===3?" pri":""}" data-act="falta-ir" data-i="${i}">${esc(x.btn)}</button><button type="button" class="btn sm ghost" data-act="falta-ignorar" data-i="${i}" title="Não mostrar outra vez">Ignorar</button></div></div>`).join("")}</div></section>`}
+function faltaIr(i){const x=(S._faltas||[])[i];if(!x)return;
+  if(x.act==="instalar")return instalarApp();
+  abrirNegocio(x.biz);showTab(x.tab);
+  if(x.foco)setTimeout(()=>{const el=document.querySelector(x.foco);if(!el)return;el.scrollIntoView({behavior:calmo()?"auto":"smooth",block:"center"});
+    el.classList.add("realce");setTimeout(()=>el.classList.remove("realce"),2200);if(el.matches("input,select,textarea"))setTimeout(()=>el.focus({preventScroll:true}),400)},450)}
+
+/* ---------- instalar como app ---------- */
+let pedidoInstalar=null;
+const ehIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent||"")&&!window.MSStream;
+const instalado=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+const podeInstalar=()=>S.modo==="supa"&&!instalado()&&(!!pedidoInstalar||ehIOS());
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();pedidoInstalar=e;if(!S.biz)refresh()});
+addEventListener("appinstalled",()=>{pedidoInstalar=null;toast("Heel Service instalado no ecrã inicial");refresh()});
+async function instalarApp(){
+  if(pedidoInstalar){const p=pedidoInstalar;pedidoInstalar=null;p.prompt();try{await p.userChoice}catch(_){}refresh();return}
+  abrir(hdr("Instalar no iPhone","Fica com o ícone da Heel Service no ecrã principal.")+`<div class="body"><ol class="pf-steps">
+    <li>Abra este site no <b>Safari</b>.</li><li>Toque no botão <b>Partilhar</b> (o quadrado com a seta para cima), em baixo.</li>
+    <li>Desça e toque em <b>Adicionar ao ecrã principal</b>, depois em <b>Adicionar</b>.</li></ol></div>
+    <footer><button type="button" class="btn pri" data-act="fechar">Percebi</button></footer>`)}
+
+/* ---------- cópias de segurança no servidor ---------- */
+function copiasHTML(){if(S.modo!=="supa"||!admin||admin.papel!=="admin")return"";return`
+  <section class="panel" style="padding:16px;display:grid;gap:12px" id="pCopias">
+    <div class="row spread"><div><h2>Cópias de segurança no servidor</h2><p class="sub">O servidor guarda uma cópia de todos os dados todas as noites, à 01:00. Pode também fazer uma agora, descarregá-la ou repor uma cópia antiga.</p></div>
+      <button type="button" class="btn pri" data-act="copia-fazer">Fazer cópia agora</button></div>
+    <div class="list" id="copiasLista"><div class="empty">A carregar…</div></div>
+    <p class="note" style="margin:0">Repor uma cópia volta a escrever os registos dessa data. Antes disso, o servidor guarda uma cópia do estado atual, por isso pode sempre voltar atrás. Os registos criados depois da cópia mantêm-se.</p>
+  </section>`}
+async function carregarCopias(){const el=$("#copiasLista");if(!el)return;
+  const{data,error}=await sb.rpc("copias_listar");
+  if(error){el.innerHTML=`<div class="empty" style="color:var(--bad)">Não foi possível ler as cópias: ${esc(error.message)}</div>`;return}
+  el.innerHTML=data&&data.length?data.slice(0,12).map(c=>`<div class="item"><div class="who"><b>${pfDataHora(c.criado_em)}</b><small>${esc(c.motivo)} · ${c.linhas} registos · ${Math.max(1,Math.round(c.bytes/1024))} KB</small></div>
+    <div class="row" style="gap:6px"><button type="button" class="btn sm" data-act="copia-baixar" data-id="${c.id}">Descarregar</button><button type="button" class="btn sm" data-act="copia-repor" data-id="${c.id}">Repor</button></div></div>`).join(""):'<div class="empty">Ainda sem cópias.</div>'}
+async function copiaAcao(a,b){
+  if(a==="copia-fazer"){b.disabled=true;b.textContent="A copiar…";const{error}=await sb.rpc("copias_fazer");b.disabled=false;b.textContent="Fazer cópia agora";if(error){toast("Não foi possível: "+error.message);return}toast("Cópia feita no servidor");return carregarCopias()}
+  if(a==="copia-baixar"){b.disabled=true;const{data,error}=await sb.rpc("copias_obter",{cid:Number(b.dataset.id)});b.disabled=false;if(error||!data){toast("Não foi possível descarregar.");return}
+    return salvarFicheiro("copia-servidor-heel-service-"+String(data.criado_em).slice(0,10)+"-"+data.id+".json",JSON.stringify(data,null,1))}
+  if(a==="copia-repor"){if(!confirmar(b,"Confirmar: repor"))return;b.disabled=true;b.textContent="A repor…";const{data,error}=await sb.rpc("copias_repor",{cid:Number(b.dataset.id)});
+    if(error){b.disabled=false;b.textContent="Repor";toast("Não foi possível repor: "+error.message);return}
+    toast(data+" registos repostos. A atualizar…");try{await db.carregar()}catch(e){console.error(e)}carregarCopias()}
 }
 
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
@@ -3873,7 +3988,7 @@ async function fnMensagens(corpo){
   let j={};try{j=await r.json()}catch(_){}
   if(!r.ok)throw new Error(j.erro||"O servidor respondeu com erro ("+r.status+").");return j;
 }
-async function srvEstado(){if(S.modo!=="supa")return;try{S.srv=await fnMensagens({acao:"estado"})}catch(e){console.error(e);S.srv={configurado:false,erro:e.message}}reAuto()}
+async function srvEstado(){if(S.modo!=="supa")return;try{S.srv=await fnMensagens({acao:"estado"})}catch(e){console.error(e);S.srv={configurado:false,erro:e.message}}reAuto();if(!S.biz&&!document.body.classList.contains("locked"))refresh()}
 /* password-recovery link from the e-mail lands back here with type=recovery in the address */
 const urlRecuperacao=()=>location.origin+location.pathname;
 let emRecuperacao=/type=recovery/.test(location.hash);
@@ -4235,6 +4350,7 @@ function refLauncher(){
   const h=new Date().getHours(),saud=h<12?"Bom dia":h<19?"Boa tarde":"Boa noite",nm=(admin?.nome||String(admin?.usuario||"").split("@")[0]).split(" ")[0],quem=nm?nm.charAt(0).toUpperCase()+nm.slice(1):"";
   $("#view").innerHTML=banner()+`
   <section class="hero"><div class="top"><div><p class="eyebrow">${cap1(new Date().toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</p><h1>${saud}${quem?", "+esc(quem):""}.</h1><p class="sub">Escolha o negócio que quer gerir.</p></div></div></section>
+  ${faltasHTML()}
   <section class="bizsec"><div class="biz-grid">${NEG.map(n=>`<button class="biz biz-${n.k}" data-biz="${n.k}"><span class="ill">${ILL[n.k]}</span><span class="bt"><b>${n.nome}</b><span class="tl">${n.tl}</span></span><span class="feat">${n.f.map(x=>`<span>${x}</span>`).join("")}</span><span class="go">Abrir</span></button>`).join("")}</div></section>
   ${pfLauncherHTML()}
   <section class="ovsec" id="ov">${ovHTML()}</section>`;
@@ -4265,9 +4381,9 @@ function refresh(){
   const locked=document.body.classList.contains("locked");
   $("#bizName").textContent=S.biz?MOD[S.biz].nome:"Heel Service";
   if(!S.ready)$("#liveTxt").textContent="a carregar…";
-  else if(S.biz==="micro"){const m=MICRO.stats();$("#liveTxt").textContent=m.ativos+" empréstimos ativos"+(m.nAtraso?" · "+m.nAtraso+" em atraso":"")}
-  else if(S.biz==="iptv"){$("#liveTxt").textContent=IPTV.stats().ativos+" contas ativas"}
-  else if(S.biz==="pessoal"){const n=pfPorClassificar().length;$("#liveTxt").textContent=n?n+" movimentos por classificar":"Gestão pessoal"}
+  else if(S.biz==="micro"){const m=MICRO.stats();$("#liveTxt").textContent=m.ativos+(m.ativos===1?" empréstimo ativo":" empréstimos ativos")+(m.nAtraso?" · "+m.nAtraso+" em atraso":"")}
+  else if(S.biz==="iptv"){const n=IPTV.stats().ativos;$("#liveTxt").textContent=n+(n===1?" conta ativa":" contas ativas")}
+  else if(S.biz==="pessoal"){const n=pfPorClassificar().length;$("#liveTxt").textContent=n?n+(n===1?" movimento por classificar":" movimentos por classificar"):"Gestão pessoal"}
   else $("#liveTxt").textContent=S.cfg.nome||"Heel Service";
   nfBadge();
   if(locked)return;
@@ -4416,6 +4532,9 @@ document.addEventListener("click",async e=>{
     case"fechar":e.preventDefault();fechar();break;
     case"tema":trocarTema();break;
     case"relatorio":abrirRelatorio(b.dataset.neg);break;
+    case"falta-ir":faltaIr(+b.dataset.i);break;
+    case"falta-ignorar":{const x=(S._faltas||[])[+b.dataset.i];if(x){faltaIgnorar(x.k);refresh();toast("Não volta a aparecer")}break}
+    case"copia-fazer":case"copia-baixar":case"copia-repor":await copiaAcao(a,b);break;
     case"pf-novo":case"pf-editar":case"pf-csv":case"pf-cart-nova":case"pf-cart-editar":case"pf-acertar":case"pf-olho":case"pf-auto":case"pf-cat-del":case"pf-regra-del":await pfAcao(a,b);break;
     case"auto-teste":case"auto-desligar":case"auto-agora":case"wa-teste":case"wa-desligar":autoAcao(a,b);break;
     case"ctr-novo":case"ctr-abrir":case"ctr-pdf":case"ctr-filtro":case"ctr-estado":case"ctr-apagar":ctrAcao(a,b.dataset.k,id,b);break;
