@@ -1016,6 +1016,25 @@ label.f[hidden],div.f[hidden],.f[hidden]{display:none!important}
 .ped-tab div{display:flex;justify-content:space-between;gap:16px;padding:9px 12px;font-size:14px}.ped-tab div:nth-child(even){background:var(--sunk)}
 .ped-tab b{font-variant-numeric:tabular-nums;text-align:right}
 .ped-tab div:last-child{font-weight:600}
+
+/* utilizadores e segurança */
+.seg-on{color:var(--ok);font-style:normal;font-weight:600}
+.seg-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#0ca30c;margin-right:7px;vertical-align:1px;box-shadow:0 0 0 0 rgba(12,163,12,.5);animation:segPulse 2s infinite}
+@keyframes segPulse{0%{box-shadow:0 0 0 0 rgba(12,163,12,.45)}70%{box-shadow:0 0 0 7px rgba(12,163,12,0)}100%{box-shadow:0 0 0 0 rgba(12,163,12,0)}}
+@media (prefers-reduced-motion:reduce){.seg-dot{animation:none}}
+.seg-pessoa{display:flex;gap:14px;align-items:center;padding:16px;border-bottom:1px solid var(--line)}
+.seg-pessoa>div{display:grid;gap:3px;min-width:0}.seg-pessoa small{color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap;overflow-wrap:anywhere}
+.seg-av{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:700 20px var(--f-display);background:var(--accent-soft);color:var(--accent)}
+.seg-av.cliente{background:var(--sunk);color:var(--muted)}
+.seg-alvo{font-weight:500;color:var(--muted)}
+.seg-disp{display:flex;align-items:center;gap:7px}.seg-disp svg{flex:none;color:var(--muted)}
+.seg-pw{font-family:var(--f-mono);letter-spacing:2px;color:var(--muted)}
+.seg-aviso{margin-bottom:16px}
+.seg-cred{display:grid;gap:10px;margin-top:14px;background:var(--sunk);border-radius:var(--r);padding:14px 16px}
+.seg-cred div{display:grid;gap:2px}.seg-cred em{font-style:normal;font-size:12px;color:var(--muted)}.seg-cred b{font-size:17px;overflow-wrap:anywhere}
+label.ck{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px;cursor:pointer}label.ck input{margin-top:3px;width:auto}
+#btnSom[aria-pressed="false"]{opacity:.65}
+.toolbar select{width:auto;max-width:220px}
 </style>
 
 <header class="top">
@@ -1024,7 +1043,7 @@ label.f[hidden],div.f[hidden],.f[hidden]{display:none!important}
       <img class="logo" src="logo-branco.png" alt="Heel Service" width="58" height="22">
       <span class="live"><i></i><span id="liveTxt">a carregar…</span></span>
     </div>
-    <div class="row hdr-r"><div class="row" id="hdrActs"><span class="who-hdr" id="hdrUser"></span><button class="btn gl ico-b" data-act="notif" id="btnNotif" aria-label="Notificações" aria-expanded="false" aria-controls="notif"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="nf-badge" id="nfBadge" hidden>0</span></button><button class="btn gl" data-act="negocios" id="btnTrocar"><svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span class="lbl">Negócios</span></button><button class="btn gl" data-act="sair" aria-label="Sair"><svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5.5 2H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h2.5M9 4.5 11.5 7 9 9.5M11.5 7H5.5"/></svg><span class="lbl">Sair</span></button></div><button class="btn gl ico-b" data-act="tema" id="btnTema" aria-label="Mudar tema"><svg class="sun" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg><svg class="moon" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.6 6.6 0 0 0 10.7 10.7z"/></svg></button></div>
+    <div class="row hdr-r"><div class="row" id="hdrActs"><span class="who-hdr" id="hdrUser"></span><button class="btn gl ico-b" data-seg="som" data-som-btn id="btnSom" aria-label="Som dos alertas"></button><button class="btn gl ico-b" data-act="notif" id="btnNotif" aria-label="Notificações" aria-expanded="false" aria-controls="notif"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="nf-badge" id="nfBadge" hidden>0</span></button><button class="btn gl" data-act="negocios" id="btnTrocar"><svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span class="lbl">Negócios</span></button><button class="btn gl" data-act="sair" aria-label="Sair"><svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5.5 2H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h2.5M9 4.5 11.5 7 9 9.5M11.5 7H5.5"/></svg><span class="lbl">Sair</span></button></div><button class="btn gl ico-b" data-act="tema" id="btnTema" aria-label="Mudar tema"><svg class="sun" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg><svg class="moon" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.6 6.6 0 0 0 10.7 10.7z"/></svg></button></div>
   </div>
 </header>
 <div class="subnav">
@@ -1371,6 +1390,75 @@ function modalEmail(o){
     }catch(e){console.error(e);st.textContent=erroGmail(e);st.style.color="var(--bad)";bs.disabled=false;bs.textContent="Tentar de novo"}
   };
 }
+
+/* ================= alertas de som, registo de atividade e presença (sistema e página dos clientes) ================= */
+const SOM_K="hs_som";
+const somLigado=()=>{try{return localStorage.getItem(SOM_K)!=="0"}catch(_){return true}};
+let somCtx=null;
+function somAC(){try{if(!somCtx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;somCtx=new A()}if(somCtx.state==="suspended")somCtx.resume().catch(()=>{});return somCtx}catch(_){return null}}
+/* browsers only allow sound after the first tap: open the audio then */
+["pointerdown","keydown","touchstart"].forEach(ev=>addEventListener(ev,()=>somAC(),{once:true,passive:true}));
+const SOM_NOTAS={
+  pedido:[[880,0,.16],[1175,.15,.18],[1568,.31,.34]],   // new client request: rising three-note chime
+  alerta:[[988,0,.16],[740,.19,.28]],                    // something needs attention
+  resposta:[[659,0,.14],[880,.13,.14],[1319,.26,.4]],     // answer arrived (accepted)
+  recusa:[[587,0,.2],[440,.2,.34]],                       // answer arrived (not accepted)
+  info:[[1047,0,.22]],ok:[[784,0,.12],[1047,.11,.22]]};
+let somUlt=0;
+function somTocar(tipo){if(!somLigado())return;if(Date.now()-somUlt<1500)return;somUlt=Date.now();const c=somAC();if(!c)return;const t0=c.currentTime+.02;
+  (SOM_NOTAS[tipo]||SOM_NOTAS.info).forEach(([f,d,dur])=>{const o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();
+    o.type="sine";o2.type="triangle";o.frequency.value=f;o2.frequency.value=f*2;
+    g.gain.setValueAtTime(.0001,t0+d);g.gain.exponentialRampToValueAtTime(.32,t0+d+.012);g.gain.exponentialRampToValueAtTime(.0001,t0+d+dur);
+    const g2=c.createGain();g2.gain.value=.12;o.connect(g);o2.connect(g2).connect(g);g.connect(c.destination);
+    o.start(t0+d);o2.start(t0+d);o.stop(t0+d+dur+.05);o2.stop(t0+d+dur+.05)});
+  try{navigator.vibrate&&navigator.vibrate(tipo==="pedido"?[140,70,140]:90)}catch(_){}}
+/* sound + (when the page is in the background and allowed) a system notification */
+function alertar(tipo,titulo,corpo){somTocar(tipo);
+  try{if(!document.hidden||!("Notification" in window)||Notification.permission!=="granted")return;
+    const op={body:corpo||"",icon:"icon-192.png",badge:"icon-192.png",tag:"hs-"+tipo+"-"+Date.now(),vibrate:[120,60,120]};
+    if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.ready.then(r=>r.showNotification(titulo,op)).catch(()=>{try{new Notification(titulo,op)}catch(_){}});
+    else new Notification(titulo,op)}catch(_){}}
+const SOM_IC_ON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const SOM_IC_OFF='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
+function somPintar(){document.querySelectorAll("[data-som-btn]").forEach(b=>{const on=somLigado();b.innerHTML=on?SOM_IC_ON:SOM_IC_OFF;b.setAttribute("aria-pressed",String(on));b.setAttribute("aria-label",on?"Som dos alertas ligado (tocar para desligar)":"Som dos alertas desligado (tocar para ligar)");b.title=on?"Som ligado":"Som desligado"})}
+function somAlternar(){const v=!somLigado();try{localStorage.setItem(SOM_K,v?"1":"0")}catch(_){}somPintar();if(v){somTocar("ok");pedirNotifSistema()}return v}
+/* asks once for permission to show alerts when the page is in the background */
+function pedirNotifSistema(){try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission().catch(()=>{})}catch(_){}}
+
+/* ---- device description from the browser's user-agent ---- */
+function dispositivoInfo(ua){ua=String(ua||"");
+  const so=/iPhone/.test(ua)?"iPhone":/iPad/.test(ua)?"iPad":/Android/.test(ua)?"Android":/Windows/.test(ua)?"Windows":/Mac OS X|Macintosh/.test(ua)?"Mac":/CrOS/.test(ua)?"Chromebook":/Linux/.test(ua)?"Linux":"";
+  const nav=/SamsungBrowser/.test(ua)?"Samsung Internet":/Edg\//.test(ua)?"Edge":/OPR\/|Opera/.test(ua)?"Opera":/FxiOS|Firefox/.test(ua)?"Firefox":/CriOS|Chrome/.test(ua)?"Chrome":/Safari/.test(ua)?"Safari":/supabase|node|Deno|curl/i.test(ua)?"Servidor":"";
+  const movel=/iPhone|Android.*Mobile|Mobile/.test(ua)&&!/iPad|Tablet/.test(ua),tablet=/iPad|Tablet|Android(?!.*Mobile)/.test(ua);
+  return{so,nav,tipo:movel?"telemovel":tablet?"tablet":so?"computador":"outro",txt:[so,nav].filter(Boolean).join(" · ")||"Dispositivo desconhecido"}}
+const appInstalada=()=>{try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(_){return false}};
+const DISP_AQUI=()=>dispositivoInfo(navigator.userAgent).txt+(appInstalada()?" · app instalada":"");
+
+/* ---- activity log: queued and sent in small batches ---- */
+function atvCriar(cliente){const q=[];let t=null;
+  async function enviar(){clearTimeout(t);t=null;if(!q.length)return;const lote=q.splice(0);
+    try{const{data}=await cliente.auth.getSession();const uid=data.session?.user?.id;if(!uid)return;lote.forEach(x=>x.user_id=uid);
+      const{error}=await cliente.from("atividade").insert(lote);if(error)console.warn("atividade",error.message)}catch(e){console.warn(e)}}
+  const f=(acao,alvo,detalhe,ja)=>{const ult=q[q.length-1];
+    if(ult&&ult.acao===acao&&ult.alvo===(alvo||null))ult.detalhe=detalhe||ult.detalhe;
+    else q.push({acao,alvo:alvo||null,detalhe:detalhe?String(detalhe).slice(0,300):null,dispositivo:DISP_AQUI()});
+    if(ja)return enviar();clearTimeout(t);t=setTimeout(enviar,2500)};
+  f.enviar=enviar;addEventListener("pagehide",enviar);return f}
+
+/* ---- who is online right now (Supabase presence; only ids and device, no names or e-mails) ---- */
+let presCanal=null;
+function presencaEntrar(cliente,uid,tipo,aoMudar){if(presCanal||!cliente||!uid)return;
+  presCanal=cliente.channel("hs-presenca",{config:{presence:{key:uid+"~"+Math.random().toString(36).slice(2,8)}}});
+  presCanal.on("presence",{event:"sync"},()=>{if(aoMudar)aoMudar(presCanal.presenceState())});
+  presCanal.subscribe(st=>{if(st==="SUBSCRIBED")presCanal.track({uid,tipo,disp:DISP_AQUI(),desde:new Date().toISOString()})})}
+function presencaSair(cliente){if(!presCanal)return;try{presCanal.untrack();cliente.removeChannel(presCanal)}catch(_){}presCanal=null}
+
+/* ---- if the administrator ends this session, leave straight away ---- */
+function vigiarSessao(cliente,uid,sair){
+  const ver=async()=>{try{const{error}=await cliente.auth.getUser();if(error&&/session|not.?found|jwt|expired|invalid/i.test(error.message||"")&&!/fetch|network/i.test(error.message||""))sair()}catch(_){}};
+  const ch=cliente.channel("rev-"+uid).on("postgres_changes",{event:"*",schema:"public",table:"seg_revogar",filter:"user_id=eq."+uid},()=>setTimeout(ver,400)).subscribe();
+  const vis=()=>{if(!document.hidden)ver()};document.addEventListener("visibilitychange",vis);
+  return()=>{try{cliente.removeChannel(ch)}catch(_){}document.removeEventListener("visibilitychange",vis)}}
 
 /* ===== Avisos automáticos: lógica partilhada pelo site e pelo servidor (sem DOM) ===== */
 const AVISOS=(()=>{
@@ -4010,8 +4098,9 @@ async function carregarPedidos(){if(!pedOn())return;
   const{data,error}=await sb.from("pedidos").select("*").order("criado_em",{ascending:false}).limit(500);
   if(error){console.error(error);return}S.pedidos=data||[];refresh();
   if(!pedCanal)pedCanal=sb.channel("pedidos-admin").on("postgres_changes",{event:"*",schema:"public",table:"pedidos"},pl=>{const n=pl.new;if(!n||!n.id)return;
-    const i=S.pedidos.findIndex(x=>x.id===n.id);if(i>=0)S.pedidos[i]=n;else S.pedidos.unshift(n);
-    if(pl.eventType==="INSERT"){toast("Novo pedido online: "+n.numero+" · "+(n.cliente?.nome||""));}refresh()}).subscribe()}
+    const i=S.pedidos.findIndex(x=>x.id===n.id),ant=i>=0?S.pedidos[i].estado:null;if(i>=0)S.pedidos[i]=n;else S.pedidos.unshift(n);
+    if(pl.eventType==="INSERT"&&i<0){toast("Novo pedido online: "+n.numero+" · "+(n.cliente?.nome||""));alertar("pedido","Novo pedido online "+n.numero,(n.cliente?.nome||"")+" · "+PED_TIPO[n.tipo]+" · "+mt(n.total))}
+    else if(pl.eventType==="UPDATE"&&n.estado==="cancelado"&&ant&&ant!=="cancelado"){alertar("alerta","Pedido cancelado",n.numero+" foi cancelado pelo cliente")}refresh()}).subscribe()}
 function pararPedidos(){if(pedCanal&&sb){try{sb.removeChannel(pedCanal)}catch(_){}}pedCanal=null;S.pedidos=[]}
 const pedPend=()=>S.pedidos.filter(p=>p.estado==="pendente");
 const pedEmp=t=>t==="serv"?S.vcfg:t==="iptv"?S.cfg:S.mcfg;
@@ -4127,6 +4216,199 @@ function abrirPartilha(){const L=LINK_CLIENTES();
   $("#shM").addEventListener("input",upd);upd();$("#shCopy").onclick=()=>copiar($("#shM").value);
   $("#shSt").remove();
   pfQR($("#shQR"),L)}
+
+/* ================= utilizadores e segurança (só administrador, site próprio) ================= */
+Object.assign(S,{seg:{ok:false,contas:[],sessoes:[],atv:[],online:{},quem:"",tipoAtv:"todos",tipoContas:"membro",q:"",fimAtv:false}});
+let atvReg=()=>{},segCanal=null,segVigia=null;
+const segOn=()=>S.modo==="supa"&&!!sb&&admin?.papel==="admin";
+const ATV_COL={clientes:"cliente IPTV",documentos:"documento IPTV",sv_clientes:"cliente de Serviços",sv_documentos:"documento de Serviços",sv_servicos:"serviço do catálogo",sv_contratos:"contrato de Serviços",
+  mc_mutuarios:"mutuário",mc_emprestimos:"empréstimo",mc_contratos:"contrato de Microcrédito",pf_carteiras:"carteira pessoal",pf_movimentos:"movimento pessoal",pf_sms:"SMS da carteira",config:"definições",envios:"mensagem enviada",seguranca:"segurança"};
+/* a readable name for a saved record, never amounts or personal-finance details */
+function atvRotulo(c,id,v){if(String(c).startsWith("pf_"))return ATV_COL[c]||c;v=v||{};
+  const n=v.numero||v.nome||v.cliente?.nome||v.mutuario?.nome||v.titulo||v.descricao||"";return(ATV_COL[c]||c)+(n?" · "+String(n).slice(0,60):c==="config"?" · "+id:"")}
+function segAgo(t){if(!t)return"nunca";const s=(Date.now()-new Date(t))/1e3;if(s<45)return"agora mesmo";if(s<3600)return"há "+Math.round(s/60)+" min";if(s<86400)return"há "+Math.round(s/3600)+" h";
+  const d=Math.round(s/86400);return d===1?"ontem":d<30?"há "+d+" dias":pfDataHora(t)}
+const segNome=c=>c?(c.nome||String(c.email||"").split("@")[0]):"—";
+const segConta=uid=>S.seg.contas.find(c=>c.user_id===uid);
+function segOnlineUids(){const o={};Object.values(S.seg.online||{}).forEach(arr=>(arr||[]).forEach(p=>{if(!p.uid)return;(o[p.uid]=o[p.uid]||[]).push(p)}));return o}
+const DISP_IC={telemovel:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg>',
+  tablet:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.2"/><path d="M11 18h2"/></svg>',
+  computador:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg>',
+  outro:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>'};
+
+/* called after login by supa.js: log, presence, watch for a forced sign-out, load data for admins */
+async function segIniciar(novoLogin){if(S.modo!=="supa"||!sb)return;
+  atvReg=atvCriar(sb);
+  const{data}=await sb.auth.getSession();const uid=data.session?.user?.id;if(!uid)return;
+  try{if(novoLogin||!sessionStorage.getItem("hs_atv_ab")){atvReg(novoLogin?"iniciou sessão":"abriu o sistema","",DISP_AQUI(),true);sessionStorage.setItem("hs_atv_ab","1")}}catch(_){}
+  presencaEntrar(sb,uid,"membro",st=>{S.seg.online=st;if(segOn()&&(!S.biz||S.biz==="seguranca"))segPintar()});
+  if(segVigia)segVigia();segVigia=vigiarSessao(sb,uid,()=>{toast("A sua sessão foi terminada pelo administrador.");supaSair("A sua sessão foi terminada pelo administrador. Entre de novo.")});
+  if(segOn())carregarSeg()}
+function segParar(){try{atvReg.enviar&&atvReg.enviar()}catch(_){}presencaSair(sb);if(segVigia){segVigia();segVigia=null}
+  if(segCanal&&sb){try{sb.removeChannel(segCanal)}catch(_){}}segCanal=null;atvReg=()=>{};S.seg.ok=false;S.seg.contas=[];S.seg.sessoes=[];S.seg.atv=[];S.seg.online={}}
+async function carregarSeg(){if(!segOn())return;
+  const[a,b,c]=await Promise.all([sb.rpc("seg_contas"),sb.rpc("seg_sessoes"),sb.from("atividade").select("*").order("criado_em",{ascending:false}).limit(300)]);
+  if(a.error||b.error||c.error){console.error(a.error||b.error||c.error);return}
+  S.seg.contas=a.data||[];S.seg.sessoes=b.data||[];S.seg.atv=c.data||[];S.seg.fimAtv=(c.data||[]).length<300;S.seg.ok=true;
+  if(!segCanal)segCanal=sb.channel("atividade-admin").on("postgres_changes",{event:"INSERT",schema:"public",table:"atividade"},pl=>{const n=pl.new;if(!n||!n.id||S.seg.atv.some(x=>x.id===n.id))return;
+      S.seg.atv.unshift(n);if(S.seg.atv.length>1000)S.seg.atv.pop();
+      if(n.tipo==="cliente"&&n.acao==="criou a conta"){alertar("info","Novo cliente registado",(n.nome||n.email||"")+" criou conta na página dos clientes");toast("Novo cliente registado: "+(n.nome||n.email))}
+      if(/iniciou sessão|criou a conta/.test(n.acao))segAtualizarListas();else segPintar()}).subscribe();
+  segPintar()}
+let segAtT=null;function segAtualizarListas(){clearTimeout(segAtT);segAtT=setTimeout(async()=>{const[a,b]=await Promise.all([sb.rpc("seg_contas"),sb.rpc("seg_sessoes")]);if(!a.error)S.seg.contas=a.data||[];if(!b.error)S.seg.sessoes=b.data||[];segPintar()},1500)}
+function segPintar(){if(!S.biz){const el=$("#segStrip");if(el)el.outerHTML=segLauncherHTML();return}if(S.biz==="seguranca"&&!dlg.open&&document.activeElement?.id!=="segQ")refresh()}
+
+/* strip on the start screen */
+function segLauncherHTML(){if(!segOn())return"";const on=Object.keys(segOnlineUids()).length,ult=S.seg.contas.find(c=>c.ultimo_login);
+  return`<section class="ped-sec" id="segStrip"><div class="ped-card seg-card"><span class="ped-ic">${SEG_IC}</span>
+    <div class="ped-t"><b>Utilizadores e segurança</b><span>${S.seg.ok?`<em class="seg-on">${on} ${on===1?"pessoa ligada":"pessoas ligadas"} agora</em>${ult?" · último a entrar: "+esc(segNome(ult))+" ("+segAgo(ult.ultimo_login)+")":""}`:"A carregar…"}</span></div>
+    <div class="ped-a"><button type="button" class="btn sm" data-biz="seguranca">Ver dispositivos e atividade</button></div></div></section>`}
+const SEG_IC='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>';
+
+const SEGURANCA={
+  nome:"Utilizadores e segurança",tabs:[["painel","Resumo"],["dispositivos","Dispositivos"],["atividade","Atividade"],["contas","Contas e senhas"]],
+  novo:["Adicionar pessoa",()=>segNovaConta("membro")],
+  build(t){const v=$("#view");
+    if(!segOn()){v.innerHTML=`<section class="panel" style="padding:24px"><h2>Utilizadores e segurança</h2><p class="sub">${S.modo==="supa"?"Só um administrador pode ver os dispositivos, a atividade e as contas.":"Esta área funciona no site da Heel Service, com login por e-mail."}</p></section>`;return}
+    const tit={painel:["Utilizadores e segurança","Quem está ligado, quem entrou por último e o que cada pessoa fez."],dispositivos:["Dispositivos ligados","Cada sessão aberta num telemóvel, tablet ou computador. Pode terminar qualquer uma."],atividade:["Atividade","Tudo o que a equipa e os clientes fizeram, do mais recente para o mais antigo."],contas:["Contas e senhas","Crie, edite e remova contas da equipa e dos clientes, e defina senhas novas."]}[t];
+    v.innerHTML=`<div class="row spread"><div><h1>${tit[0]}</h1><p class="sub">${tit[1]}</p></div><div class="row"><button class="btn" data-seg="atualizar">Atualizar</button>${t==="contas"?`<button class="btn" data-seg="nova-cliente">+ Cliente</button><button class="btn pri" data-seg="nova-membro">+ Pessoa da equipa</button>`:""}</div></div><div id="segV"><div class="panel empty" style="padding:28px">A carregar…</div></div>`;
+    if(!S.seg.ok)carregarSeg()},
+  ref(){refSeg()}
+};
+function refSeg(){const el=$("#segV");if(!el||!S.seg.ok)return;const t=S.tab;
+  el.innerHTML=t==="painel"?segPainelHTML():t==="dispositivos"?segDispHTML():t==="atividade"?segAtvHTML():segContasHTML();
+  rotularTabelas();const q=$("#segQ");if(q){q.oninput=e=>{S.seg.q=e.target.value;const p=q.selectionStart;refSeg();const n=$("#segQ");n.focus();try{n.setSelectionRange(p,p)}catch(_){}}}
+  const sq=$("#segQuem");if(sq)sq.onchange=e=>{S.seg.quem=e.target.value;refSeg()}}
+
+/* --- summary --- */
+function segPainelHTML(){const on=segOnlineUids(),ss=S.seg.sessoes,hoje=new Date().toDateString();
+  const ult=S.seg.contas.find(c=>c.ultimo_login),ultS=ult?ss.filter(s=>s.user_id===ult.user_id).sort((a,b)=>new Date(b.ativa)-new Date(a.ativa))[0]:null;
+  const atvHoje=S.seg.atv.filter(a=>new Date(a.criado_em).toDateString()===hoje).length,ultA=ult?S.seg.atv.filter(a=>a.user_id===ult.user_id).slice(0,8):[];
+  const onList=Object.entries(on);
+  return`<section class="kpis"><div class="kpi ok"><span>Ligados agora</span><b>${onList.length}</b><em>${onList.reduce((s,[,a])=>s+a.length,0)} ${onList.length===1?"ecrã aberto":"ecrãs abertos"}</em></div>
+    <button class="kpi" data-tab="dispositivos"><span>Sessões abertas</span><b>${ss.length}</b><em>em ${new Set(ss.map(s=>s.user_id)).size} contas</em></button>
+    <button class="kpi" data-tab="contas"><span>Contas</span><b>${S.seg.contas.length}</b><em>${S.seg.contas.filter(c=>c.tipo==="membro").length} da equipa · ${S.seg.contas.filter(c=>c.tipo==="cliente").length} clientes</em></button>
+    <button class="kpi" data-tab="atividade"><span>Ações hoje</span><b>${atvHoje}</b><em>${S.seg.atv[0]?"última "+segAgo(S.seg.atv[0].criado_em):"sem registos"}</em></button></section>
+  <div class="grid2">
+    <section class="panel"><header><div><h2>Última pessoa a entrar</h2><p class="sub">${ult?segAgo(ult.ultimo_login)+" · "+pfDataHora(ult.ultimo_login):"Ainda ninguém entrou"}</p></div>${ult?`<button class="btn sm" data-seg="ver-pessoa" data-uid="${ult.user_id}">Ver tudo desta pessoa</button>`:""}</header>
+      ${ult?`<div class="seg-pessoa"><span class="seg-av ${ult.tipo}">${esc(segNome(ult).charAt(0).toUpperCase())}</span><div><b>${esc(segNome(ult))} ${segTipoPill(ult)}</b><small class="mono">${esc(ult.email)}</small>
+        <small>${ultS?DISP_IC[dispositivoInfo(ultS.user_agent).tipo]+" "+esc(dispositivoInfo(ultS.user_agent).txt)+(ultS.ip?" · IP "+esc(ultS.ip):""):"Sem sessão aberta"}${on[ult.user_id]?' · <em class="seg-on">ligado agora</em>':""}</small></div></div>
+      <div class="list">${ultA.length?ultA.map(segAtvItem).join(""):'<div class="empty">Sem ações registadas.</div>'}</div>`:'<div class="empty">Sem dados.</div>'}</section>
+    <section class="panel"><header><div><h2>Ligados agora</h2><p class="sub">Atualiza sozinho</p></div><button class="btn sm" data-tab="dispositivos">Dispositivos</button></header>
+      <div class="list">${onList.length?onList.map(([uid,arr])=>{const c=segConta(uid);return`<div class="item"><div class="who"><b><i class="seg-dot"></i>${esc(c?segNome(c):"Conta "+uid.slice(0,6))} ${c?segTipoPill(c):""}</b><small>${arr.map(p=>esc(p.disp)).join(" · ")}</small></div><span class="tag">${segAgo(arr.map(p=>p.desde).sort()[0])}</span></div>`}).join(""):'<div class="empty">Ninguém com o site aberto neste momento.</div>'}</div></section>
+  </div>
+  <section class="panel"><header><div><h2>Últimas ações de todos</h2><p class="sub">Equipa e clientes</p></div><button class="btn sm" data-tab="atividade">Ver tudo</button></header><div class="list">${S.seg.atv.slice(0,12).map(a=>segAtvItem(a,true)).join("")||'<div class="empty">Sem ações registadas ainda.</div>'}</div></section>`}
+const segTipoPill=c=>c.tipo==="cliente"?'<span class="pill sem">Cliente</span>':c.papel==="admin"?'<span class="pill doc">Administrador</span>':'<span class="pill ok">Equipa</span>';
+function segAtvItem(a,quem){const d=dispositivoInfo(a.dispositivo||"");return`<div class="item"><div class="who"><b>${quem?esc(a.nome||a.email||"—")+" · ":""}${esc(a.acao)}${a.alvo?` <span class="seg-alvo">${esc(a.alvo)}</span>`:""}</b><small>${pfDataHora(a.criado_em)}${a.dispositivo?" · "+esc(a.dispositivo.length>70?d.txt:a.dispositivo):""}${a.detalhe&&a.detalhe!==a.dispositivo?" · "+esc(a.detalhe):""}</small></div><span class="tag">${segAgo(a.criado_em)}</span></div>`}
+
+/* --- devices (real sessions) --- */
+function segDispHTML(){const on=segOnlineUids(),q=String(S.seg.q||"").toLowerCase();
+  const L=S.seg.sessoes.filter(s=>!q||[s.nome,s.email,s.user_agent,s.ip].join(" ").toLowerCase().includes(q));
+  const pessoas=[...new Set(L.map(s=>s.user_id))];
+  return`<section class="panel"><div class="toolbar"><input class="search" id="segQ" type="search" placeholder="Procurar por pessoa, e-mail, aparelho ou IP" value="${esc(S.seg.q)}"></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Pessoa</th><th>Dispositivo</th><th>Entrou</th><th>Última atividade</th><th>Estado</th><th style="text-align:right">Ações</th></tr></thead><tbody>
+    ${L.length?L.map(s=>{const d=dispositivoInfo(s.user_agent),eu=s.email===admin.usuario,online=!!on[s.user_id];
+      return`<tr><td class="cname"><b>${esc(s.nome||String(s.email).split("@")[0])} ${segTipoPill(s)}</b><small class="mono">${esc(s.email)}</small></td>
+      <td class="cname"><b class="seg-disp">${DISP_IC[d.tipo]}${esc(d.txt)}</b><small>${s.ip?"IP "+esc(s.ip):""}</small></td><td>${pfDataHora(s.criada)}</td><td>${segAgo(s.ativa)}</td>
+      <td>${online?'<span class="pill ok"><i class="seg-dot"></i>Ligado</span>':'<span class="pill sem">Inativo</span>'}</td>
+      <td><div class="acts">${eu?'<span class="tag">você</span>':`<button class="btn sm danger" data-seg="terminar" data-uid="${s.user_id}" data-sid="${s.sid}" data-email="${esc(s.email)}">Terminar sessão</button>`}</div></td></tr>`}).join(""):'<tr><td colspan="6" class="empty">Nenhuma sessão aberta.</td></tr>'}</tbody></table></div>
+    <p class="note" style="padding:0 16px 14px">“Ligado” quer dizer que a pessoa tem o site aberto neste momento. Uma sessão fica aberta até a pessoa sair ou até ser terminada aqui${pessoas.length?"":""}. Ao terminar, a pessoa sai logo e tem de entrar de novo com a senha.</p></section>`}
+
+/* --- activity --- */
+function segAtvHTML(){const q=String(S.seg.q||"").toLowerCase(),t=S.seg.tipoAtv,quem=S.seg.quem;
+  const L=S.seg.atv.filter(a=>(t==="todos"||a.tipo===t)&&(!quem||a.user_id===quem)&&(!q||[a.nome,a.email,a.acao,a.alvo,a.detalhe,a.dispositivo].join(" ").toLowerCase().includes(q)));
+  const pessoas=[...new Map(S.seg.atv.map(a=>[a.user_id,a])).values()];
+  return`<section class="panel"><div class="toolbar"><input class="search" id="segQ" type="search" placeholder="Procurar ação, pessoa ou registo" value="${esc(S.seg.q)}">
+    <select id="segQuem" aria-label="Pessoa"><option value="">Todas as pessoas</option>${pessoas.map(a=>`<option value="${a.user_id}"${a.user_id===quem?" selected":""}>${esc(a.nome||a.email)}</option>`).join("")}</select>
+    <div class="chips">${[["todos","Todos"],["membro","Equipa"],["cliente","Clientes"]].map(([k,l])=>`<button class="chip" data-seg="tatv" data-k="${k}" aria-pressed="${t===k}">${l}</button>`).join("")}</div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Sobre</th><th>Dispositivo</th></tr></thead><tbody>
+    ${L.length?L.slice(0,400).map(a=>`<tr><td class="cname"><b>${segAgo(a.criado_em)}</b><small>${pfDataHora(a.criado_em)}</small></td><td class="cname"><b>${esc(a.nome||"—")}</b><small class="mono">${esc(a.email||"")}</small></td><td>${esc(a.acao)}</td><td>${esc(a.alvo||"")}${a.detalhe&&a.detalhe!==a.dispositivo?`<small style="display:block;color:var(--muted)">${esc(a.detalhe)}</small>`:""}</td><td><small>${esc(a.dispositivo||"")}</small></td></tr>`).join(""):'<tr><td colspan="5" class="empty">Sem ações com estes filtros.</td></tr>'}</tbody></table></div>
+    ${S.seg.fimAtv?"":`<div class="row" style="justify-content:center;padding:12px"><button class="btn" data-seg="mais-atv">Carregar ações mais antigas</button></div>`}</section>`}
+
+/* --- accounts and passwords (CRUD) --- */
+function segContasHTML(){const t=S.seg.tipoContas,q=String(S.seg.q||"").toLowerCase(),on=segOnlineUids();
+  const L=S.seg.contas.filter(c=>c.tipo===t&&(!q||[c.nome,c.email,c.telefone].join(" ").toLowerCase().includes(q)));
+  return`<div class="calc seg-aviso"><b>Sobre as senhas</b><p style="margin:6px 0 0">Por segurança, nenhuma senha fica guardada de forma legível, nem para o administrador: o servidor guarda só uma “impressão digital” da senha. Por isso não é possível ver a senha atual de ninguém. Pode sempre <b>definir uma senha nova</b>; ela aparece uma única vez para a copiar ou enviar à pessoa.</p></div>
+  <section class="panel"><div class="toolbar"><input class="search" id="segQ" type="search" placeholder="Procurar por nome, e-mail ou telefone" value="${esc(S.seg.q)}">
+    <div class="chips">${[["membro","Equipa"],["cliente","Clientes"]].map(([k,l])=>`<button class="chip" data-seg="tcont" data-k="${k}" aria-pressed="${t===k}">${l} (${S.seg.contas.filter(c=>c.tipo===k).length})</button>`).join("")}</div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>E-mail (login)</th><th>Senha</th><th>${t==="membro"?"Papel":"Telefone"}</th><th>Último login</th><th>Sessões</th><th style="text-align:right">Ações</th></tr></thead><tbody>
+    ${L.length?L.map(c=>{const eu=c.email===admin.usuario;return`<tr><td class="cname"><b>${on[c.user_id]?'<i class="seg-dot"></i>':""}${esc(c.nome||"—")}</b><small>criada ${fmtD(String(c.criado).slice(0,10))}</small></td>
+      <td class="mono">${esc(c.email)}</td><td><span class="seg-pw" title="A senha não pode ser vista">••••••••</span></td><td>${t==="membro"?segTipoPill(c):esc(c.telefone||"—")}</td>
+      <td class="cname"><b>${segAgo(c.ultimo_login)}</b><small>${c.ultimo_login?pfDataHora(c.ultimo_login):""}</small></td><td class="num">${c.sessoes||0}</td>
+      <td><div class="acts"><button class="btn sm" data-seg="editar" data-uid="${c.user_id}">Editar</button><button class="btn sm" data-seg="senha" data-uid="${c.user_id}">Nova senha</button>${eu?'<span class="tag">você</span>':`${c.sessoes?`<button class="btn sm" data-seg="terminar-todas" data-uid="${c.user_id}" data-email="${esc(c.email)}">Terminar sessões</button>`:""}<button class="btn sm danger" data-seg="remover" data-uid="${c.user_id}">Remover</button>`}</div></td></tr>`}).join(""):`<tr><td colspan="7" class="empty">${t==="membro"?"Sem pessoas da equipa.":"Ainda não há clientes com conta."}</td></tr>`}</tbody></table></div></section>`}
+
+const segSenhaSug=()=>gerar(4,"abcdefghjkmnpqrstuvwxyz")+gerar(4,"23456789")+gerar(2,"ABCDEFGHJKLMNPQRSTUVWXYZ");
+const segMsgCred=(nome,email,senha,tipo)=>`Olá ${String(nome||"").split(" ")[0]}, a sua conta na Heel Service está pronta.\nEndereço: ${tipo==="cliente"?PORTAL_URL():PORTAL_URL()+"admin.html"}\nE-mail: ${email}\nSenha: ${senha}\nPor segurança, mude a senha depois de entrar.`;
+/* shown once after a password is set */
+function segMostrarSenha(nome,email,senha,tipo,tel,titulo){
+  abrir(hdr(titulo||"Senha definida",esc(email))+`<div class="body"><p class="sub" style="margin:0">Copie ou envie agora. Depois de fechar esta janela a senha deixa de poder ser vista.</p>
+    <div class="seg-cred"><div><em>E-mail</em><b class="mono">${esc(email)}</b></div><div><em>Senha</em><b class="mono">${esc(senha)}</b></div></div></div>
+    <footer><button type="button" class="btn" data-seg="copiar-cred" style="margin-right:auto">Copiar</button>${tel?`<a class="btn" target="_blank" rel="noopener" href="https://wa.me/${waNum(tel)}?text=${encodeURIComponent(segMsgCred(nome,email,senha,tipo))}">Enviar pelo WhatsApp</a>`:""}<button type="button" class="btn pri" data-act="fechar">Feito</button></footer>`);
+  dlg._cred=segMsgCred(nome,email,senha,tipo)}
+function segNovaConta(tipo){const sug=segSenhaSug(),cli=tipo==="cliente";
+  abrir(hdr(cli?"Adicionar cliente":"Adicionar pessoa da equipa",cli?"O cliente entra na página dos clientes com este e-mail e senha.":"A pessoa entra no sistema com este e-mail e senha.")+`<div class="body"><div class="fgrid">
+    <label class="f">Nome<input id="sgN" maxlength="80" required></label><label class="f">E-mail<input id="sgE" type="email" autocapitalize="none" inputmode="email" required></label>
+    ${cli?`<label class="f">Telefone / WhatsApp<input id="sgT" type="tel" inputmode="tel" placeholder="84 123 4567"></label>`:`<label class="f">Papel<select id="sgR"><option value="membro">Equipa: usa o sistema</option><option value="admin">Administrador: também gere contas e segurança</option></select></label>`}
+    <label class="f">Senha inicial<span class="withbtn"><input id="sgP" class="mono" value="${sug}" autocomplete="off"><button type="button" class="btn sm" data-seg="gerar">Outra</button></span><small>8 ou mais caracteres, com letras e números.</small></label></div>
+    <p class="err" id="sgErr" hidden style="color:var(--bad)"></p></div>
+    <footer><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn pri">Criar conta</button></footer>`);
+  $("#dform").onsubmit=async e=>{e.preventDefault();const er=$("#sgErr"),bt=dlg.querySelector("[type=submit]");er.hidden=true;
+    const email=$("#sgE").value.trim().toLowerCase(),senha=$("#sgP").value,nome=$("#sgN").value.trim(),tel=cli?$("#sgT").value.trim():"";
+    const falha=m=>{er.textContent=m;er.hidden=false};if(!nome)return falha("Indique o nome.");if(!emailOk(email))return falha("Indique um e-mail válido.");const v=validarSenha(senha,senha);if(v)return falha(v);
+    bt.disabled=true;bt.textContent="A criar…";
+    try{await fnUtilizadores({acao:cli?"criar_cliente":"criar",email,senha,nome,telefone:tel,papel:cli?undefined:$("#sgR").value,dispositivo:DISP_AQUI()});
+      segMostrarSenha(nome,email,senha,tipo,tel,"Conta criada");toast("Conta criada para "+email);S.seg.tipoContas=tipo;carregarSeg()}
+    catch(err){bt.disabled=false;bt.textContent="Criar conta";falha(err.message)}}}
+function segEditar(uid){const c=segConta(uid);if(!c)return;const cli=c.tipo==="cliente",eu=c.email===admin.usuario;
+  abrir(hdr("Editar conta",esc(c.email))+`<div class="body"><div class="fgrid">
+    <label class="f">Nome<input id="sgN" maxlength="80" value="${esc(c.nome||"")}"></label>
+    <label class="f">E-mail (login)<input id="sgE" type="email" autocapitalize="none" inputmode="email" value="${esc(c.email)}"${eu?" disabled":""}>${eu?"<small>Para mudar o seu próprio e-mail, peça a outro administrador.</small>":"<small>Se mudar, a pessoa passa a entrar com o e-mail novo.</small>"}</label>
+    ${cli?`<label class="f">Telefone / WhatsApp<input id="sgT" type="tel" inputmode="tel" value="${esc(c.telefone||"")}"></label>`:`<label class="f">Papel<select id="sgR"${eu?" disabled":""}><option value="membro"${c.papel!=="admin"?" selected":""}>Equipa</option><option value="admin"${c.papel==="admin"?" selected":""}>Administrador</option></select></label>`}
+    <div class="f"><span>Senha</span><span class="withbtn"><input class="mono" value="••••••••" disabled aria-label="Senha protegida"><button type="button" class="btn sm" data-seg="senha" data-uid="${uid}">Definir nova</button></span><small>A senha atual não pode ser vista.</small></div></div>
+    <p class="err" id="sgErr" hidden style="color:var(--bad)"></p></div>
+    <footer><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn pri">Guardar</button></footer>`);
+  $("#dform").onsubmit=async e=>{e.preventDefault();const er=$("#sgErr"),bt=dlg.querySelector("[type=submit]");er.hidden=true;const novo=$("#sgE").value.trim().toLowerCase();
+    if(!emailOk(novo)){er.textContent="Indique um e-mail válido.";er.hidden=false;return}bt.disabled=true;bt.textContent="A guardar…";
+    try{await fnUtilizadores({acao:"editar",email:c.email,novo_email:novo,nome:$("#sgN").value.trim(),telefone:cli?$("#sgT").value.trim():undefined,papel:cli?undefined:$("#sgR").value,dispositivo:DISP_AQUI()});
+      fechar();toast("Conta atualizada");carregarSeg();if(!cli&&typeof carregarUsers==="function")carregarUsers()}catch(err){bt.disabled=false;bt.textContent="Guardar";er.textContent=err.message;er.hidden=false}}}
+function segSenha(uid){const c=segConta(uid);if(!c)return;const eu=c.email===admin.usuario,sug=segSenhaSug();
+  abrir(hdr("Nova senha",esc(segNome(c))+" · "+esc(c.email))+`<div class="body"><label class="f">Nova senha<span class="withbtn"><input id="sgP" class="mono" value="${sug}" autocomplete="off"><button type="button" class="btn sm" data-seg="gerar">Outra</button></span><small>8 ou mais caracteres, com letras e números. A senha antiga deixa de funcionar.</small></label>
+    ${eu?"":`<label class="ck"><input type="checkbox" id="sgTerm" checked> Terminar as sessões abertas desta pessoa (sai de todos os aparelhos)</label>`}
+    <p class="err" id="sgErr" hidden style="color:var(--bad)"></p></div>
+    <footer><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn pri">Definir senha</button></footer>`);
+  $("#dform").onsubmit=async e=>{e.preventDefault();const er=$("#sgErr"),bt=dlg.querySelector("[type=submit]"),senha=$("#sgP").value;const v=validarSenha(senha,senha);if(v){er.textContent=v;er.hidden=false;return}
+    bt.disabled=true;bt.textContent="A definir…";
+    try{await fnUtilizadores({acao:"senha",email:c.email,senha,terminar:!eu&&$("#sgTerm").checked,dispositivo:DISP_AQUI()});segMostrarSenha(c.nome,c.email,senha,c.tipo,c.telefone,"Senha nova definida");carregarSeg()}
+    catch(err){bt.disabled=false;bt.textContent="Definir senha";er.textContent=err.message;er.hidden=false}}}
+function segRemover(uid){const c=segConta(uid);if(!c)return;const cli=c.tipo==="cliente";
+  abrir(hdr("Remover conta",esc(segNome(c))+" · "+esc(c.email))+`<div class="body"><p style="margin:0">${cli?"O cliente deixa de poder entrar na página dos clientes. <b>Os pedidos deste cliente também são apagados.</b> Os clientes e documentos já registados no sistema ficam.":"A pessoa deixa de poder entrar no sistema. Os dados que ela registou ficam."}</p>
+    <label class="f" style="margin-top:12px">Para confirmar, escreva o e-mail<input id="sgC" autocapitalize="none" placeholder="${esc(c.email)}"></label><p class="err" id="sgErr" hidden style="color:var(--bad)"></p></div>
+    <footer><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn danger">Remover conta</button></footer>`);
+  $("#dform").onsubmit=async e=>{e.preventDefault();const er=$("#sgErr"),bt=dlg.querySelector("[type=submit]");if($("#sgC").value.trim().toLowerCase()!==c.email){er.textContent="O e-mail não corresponde.";er.hidden=false;return}
+    bt.disabled=true;bt.textContent="A remover…";
+    try{await fnUtilizadores({acao:"remover",email:c.email,dispositivo:DISP_AQUI()});fechar();toast("Conta removida");carregarSeg();if(cli&&typeof carregarPedidos==="function")carregarPedidos()}
+    catch(err){bt.disabled=false;bt.textContent="Remover conta";er.textContent=err.message;er.hidden=false}}}
+async function segTerminar(b,todas){const nome=b.dataset.email||"";if(!confirmar(b,todas?"Confirmar: sair de todos":"Confirmar terminar"))return;b.disabled=true;
+  try{const r=await fnUtilizadores({acao:"terminar",user_id:b.dataset.uid,sessao:todas?null:b.dataset.sid,email:nome,dispositivo:DISP_AQUI()});
+    toast(todas?"Sessões terminadas ("+(r.terminadas||0)+")":"Sessão terminada");segAtualizarListas();setTimeout(carregarSeg,300)}catch(err){b.disabled=false;toast(err.message)}}
+async function segMaisAtv(b){const ult=S.seg.atv[S.seg.atv.length-1];if(!ult)return;b.disabled=true;
+  const{data,error}=await sb.from("atividade").select("*").lt("criado_em",ult.criado_em).order("criado_em",{ascending:false}).limit(300);
+  if(error){b.disabled=false;return toast("Não foi possível carregar")}S.seg.atv.push(...data);S.seg.fimAtv=data.length<300;refSeg()}
+
+document.addEventListener("click",e=>{const b=e.target.closest("[data-seg]");if(!b)return;const a=b.dataset.seg,uid=b.dataset.uid;
+  if(a!=="tatv"&&a!=="tcont")e.preventDefault();
+  switch(a){
+    case"atualizar":S.seg.ok&&toast("A atualizar…");carregarSeg();break;
+    case"nova-membro":segNovaConta("membro");break;case"nova-cliente":segNovaConta("cliente");break;
+    case"editar":segEditar(uid);break;case"senha":segSenha(uid);break;case"remover":segRemover(uid);break;
+    case"terminar":segTerminar(b,false);break;case"terminar-todas":segTerminar(b,true);break;
+    case"gerar":{const i=$("#sgP");if(i)i.value=segSenhaSug();break}
+    case"copiar-cred":copiar(dlg._cred||"");break;
+    case"tatv":S.seg.tipoAtv=b.dataset.k;refSeg();break;case"tcont":S.seg.tipoContas=b.dataset.k;refSeg();break;
+    case"ver-pessoa":S.seg.quem=uid;S.seg.tipoAtv="todos";S.seg.q="";showTab("atividade");break;
+    case"mais-atv":segMaisAtv(b);break;
+    case"som":somAlternar();break;
+  }});
 
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
 Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
@@ -4283,7 +4565,7 @@ async function autoAcao(a,b){
 }
 
 /* ================= site próprio: Supabase (base de dados + logins por e-mail) ================= */
-let sb=null;
+let sb=null,segNovoLogin=false;
 const SUPA=()=>window.HS_SUPA;
 /* Same calls as the claude.ai database, backed by the "registos" table with live updates. */
 function criarSupaDB(cliente){
@@ -4295,8 +4577,8 @@ function criarSupaDB(cliente){
   const falhou=(e,acao)=>{console.error(e);const m=String(e?.message||"");toast(/JWT|token|session/i.test(m)?"A sessão expirou. Entre de novo.":"Não foi possível "+acao+". Verifique a Internet e tente de novo.")};
   const ref=(c,id)=>({id,
     get:async()=>snapDoc(c,id),
-    set:async v=>{(cache[c]=cache[c]||{})[id]=clone(v);avisar();const{error}=await cliente.from("registos").upsert({col:c,id,data:v});if(error){falhou(error,"guardar");throw error}},
-    delete:async()=>{if(cache[c])delete cache[c][id];avisar();const{error}=await cliente.from("registos").delete().eq("col",c).eq("id",id);if(error){falhou(error,"eliminar");throw error}},
+    set:async v=>{const novo=!cache[c]?.[id];(cache[c]=cache[c]||{})[id]=clone(v);avisar();const{error}=await cliente.from("registos").upsert({col:c,id,data:v});if(error){falhou(error,"guardar");throw error}try{atvReg(c==="config"?"alterou":novo?"criou":"alterou",atvRotulo(c,id,v))}catch(_){}},
+    delete:async()=>{const ant=cache[c]?.[id];if(cache[c])delete cache[c][id];try{atvReg("eliminou",atvRotulo(c,id,ant))}catch(_){}avisar();const{error}=await cliente.from("registos").delete().eq("col",c).eq("id",id);if(error){falhou(error,"eliminar");throw error}},
     onSnapshot:cb=>{const f=()=>cb(snapDoc(c,id));ouv.add(f);setTimeout(f,0);return()=>ouv.delete(f)}});
   return{supa:true,
     async carregar(){for(const k in cache)delete cache[k];let de=0;const passo=1000;
@@ -4361,7 +4643,7 @@ function telaLoginEmail(aviso){
     const{data,error}=await sb.auth.signInWithPassword({email,password:senha});
     bt.disabled=false;bt.textContent="Entrar";
     if(error){er.textContent=/invalid|credentials/i.test(error.message)?"E-mail ou senha incorretos.":/network|fetch/i.test(error.message)?"Sem ligação ao servidor. Verifique a Internet.":"Não foi possível entrar: "+error.message;er.hidden=false;$("#lP").value="";return}
-    supaEntrar(data.user.email)};
+    segNovoLogin=true;supaEntrar(data.user.email)};
 }
 function telaRecuperar(email){
   telaAuth("Recuperar senha","Escreva o e-mail da sua conta. Enviamos um link para definir uma senha nova.",`<form id="rForm" novalidate>
@@ -4409,10 +4691,10 @@ async function supaEntrar(email){
   try{const{data:m,error}=await sb.from("membros").select("email,nome,papel").eq("email",email.toLowerCase()).maybeSingle();if(error)throw error;
     if(!m){await sb.auth.signOut();return telaLoginEmail("A conta "+email+" não tem acesso a este sistema. Peça ao administrador para a adicionar.")}
     admin={usuario:m.email,nome:m.nome,papel:m.papel,supa:true};
-    await db.carregar();entrar();srvEstado();carregarPedidos();
+    await db.carregar();entrar();srvEstado();carregarPedidos();segIniciar(segNovoLogin);segNovoLogin=false;
   }catch(err){console.error(err);telaAuth("Erro ao carregar","Não foi possível carregar os dados. Verifique a Internet e tente de novo.",`<button class="btn pri" onclick="location.reload()">Tentar de novo</button>`)}
 }
-async function supaSair(msg){try{pararPedidos();db.parar();await sb.auth.signOut()}catch(_){}telaLoginEmail(msg)}
+async function supaSair(msg){try{atvReg("terminou sessão","","",true);await new Promise(r=>setTimeout(r,250));segParar();pararPedidos();db.parar();await sb.auth.signOut()}catch(_){}telaLoginEmail(msg)}
 
 /* ---------- conta e utilizadores (Definições) ---------- */
 function contaSupaHTML(){if(!admin)return"";const ehAdmin=admin.papel==="admin";return`
@@ -4421,7 +4703,7 @@ function contaSupaHTML(){if(!admin)return"";const ehAdmin=admin.papel==="admin";
     <div class="fgrid"><label class="f full">Senha atual<input type="password" id="sAtual" autocomplete="current-password"></label>
     <label class="f">Nova senha<input type="password" id="sNova" autocomplete="new-password"></label><label class="f">Repetir nova senha<input type="password" id="sNova2" autocomplete="new-password"></label></div>
     <p class="note" id="sMsg"></p><div class="row" style="justify-content:flex-end"><button class="btn" type="submit">Alterar senha</button></div></form>
-  ${ehAdmin?`<section class="panel" id="pUsers"><header><div><h2>Utilizadores</h2><p class="sub">Pessoas que podem entrar neste sistema com o seu próprio e-mail. Todas veem e alteram os mesmos dados.</p></div><button type="button" class="btn pri sm" id="uNovo">+ Adicionar pessoa</button></header>
+  ${ehAdmin?`<section class="panel" id="pUsers"><header><div><h2>Utilizadores</h2><p class="sub">Pessoas que podem entrar neste sistema com o seu próprio e-mail. Todas veem e alteram os mesmos dados.</p></div><div class="row" style="gap:6px"><button type="button" class="btn sm" data-biz="seguranca">Dispositivos, atividade e clientes</button><button type="button" class="btn pri sm" id="uNovo">+ Adicionar pessoa</button></div></header>
     <div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbUsers"><tr><td colspan="4" class="empty">A carregar…</td></tr></tbody></table></div></section>`:""}`}
 async function carregarUsers(){
   const tb=$("#tbUsers");if(!tb)return;
@@ -4525,7 +4807,7 @@ function nfBadge(){
   const b=$("#nfBadge"),btn=$("#btnNotif");if(!b||!btn)return;
   const n=S.ready?alertas().length:0;b.textContent=n>99?"99+":String(n);b.hidden=!n;
   btn.setAttribute("aria-label",n?n+" notificações":"Notificações");
-  if(n>nfUlt&&nfUlt>=0&&!calmo()){btn.classList.remove("ring");void btn.offsetWidth;btn.classList.add("ring")}
+  if(n>nfUlt&&nfUlt>=0){somTocar("alerta");if(!calmo()){btn.classList.remove("ring");void btn.offsetWidth;btn.classList.add("ring")}}
   nfUlt=n;
 }
 function nfHTML(){
@@ -4606,7 +4888,7 @@ function revelar(){
 }
 
 /* ================= navegação ================= */
-const MOD={serv:SERV,iptv:IPTV,micro:MICRO,pessoal:PESSOAL,pedidos:PEDIDOS};
+const MOD={serv:SERV,iptv:IPTV,micro:MICRO,pessoal:PESSOAL,pedidos:PEDIDOS,seguranca:SEGURANCA};
 function abrirNegocio(b){
   S.biz=b;store_("sessionStorage","hs_negocio",b);
   document.body.classList.remove("launch");
@@ -4696,7 +4978,7 @@ function refLauncher(){
   $("#view").innerHTML=banner()+`
   <section class="hero" data-ceu="${climaEstado().tipo}" data-periodo="${climaEstado().dia?"dia":"noite"}">${climaCenaHTML()}<div class="top"><div><p class="eyebrow">${cap1(new Date().toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</p><h1>${saud}${quem?", "+esc(quem):""}.</h1><p class="sub">Escolha o negócio que quer gerir.</p><div id="climaInfo">${climaInfoHTML()}</div></div></div></section>
   <section class="bizsec"><div class="biz-grid">${NEG.map(n=>`<button class="biz biz-${n.k}" data-biz="${n.k}"><span class="ill">${ILL[n.k]}</span><span class="bt"><b>${n.nome}</b><span class="tl">${n.tl}</span></span><span class="feat">${n.f.map(x=>`<span>${x}</span>`).join("")}</span><span class="go">Abrir</span></button>`).join("")}</div></section>
-  ${pedLauncherHTML()}${pfLauncherHTML()}
+  ${pedLauncherHTML()}${segLauncherHTML()}${pfLauncherHTML()}
   <section class="ovsec" id="ov">${ovHTML()}</section>`;
   ligarOv();if(!climaT)climaIniciar();
 }
@@ -4728,9 +5010,10 @@ function refresh(){
   else if(S.biz==="micro"){const m=MICRO.stats();$("#liveTxt").textContent=m.ativos+(m.ativos===1?" empréstimo ativo":" empréstimos ativos")+(m.nAtraso?" · "+m.nAtraso+" em atraso":"")}
   else if(S.biz==="iptv"){const n=IPTV.stats().ativos;$("#liveTxt").textContent=n+(n===1?" conta ativa":" contas ativas")}
   else if(S.biz==="pedidos"){const n=pedPend().length;$("#liveTxt").textContent=n?n+(n===1?" pedido por responder":" pedidos por responder"):"Pedidos online"}
+  else if(S.biz==="seguranca"){const n=Object.keys(segOnlineUids()).length;$("#liveTxt").textContent=n+(n===1?" pessoa ligada agora":" pessoas ligadas agora")}
   else if(S.biz==="pessoal"){const n=pfPorClassificar().length;$("#liveTxt").textContent=n?n+(n===1?" movimento por classificar":" movimentos por classificar"):"Gestão pessoal"}
   else $("#liveTxt").textContent=S.cfg.nome||"Heel Service";
-  nfBadge();
+  nfBadge();somPintar();
   if(locked)return;
   if(!S.biz){moverInd();return refLauncher()}
   requestAnimationFrame(moverInd);

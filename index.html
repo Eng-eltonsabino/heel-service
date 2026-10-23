@@ -46,6 +46,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav a,.nav button{all:unset;cursor:pointer;padding:8px 12px;border-radius:999px;font-size:15px;font-weight:500;color:rgba(255,255,255,.82);position:relative;white-space:nowrap}
 .nav a:hover,.nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
 .nav a[aria-current="page"]{color:#fff;background:rgba(255,255,255,.12)}
+.nav .som-b{display:grid;place-items:center;padding:8px}.nav .som-b[aria-pressed="false"]{opacity:.6}
 .nav .cta{background:var(--red);color:#fff}.nav .cta:hover{background:var(--red-2)}
 .dot{position:absolute;top:4px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--red);color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
 .nav .cta .dot{background:#fff;color:var(--red)}
@@ -219,6 +220,7 @@ input[type=range]{padding:0;min-height:0;height:32px;border:0;accent-color:var(-
     <a class="opt" href="#servicos">Serviços</a><a class="opt" href="#iptv">IPTV</a><a class="opt" href="#micro">Microcrédito</a>
     <a class="opt" href="#contacto">Contacto</a>
     <a href="#pedidos" id="navPed">Os meus pedidos</a>
+    <button type="button" class="som-b" data-psom data-som-btn aria-label="Som dos alertas"></button>
     <a href="#conta" class="cta" id="navConta">Entrar</a>
   </nav>
 </div></header>
@@ -423,6 +425,75 @@ async function pdfPedido(p,emp){
   return pdfOut(pdf,(p.numero||"pedido")+".pdf");
 }
 
+/* ================= alertas de som, registo de atividade e presença (sistema e página dos clientes) ================= */
+const SOM_K="hs_som";
+const somLigado=()=>{try{return localStorage.getItem(SOM_K)!=="0"}catch(_){return true}};
+let somCtx=null;
+function somAC(){try{if(!somCtx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;somCtx=new A()}if(somCtx.state==="suspended")somCtx.resume().catch(()=>{});return somCtx}catch(_){return null}}
+/* browsers only allow sound after the first tap: open the audio then */
+["pointerdown","keydown","touchstart"].forEach(ev=>addEventListener(ev,()=>somAC(),{once:true,passive:true}));
+const SOM_NOTAS={
+  pedido:[[880,0,.16],[1175,.15,.18],[1568,.31,.34]],   // new client request: rising three-note chime
+  alerta:[[988,0,.16],[740,.19,.28]],                    // something needs attention
+  resposta:[[659,0,.14],[880,.13,.14],[1319,.26,.4]],     // answer arrived (accepted)
+  recusa:[[587,0,.2],[440,.2,.34]],                       // answer arrived (not accepted)
+  info:[[1047,0,.22]],ok:[[784,0,.12],[1047,.11,.22]]};
+let somUlt=0;
+function somTocar(tipo){if(!somLigado())return;if(Date.now()-somUlt<1500)return;somUlt=Date.now();const c=somAC();if(!c)return;const t0=c.currentTime+.02;
+  (SOM_NOTAS[tipo]||SOM_NOTAS.info).forEach(([f,d,dur])=>{const o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();
+    o.type="sine";o2.type="triangle";o.frequency.value=f;o2.frequency.value=f*2;
+    g.gain.setValueAtTime(.0001,t0+d);g.gain.exponentialRampToValueAtTime(.32,t0+d+.012);g.gain.exponentialRampToValueAtTime(.0001,t0+d+dur);
+    const g2=c.createGain();g2.gain.value=.12;o.connect(g);o2.connect(g2).connect(g);g.connect(c.destination);
+    o.start(t0+d);o2.start(t0+d);o.stop(t0+d+dur+.05);o2.stop(t0+d+dur+.05)});
+  try{navigator.vibrate&&navigator.vibrate(tipo==="pedido"?[140,70,140]:90)}catch(_){}}
+/* sound + (when the page is in the background and allowed) a system notification */
+function alertar(tipo,titulo,corpo){somTocar(tipo);
+  try{if(!document.hidden||!("Notification" in window)||Notification.permission!=="granted")return;
+    const op={body:corpo||"",icon:"icon-192.png",badge:"icon-192.png",tag:"hs-"+tipo+"-"+Date.now(),vibrate:[120,60,120]};
+    if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.ready.then(r=>r.showNotification(titulo,op)).catch(()=>{try{new Notification(titulo,op)}catch(_){}});
+    else new Notification(titulo,op)}catch(_){}}
+const SOM_IC_ON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const SOM_IC_OFF='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
+function somPintar(){document.querySelectorAll("[data-som-btn]").forEach(b=>{const on=somLigado();b.innerHTML=on?SOM_IC_ON:SOM_IC_OFF;b.setAttribute("aria-pressed",String(on));b.setAttribute("aria-label",on?"Som dos alertas ligado (tocar para desligar)":"Som dos alertas desligado (tocar para ligar)");b.title=on?"Som ligado":"Som desligado"})}
+function somAlternar(){const v=!somLigado();try{localStorage.setItem(SOM_K,v?"1":"0")}catch(_){}somPintar();if(v){somTocar("ok");pedirNotifSistema()}return v}
+/* asks once for permission to show alerts when the page is in the background */
+function pedirNotifSistema(){try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission().catch(()=>{})}catch(_){}}
+
+/* ---- device description from the browser's user-agent ---- */
+function dispositivoInfo(ua){ua=String(ua||"");
+  const so=/iPhone/.test(ua)?"iPhone":/iPad/.test(ua)?"iPad":/Android/.test(ua)?"Android":/Windows/.test(ua)?"Windows":/Mac OS X|Macintosh/.test(ua)?"Mac":/CrOS/.test(ua)?"Chromebook":/Linux/.test(ua)?"Linux":"";
+  const nav=/SamsungBrowser/.test(ua)?"Samsung Internet":/Edg\//.test(ua)?"Edge":/OPR\/|Opera/.test(ua)?"Opera":/FxiOS|Firefox/.test(ua)?"Firefox":/CriOS|Chrome/.test(ua)?"Chrome":/Safari/.test(ua)?"Safari":/supabase|node|Deno|curl/i.test(ua)?"Servidor":"";
+  const movel=/iPhone|Android.*Mobile|Mobile/.test(ua)&&!/iPad|Tablet/.test(ua),tablet=/iPad|Tablet|Android(?!.*Mobile)/.test(ua);
+  return{so,nav,tipo:movel?"telemovel":tablet?"tablet":so?"computador":"outro",txt:[so,nav].filter(Boolean).join(" · ")||"Dispositivo desconhecido"}}
+const appInstalada=()=>{try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(_){return false}};
+const DISP_AQUI=()=>dispositivoInfo(navigator.userAgent).txt+(appInstalada()?" · app instalada":"");
+
+/* ---- activity log: queued and sent in small batches ---- */
+function atvCriar(cliente){const q=[];let t=null;
+  async function enviar(){clearTimeout(t);t=null;if(!q.length)return;const lote=q.splice(0);
+    try{const{data}=await cliente.auth.getSession();const uid=data.session?.user?.id;if(!uid)return;lote.forEach(x=>x.user_id=uid);
+      const{error}=await cliente.from("atividade").insert(lote);if(error)console.warn("atividade",error.message)}catch(e){console.warn(e)}}
+  const f=(acao,alvo,detalhe,ja)=>{const ult=q[q.length-1];
+    if(ult&&ult.acao===acao&&ult.alvo===(alvo||null))ult.detalhe=detalhe||ult.detalhe;
+    else q.push({acao,alvo:alvo||null,detalhe:detalhe?String(detalhe).slice(0,300):null,dispositivo:DISP_AQUI()});
+    if(ja)return enviar();clearTimeout(t);t=setTimeout(enviar,2500)};
+  f.enviar=enviar;addEventListener("pagehide",enviar);return f}
+
+/* ---- who is online right now (Supabase presence; only ids and device, no names or e-mails) ---- */
+let presCanal=null;
+function presencaEntrar(cliente,uid,tipo,aoMudar){if(presCanal||!cliente||!uid)return;
+  presCanal=cliente.channel("hs-presenca",{config:{presence:{key:uid+"~"+Math.random().toString(36).slice(2,8)}}});
+  presCanal.on("presence",{event:"sync"},()=>{if(aoMudar)aoMudar(presCanal.presenceState())});
+  presCanal.subscribe(st=>{if(st==="SUBSCRIBED")presCanal.track({uid,tipo,disp:DISP_AQUI(),desde:new Date().toISOString()})})}
+function presencaSair(cliente){if(!presCanal)return;try{presCanal.untrack();cliente.removeChannel(presCanal)}catch(_){}presCanal=null}
+
+/* ---- if the administrator ends this session, leave straight away ---- */
+function vigiarSessao(cliente,uid,sair){
+  const ver=async()=>{try{const{error}=await cliente.auth.getUser();if(error&&/session|not.?found|jwt|expired|invalid/i.test(error.message||"")&&!/fetch|network/i.test(error.message||""))sair()}catch(_){}};
+  const ch=cliente.channel("rev-"+uid).on("postgres_changes",{event:"*",schema:"public",table:"seg_revogar",filter:"user_id=eq."+uid},()=>setTimeout(ver,400)).subscribe();
+  const vis=()=>{if(!document.hidden)ver()};document.addEventListener("visibilitychange",vis);
+  return()=>{try{cliente.removeChannel(ch)}catch(_){}document.removeEventListener("visibilitychange",vis)}}
+
 /* ================= portal do cliente ================= */
 const WA="258869252812",WA_TXT="+258 86 925 2812";
 const IC={
@@ -445,15 +516,21 @@ async function carregarCatalogo(){const{data,error}=await sb.rpc("portal_catalog
   const pl=P.cat.iptv.planos||[];if(!P.iptv.plano&&pl.length)P.iptv.plano=(pl.find(x=>x.meses===3)||pl[0]).id;
   P.micro.meses=Math.min(Math.max(1,P.cat.micro.meses||3),12)}
 async function carregarConta(){const{data}=await sb.auth.getSession();P.user=data.session?data.session.user:null;
-  if(!P.user){P.perfil=null;P.pedidos=[];pararCanal();return}
+  if(!P.user){P.perfil=null;P.pedidos=[];pararCanal();cliSegParar();return}
   const[a,b]=await Promise.all([sb.from("portal_clientes").select("*").eq("user_id",P.user.id).maybeSingle(),sb.from("pedidos").select("*").eq("user_id",P.user.id).order("criado_em",{ascending:false})]);
-  P.perfil=a.data||{user_id:P.user.id,email:P.user.email,nome:P.user.user_metadata?.nome||"",telefone:""};P.pedidos=b.data||[];ligarCanal()}
+  P.perfil=a.data||{user_id:P.user.id,email:P.user.email,nome:P.user.user_metadata?.nome||"",telefone:""};P.pedidos=b.data||[];ligarCanal();cliSegIniciar()}
 function ligarCanal(){if(P.canal||!P.user)return;
   P.canal=sb.channel("meus-pedidos").on("postgres_changes",{event:"*",schema:"public",table:"pedidos",filter:"user_id=eq."+P.user.id},async pl=>{
     const n=pl.new;if(!n||!n.id)return;const i=P.pedidos.findIndex(x=>x.id===n.id),antes=i>=0?P.pedidos[i]:null;
     if(i>=0)P.pedidos[i]=n;else P.pedidos.unshift(n);
-    if(antes&&antes.estado!==n.estado&&(n.estado==="aceite"||n.estado==="recusado"))toast("O pedido "+n.numero+(n.estado==="aceite"?" foi aceite":" não foi aceite"));
+    if(antes&&antes.estado!==n.estado&&(n.estado==="aceite"||n.estado==="recusado")){toast("O pedido "+n.numero+(n.estado==="aceite"?" foi aceite":" não foi aceite"));alertar(n.estado==="aceite"?"resposta":"recusa","Heel Service · pedido "+n.numero,n.estado==="aceite"?"O seu pedido foi aceite. Veja os passos para pagar.":"O seu pedido não foi aceite. Veja o motivo.")}
     badges();if(rota()==="pedidos")render()}).subscribe()}
+/* activity log, presence and forced sign-out for the customer account */
+let atv=()=>{},cliVigia=null;
+function cliSegIniciar(){if(cliVigia||!P.user)return;atv=atvCriar(sb);presencaEntrar(sb,P.user.id,"cliente");
+  cliVigia=vigiarSessao(sb,P.user.id,async()=>{try{await sb.auth.signOut({scope:"local"})}catch(_){}await carregarConta();badges();toast("A sua sessão terminou. Entre de novo.");ir("conta")});
+  try{if(!sessionStorage.getItem("hs_atv_ab")){atv(P.novoLogin||"abriu a página","",DISP_AQUI());sessionStorage.setItem("hs_atv_ab","1")}}catch(_){}P.novoLogin=null}
+function cliSegParar(){presencaSair(sb);if(cliVigia){cliVigia();cliVigia=null}atv=()=>{}}
 function pararCanal(){if(P.canal){sb.removeChannel(P.canal);P.canal=null}}
 const naoVistos=()=>P.pedidos.filter(p=>!p.visto_cliente).length;
 function badges(){const n=naoVistos(),np=$("#navPed"),nc=$("#navConta");
@@ -550,14 +627,14 @@ function ligarAuth(depois){
   const erro=(id,m)=>{const e=$(id);e.textContent=m;e.hidden=!m};
   $("#fIn").onsubmit=async e=>{e.preventDefault();erro("#aErr","");const b=e.submitter||e.target.querySelector("button");b.disabled=true;
     const{error}=await sb.auth.signInWithPassword({email:$("#aE").value.trim().toLowerCase(),password:$("#aP").value});b.disabled=false;
-    if(error)return erro("#aErr",erroTxt(error));await carregarConta();toast("Bem-vindo de volta");depois()};
+    if(error)return erro("#aErr",erroTxt(error));P.novoLogin="iniciou sessão";try{sessionStorage.removeItem("hs_atv_ab")}catch(_){}await carregarConta();toast("Bem-vindo de volta");depois()};
   $("#aEsq").onclick=async()=>{const em=$("#aE").value.trim().toLowerCase();if(!emailOk(em))return erro("#aErr","Escreva o seu e-mail acima e toque outra vez em “Esqueci a senha”.");
     const{error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});erro("#aErr","");toast(error?erroTxt(error):"Enviámos um link para "+em+". Abra-o para criar uma senha nova.")};
   $("#fUp").onsubmit=async e=>{e.preventDefault();erro("#uErr","");const b=e.target.querySelector("button");b.disabled=true;b.textContent="A criar…";
     try{const r=await fetch(window.HS_SUPA.url+"/functions/v1/portal",{method:"POST",headers:{"Content-Type":"application/json",apikey:window.HS_SUPA.key},body:JSON.stringify({acao:"registar",nome:$("#uN").value,telefone:$("#uT").value,email:$("#uE").value,senha:$("#uP").value})});
       const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.erro||"Não foi possível criar a conta.");
       const{error}=await sb.auth.signInWithPassword({email:$("#uE").value.trim().toLowerCase(),password:$("#uP").value});if(error)throw error;
-      await carregarConta();toast("Conta criada");depois()}catch(err){erro("#uErr",erroTxt(err))}
+      P.novoLogin="criou a conta";try{sessionStorage.removeItem("hs_atv_ab")}catch(_){}await carregarConta();toast("Conta criada");depois()}catch(err){erro("#uErr",erroTxt(err))}
     b.disabled=false;b.textContent="Criar conta"}}
 
 /* step 2: customer data and consent */
@@ -597,7 +674,7 @@ LIGA.dados=()=>{if(!P.user){ligarAuth(()=>render());return}
       if(P.tipo==="iptv")row.detalhes={plano:P.iptv.plano,ecras:P.iptv.ecras,aparelho:P.iptv.aparelho};
       if(P.tipo==="micro")row.detalhes={valor:P.micro.valor,meses:P.micro.meses,finalidade:P.micro.finalidade};
       const{data,error}=await sb.from("pedidos").insert(row).select().single();if(error)throw error;
-      if(!P.pedidos.some(x=>x.id===data.id))P.pedidos.unshift(data);P.ultimo=data;if(P.tipo==="serv")P.serv={};ir("feito")}
+      if(!P.pedidos.some(x=>x.id===data.id))P.pedidos.unshift(data);P.ultimo=data;atv("fez um pedido",data.numero+" · "+PED_TIPO[data.tipo],"",true);pedirNotifSistema();if(P.tipo==="serv")P.serv={};ir("feito")}
     catch(err){er.textContent=erroTxt(err);er.hidden=false;b.disabled=false;b.textContent="Enviar pedido e gerar cotação"}}};
 
 /* step 3: the quote must be downloaded */
@@ -608,11 +685,11 @@ function vFeito(){const p=P.ultimo;if(!p)return vPedidos();
     <a class="btn" href="#pedidos">Ver os meus pedidos</a></div></div>`}
 async function descarregar(id,b){const p=P.pedidos.find(x=>x.id===+id)||P.ultimo;if(!p)return;if(b){b.disabled=true}
   try{const r=await pdfPedido(p,P.cat.empresa);if(r){await dl.save({filename:r.nome,data:r.blob});toast("Cotação descarregada")}
-    if(!p.descarregado_em){await sb.rpc("pedido_cliente",{pid:p.id,acao:"descarregado"});p.descarregado_em=new Date().toISOString()}
+    if(!p.descarregado_em){await sb.rpc("pedido_cliente",{pid:p.id,acao:"descarregado"});atv("descarregou a cotação",p.numero);p.descarregado_em=new Date().toISOString()}
     if(rota()==="pedidos")render()}catch(e){console.error(e);toast("Não foi possível criar o PDF.")}if(b)b.disabled=false}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-pdf]");if(b){descarregar(b.dataset.pdf,b);return}
   const c=e.target.closest("[data-cancel]");if(c){if(!c.dataset.ok){c.dataset.ok=1;c.textContent="Confirmar cancelamento";return}
-    sb.rpc("pedido_cliente",{pid:+c.dataset.cancel,acao:"cancelar"}).then(({error})=>{if(error)return toast(erroTxt(error));const p=P.pedidos.find(x=>x.id===+c.dataset.cancel);if(p)p.estado="cancelado";toast("Pedido cancelado");render()})}});
+    sb.rpc("pedido_cliente",{pid:+c.dataset.cancel,acao:"cancelar"}).then(({error})=>{if(error)return toast(erroTxt(error));const p=P.pedidos.find(x=>x.id===+c.dataset.cancel);if(p){p.estado="cancelado";atv("cancelou o pedido",p.numero,"",true)}toast("Pedido cancelado");render()})}});
 
 /* my requests */
 function vPedidos(){if(!P.user)return`<div class="wrap">${phHTML("serv","Os meus pedidos","Entre na sua conta","Veja o estado dos seus pedidos e descarregue as cotações.")}${authHTML()}</div>`;
@@ -650,7 +727,7 @@ LIGA.conta=()=>{if(!P.user){ligarAuth(()=>ir("pedidos"));return}
     if(error){er.textContent=erroTxt(error);er.hidden=false;return}P.perfil={...P.perfil,...fd};toast("Dados guardados")};
   $("#fSenha").onsubmit=async e=>{e.preventDefault();const v=$("#sN").value,er=$("#sErr");if(v.length<8||!/\d/.test(v)||!/[A-Za-z]/.test(v)){er.textContent="Pelo menos 8 caracteres, com letras e números.";er.hidden=false;return}
     const{error}=await sb.auth.updateUser({password:v});if(error){er.textContent=erroTxt(error);er.hidden=false;return}er.hidden=true;$("#sN").value="";toast("Senha alterada")};
-  $("#sair").onclick=async()=>{await sb.auth.signOut();await carregarConta();toast("Saiu da conta");ir("inicio")}};
+  $("#sair").onclick=async()=>{await atv("terminou sessão","","",true);try{sessionStorage.removeItem("hs_atv_ab")}catch(_){}await sb.auth.signOut();await carregarConta();toast("Saiu da conta");ir("inicio")}};
 function vNovaSenha(){return`<div class="wrap"><div class="ph"><h1>Criar senha nova</h1><p>Escolha uma senha nova para a sua conta.</p></div><form class="auth card panel" id="fNova"><label class="f">Senha nova<input id="nS" type="password" autocomplete="new-password" required><small>Pelo menos 8 caracteres, com letras e números.</small></label><p class="err" id="nErr" hidden></p><button class="btn pri lg block">Guardar senha</button></form></div>`}
 LIGA["nova-senha"]=()=>{$("#fNova").onsubmit=async e=>{e.preventDefault();const v=$("#nS").value,er=$("#nErr");if(v.length<8||!/\d/.test(v)||!/[A-Za-z]/.test(v)){er.textContent="Pelo menos 8 caracteres, com letras e números.";er.hidden=false;return}
   const{error}=await sb.auth.updateUser({password:v});if(error){er.textContent=erroTxt(error);er.hidden=false;return}P.recup=false;history.replaceState(null,"",location.pathname+"#pedidos");await carregarConta();toast("Senha guardada");render()}};
@@ -668,6 +745,7 @@ function mostrarInst(forcar){if(jaApp())return;let fechado=false;try{fechado=ses
   if(ehIOSp()&&!pedidoInst){$("#instTxt").textContent="No Safari: toque em Partilhar e depois em “Adicionar ao ecrã principal”.";$("#instOk").textContent="Como fazer"}
   $("#inst").hidden=false}
 document.addEventListener("click",async e=>{
+  if(e.target.closest("[data-psom]")){const v=somAlternar();toast(v?"Som dos alertas ligado":"Som dos alertas desligado");return}
   if(e.target.closest("#instX")){$("#inst").hidden=true;try{sessionStorage.setItem("hs_inst_x","1")}catch(_){}return}
   if(e.target.closest("#instOk")){if(pedidoInst){const p=pedidoInst;pedidoInst=null;p.prompt();try{await p.userChoice}catch(_){}$("#inst").hidden=true}
     else toast("Toque no botão Partilhar do Safari (quadrado com a seta) e escolha “Adicionar ao ecrã principal”.");}});
@@ -682,7 +760,7 @@ if("serviceWorker" in navigator&&location.protocol==="https:")addEventListener("
   sb.auth.onAuthStateChange((ev)=>{if(ev==="PASSWORD_RECOVERY"){P.recup=true;render()}});
   try{await Promise.all([carregarCatalogo(),carregarConta()])}catch(e){console.error(e);app().innerHTML=`<div class="wrap"><div class="loading">Não foi possível carregar os serviços. Verifique a Internet e recarregue.<br><br><a class="btn wa" href="${waLink("Olá Heel Service")}">Falar pelo WhatsApp</a></div></div>`;return}
   if(P.recup&&!/^#(nova-senha)?$/.test(location.hash.split("&")[0]))history.replaceState(null,"",location.pathname+"#nova-senha");
-  render();setTimeout(()=>mostrarInst(false),1500);
+  render();somPintar();setTimeout(()=>mostrarInst(false),1500);
 })();
 
 })();</script>
