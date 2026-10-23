@@ -1035,6 +1035,7 @@ label.f[hidden],div.f[hidden],.f[hidden]{display:none!important}
 label.ck{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px;cursor:pointer}label.ck input{margin-top:3px;width:auto}
 #btnSom[aria-pressed="false"]{opacity:.65}
 .toolbar select{width:auto;max-width:220px}
+.seg-portao{margin-bottom:16px;border-left:4px solid var(--warn)}.seg-portao.on{border-left-color:var(--ok)}
 </style>
 
 <header class="top">
@@ -3915,6 +3916,7 @@ function faltas(){
     const d=ativos&&semEmail===ativos&&comTel?`Nenhum dos ${ativos} clientes IPTV tem e-mail, mas ${comTel===ativos?"todos têm":comTel+" têm"} telefone: ligue o WhatsApp para os avisos chegarem.`:"Ligue o Gmail ou o WhatsApp para os lembretes de pagamento e os recibos saírem sozinhos.";
     out.push({k:"envio",nv:3,t:"Os avisos automáticos estão parados",d,biz:"iptv",tab:"definicoes",foco:"#pAuto",btn:"Ligar"});
   }else if(sup&&srvOk()&&!waOk()&&ativos&&semEmail===ativos)out.push({k:"wa",nv:2,t:"Ligue também o WhatsApp",d:`O Gmail está ligado, mas nenhum dos ${ativos} clientes IPTV tem e-mail. Pelo WhatsApp os avisos chegam a todos.`,biz:"iptv",tab:"definicoes",foco:"#pAuto",btn:"Ligar"});
+  if(sup&&ehAdmin&&S.seg&&S.seg.ok&&!S.seg.portao)out.push({k:"portao",nv:2,t:"Crie o código de acesso",d:"Quem tocar no cadeado do site vê logo o ecrã de login. Com um código, só a sua equipa chega lá.",biz:"seguranca",tab:"contas",foco:".seg-portao",btn:"Criar código"});
   const semContacto=S.clientes.filter(c=>!emailOk(c.email)&&waNum(c.telefone).length<11).length;
   if(semContacto)out.push({k:"contacto-"+semContacto,nv:2,t:semContacto+(semContacto===1?" cliente IPTV sem contacto":" clientes IPTV sem contacto"),d:"Sem e-mail nem telefone válido, não recebem avisos.",biz:"iptv",tab:"clientes",btn:"Ver clientes"});
   if(PH(S.vcfg.cotPrazo))out.push({k:"prazo",nv:2,t:"Prazo das cotações de serviços",d:"As cotações de serviços mostram “(preencher)” no prazo de execução.",biz:"serv",tab:"definicoes",foco:"#fDefsV [name=cotPrazo]",btn:"Preencher"});
@@ -4247,7 +4249,7 @@ async function segIniciar(novoLogin){if(S.modo!=="supa"||!sb)return;
 function segParar(){try{atvReg.enviar&&atvReg.enviar()}catch(_){}presencaSair(sb);if(segVigia){segVigia();segVigia=null}
   if(segCanal&&sb){try{sb.removeChannel(segCanal)}catch(_){}}segCanal=null;atvReg=()=>{};S.seg.ok=false;S.seg.contas=[];S.seg.sessoes=[];S.seg.atv=[];S.seg.online={}}
 async function carregarSeg(){if(!segOn())return;
-  const[a,b,c]=await Promise.all([sb.rpc("seg_contas"),sb.rpc("seg_sessoes"),sb.from("atividade").select("*").order("criado_em",{ascending:false}).limit(300)]);
+  const[a,b,c,d]=await Promise.all([sb.rpc("seg_contas"),sb.rpc("seg_sessoes"),sb.from("atividade").select("*").order("criado_em",{ascending:false}).limit(300),sb.rpc("portao_info")]);S.seg.portao=d.error?S.seg.portao:d.data;
   if(a.error||b.error||c.error){console.error(a.error||b.error||c.error);return}
   S.seg.contas=a.data||[];S.seg.sessoes=b.data||[];S.seg.atv=c.data||[];S.seg.fimAtv=(c.data||[]).length<300;S.seg.ok=true;
   if(!segCanal)segCanal=sb.channel("atividade-admin").on("postgres_changes",{event:"INSERT",schema:"public",table:"atividade"},pl=>{const n=pl.new;if(!n||!n.id||S.seg.atv.some(x=>x.id===n.id))return;
@@ -4328,7 +4330,7 @@ function segAtvHTML(){const q=String(S.seg.q||"").toLowerCase(),t=S.seg.tipoAtv,
 /* --- accounts and passwords (CRUD) --- */
 function segContasHTML(){const t=S.seg.tipoContas,q=String(S.seg.q||"").toLowerCase(),on=segOnlineUids();
   const L=S.seg.contas.filter(c=>c.tipo===t&&(!q||[c.nome,c.email,c.telefone].join(" ").toLowerCase().includes(q)));
-  return`<div class="calc seg-aviso"><b>Sobre as senhas</b><p style="margin:6px 0 0">Por segurança, nenhuma senha fica guardada de forma legível, nem para o administrador: o servidor guarda só uma “impressão digital” da senha. Por isso não é possível ver a senha atual de ninguém. Pode sempre <b>definir uma senha nova</b>; ela aparece uma única vez para a copiar ou enviar à pessoa.</p></div>
+  return portaoPainelHTML()+`<div class="calc seg-aviso"><b>Sobre as senhas</b><p style="margin:6px 0 0">Por segurança, nenhuma senha fica guardada de forma legível, nem para o administrador: o servidor guarda só uma “impressão digital” da senha. Por isso não é possível ver a senha atual de ninguém. Pode sempre <b>definir uma senha nova</b>; ela aparece uma única vez para a copiar ou enviar à pessoa.</p></div>
   <section class="panel"><div class="toolbar"><input class="search" id="segQ" type="search" placeholder="Procurar por nome, e-mail ou telefone" value="${esc(S.seg.q)}">
     <div class="chips">${[["membro","Equipa"],["cliente","Clientes"]].map(([k,l])=>`<button class="chip" data-seg="tcont" data-k="${k}" aria-pressed="${t===k}">${l} (${S.seg.contas.filter(c=>c.tipo===k).length})</button>`).join("")}</div></div>
     <div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>E-mail (login)</th><th>Senha</th><th>${t==="membro"?"Papel":"Telefone"}</th><th>Último login</th><th>Sessões</th><th style="text-align:right">Ações</th></tr></thead><tbody>
@@ -4408,7 +4410,76 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-seg]");if(
     case"ver-pessoa":S.seg.quem=uid;S.seg.tipoAtv="todos";S.seg.q="";showTab("atividade");break;
     case"mais-atv":segMaisAtv(b);break;
     case"som":somAlternar();break;
+    case"portao":portaoDialogo();break;
   }});
+
+/* ================= código de acesso antes do login (site próprio) ================= */
+const PORTAO_K="hs_portao_ok";
+const portaoPassou=()=>{try{return sessionStorage.getItem(PORTAO_K)==="1"}catch(_){return false}};
+function portaoMarcar(){try{sessionStorage.setItem(PORTAO_K,"1")}catch(_){}}
+/* true = may go on to the e-mail login; false = the code screen is showing */
+async function portaoPassar(aviso){if(portaoPassou())return true;
+  try{const{data,error}=await sb.rpc("portao_estado");if(error)throw error;if(!data||!data.ativo)return true}
+  catch(e){console.error(e);telaAuth("Sem ligação","Não foi possível contactar o servidor. Verifique a Internet e recarregue a página.",`<button class="btn pri" onclick="location.reload()">Tentar de novo</button>`);return false}
+  telaCodigo(aviso?aviso+" Escreva o código de acesso para continuar.":"");return false}
+function telaCodigo(aviso){
+  telaAuth("Código de acesso",aviso||"Escreva o código de acesso que o administrador definiu. Depois entra com o seu e-mail e senha.",`<form id="cForm" novalidate>
+    <label class="f">Código de acesso<span class="withbtn"><input id="cC" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="32"><button type="button" class="btn sm" id="cVer">Mostrar</button></span></label>
+    <p class="err" id="cErr" hidden></p><button class="btn pri" type="submit" id="cBtn">Continuar</button>
+    <button type="button" class="btn" id="cEsq">Esqueci o código</button></form>
+    <p class="note" style="text-align:center;margin:14px 0 0">É cliente? <a href="./">Faça o seu pedido aqui</a>.</p>`);
+  setTimeout(()=>$("#cC")?.focus(),50);
+  $("#cVer").onclick=()=>{const p=$("#cC"),v=p.type==="password";p.type=v?"text":"password";$("#cVer").textContent=v?"Ocultar":"Mostrar"};
+  $("#cEsq").onclick=()=>telaCodigoEsquecido();
+  $("#cForm").onsubmit=async e=>{e.preventDefault();const er=$("#cErr"),bt=$("#cBtn"),c=$("#cC").value.trim();er.hidden=true;
+    if(!c){er.textContent="Escreva o código.";er.hidden=false;return}
+    bt.disabled=true;bt.textContent="A verificar…";
+    try{const{data,error}=await sb.rpc("portao_verificar",{codigo:c});if(error)throw error;
+      if(data.ok){portaoMarcar();return supaGate()}
+      $("#cC").value="";er.textContent=data.bloqueado?`Demasiadas tentativas erradas. Tente de novo daqui a ${data.minutos} ${data.minutos===1?"minuto":"minutos"}.`:`Código incorreto.${data.restam>0?` Restam ${data.restam} ${data.restam===1?"tentativa":"tentativas"} antes de bloquear 15 minutos.`:""}`;er.hidden=false}
+    catch(err){er.textContent=/fetch|network/i.test(err.message||"")?"Sem ligação ao servidor. Verifique a Internet.":"Não foi possível verificar: "+err.message;er.hidden=false}
+    bt.disabled=false;bt.textContent="Continuar"}}
+/* forgot the code: an administrator proves who they are with e-mail and password, then sets a new one */
+function telaCodigoEsquecido(){
+  telaAuth("Esqueci o código","Só um administrador pode criar um código novo. Entre com o seu e-mail e senha de administrador.",`<form id="kForm" novalidate>
+    <label class="f">E-mail do administrador<input id="kE" type="email" autocomplete="username" autocapitalize="none" inputmode="email"></label>
+    <label class="f">Senha<input id="kP" type="password" autocomplete="current-password"></label>
+    <p class="err" id="kErr" hidden></p><button class="btn pri" type="submit" id="kBtn">Confirmar</button><button type="button" class="btn" id="kVolta">Voltar</button></form>`);
+  $("#kVolta").onclick=()=>telaCodigo();
+  $("#kForm").onsubmit=async e=>{e.preventDefault();const er=$("#kErr"),bt=$("#kBtn");er.hidden=true;const email=$("#kE").value.trim().toLowerCase();
+    if(!emailOk(email)||!$("#kP").value){er.textContent="Indique o e-mail e a senha.";er.hidden=false;return}
+    bt.disabled=true;bt.textContent="A confirmar…";
+    const{error}=await sb.auth.signInWithPassword({email,password:$("#kP").value});
+    if(!error){const{data:m}=await sb.from("membros").select("papel").eq("email",email).maybeSingle();
+      if(m&&m.papel==="admin"){segNovoLogin=true;return telaNovoCodigo(email)}await sb.auth.signOut()}
+    bt.disabled=false;bt.textContent="Confirmar";er.textContent=error&&/network|fetch/i.test(error.message)?"Sem ligação ao servidor.":"E-mail ou senha incorretos, ou a conta não é de administrador.";er.hidden=false}}
+function telaNovoCodigo(email){
+  telaAuth("Novo código de acesso","Crie o código que todos terão de escrever antes do login.",`<form id="nkForm" novalidate>
+    <label class="f">Novo código<input id="nk1" type="password" autocomplete="new-password" maxlength="32"><small>6 a 32 caracteres. Use números e letras.</small></label>
+    <label class="f">Repetir código<input id="nk2" type="password" autocomplete="new-password" maxlength="32"></label>
+    <p class="err" id="nkErr" hidden></p><button class="btn pri" type="submit" id="nkBtn">Guardar e entrar</button></form>`);
+  $("#nkForm").onsubmit=async e=>{e.preventDefault();const er=$("#nkErr"),a=$("#nk1").value.trim(),b=$("#nk2").value.trim();
+    const v=portaoValidar(a,b);if(v){er.textContent=v;er.hidden=false;return}
+    const{error}=await sb.rpc("portao_definir",{codigo:a});if(error){er.textContent=error.message;er.hidden=false;return}
+    portaoMarcar();toast("Código de acesso alterado");supaEntrar(email)}}
+function portaoValidar(a,b){if(a.length<6)return"O código precisa de pelo menos 6 caracteres.";if(a.length>32)return"O código pode ter no máximo 32 caracteres.";
+  const fac=x=>/^(.)\1+$/.test(x)||"01234567890123456789".includes(x)||"98765432109876543210".includes(x)||"abcdefghijklmnopqrstuvwxyz".includes(x.toLowerCase())||/^(qwerty|password|senha|heelservice|admin)/i.test(x);if(fac(a))return"Esse código é fácil de adivinhar. Escolha outro.";if(a!==b)return"Os dois códigos não são iguais.";return""}
+
+/* admin panel inside "Contas e senhas" */
+function portaoPainelHTML(){const p=S.seg.portao;
+  return`<section class="panel seg-portao ${p?"on":"off"}"><header><div><h2>Código de acesso</h2><p class="sub">${p?`Ativo · alterado ${segAgo(p.atualizado_em)}${p.atualizado_por?" por "+esc(p.atualizado_por):""}. Quem tocar no cadeado tem de escrever este código antes do e-mail e senha.`:"Ainda não criado. Quem tocar no cadeado vai direto ao ecrã de e-mail e senha."}</p></div>
+    <button class="btn ${p?"":"pri"} sm" data-seg="portao">${p?"Alterar código":"Criar código"}</button></header></section>`}
+function portaoDialogo(){const p=S.seg.portao;
+  abrir(hdr(p?"Alterar código de acesso":"Criar código de acesso","Este código é pedido antes do login, em todos os aparelhos.")+`<div class="body"><div class="fgrid">
+    <label class="f">Novo código<span class="withbtn"><input id="pk1" type="password" autocomplete="new-password" maxlength="32"><button type="button" class="btn sm" id="pkVer">Mostrar</button></span><small>6 a 32 caracteres, com números e letras.</small></label>
+    <label class="f">Repetir código<input id="pk2" type="password" autocomplete="new-password" maxlength="32"></label></div>
+    <p class="note">O código fica guardado cifrado: depois de guardar não pode ser visto, só alterado. Partilhe-o apenas com a equipa. Quem já está dentro do sistema não sai.</p><p class="err" id="pkErr" hidden style="color:var(--bad)"></p></div>
+    <footer><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn pri">Guardar código</button></footer>`);
+  $("#pkVer").onclick=()=>{const v=$("#pk1").type==="password";["#pk1","#pk2"].forEach(s=>$(s).type=v?"text":"password");$("#pkVer").textContent=v?"Ocultar":"Mostrar"};
+  $("#dform").onsubmit=async e=>{e.preventDefault();const er=$("#pkErr"),bt=dlg.querySelector("[type=submit]"),a=$("#pk1").value.trim();
+    const v=portaoValidar(a,$("#pk2").value.trim());if(v){er.textContent=v;er.hidden=false;return}bt.disabled=true;bt.textContent="A guardar…";
+    const{error}=await sb.rpc("portao_definir",{codigo:a});if(error){bt.disabled=false;bt.textContent="Guardar código";er.textContent=error.message;er.hidden=false;return}
+    portaoMarcar();fechar();toast(p?"Código de acesso alterado":"Código de acesso criado");carregarSeg()}}
 
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
 Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
@@ -4620,7 +4691,8 @@ async function supaGate(){
   if(emRecuperacao){sb.auth.onAuthStateChange((ev,s)=>{if(s&&emRecuperacao){emRecuperacao=false;telaNovaSenha(s.user.email)}});
     const{data}=await sb.auth.getSession();if(data.session){emRecuperacao=false;return telaNovaSenha(data.session.user.email)}
     setTimeout(()=>{if(emRecuperacao){emRecuperacao=false;limparEndereco();telaLoginEmail("Não foi possível validar o link. Peça um novo em “Esqueci a senha”.")}},6000);return}
-  try{const{data}=await sb.auth.getSession();
+  try{if(!(await portaoPassar()))return;
+    const{data}=await sb.auth.getSession();
     if(data.session)return supaEntrar(data.session.user.email);
     const e=await fnUtilizadores({acao:"estado"});
     if(!e.temAdmin)return telaPrimeiroAdmin();
@@ -4694,7 +4766,7 @@ async function supaEntrar(email){
     await db.carregar();entrar();srvEstado();carregarPedidos();segIniciar(segNovoLogin);segNovoLogin=false;
   }catch(err){console.error(err);telaAuth("Erro ao carregar","Não foi possível carregar os dados. Verifique a Internet e tente de novo.",`<button class="btn pri" onclick="location.reload()">Tentar de novo</button>`)}
 }
-async function supaSair(msg){try{atvReg("terminou sessão","","",true);await new Promise(r=>setTimeout(r,250));segParar();pararPedidos();db.parar();await sb.auth.signOut()}catch(_){}telaLoginEmail(msg)}
+async function supaSair(msg){try{sessionStorage.removeItem("hs_portao_ok")}catch(_){}try{atvReg("terminou sessão","","",true);await new Promise(r=>setTimeout(r,250));segParar();pararPedidos();db.parar();await sb.auth.signOut()}catch(_){}if(await portaoPassar(msg))telaLoginEmail(msg)}
 
 /* ---------- conta e utilizadores (Definições) ---------- */
 function contaSupaHTML(){if(!admin)return"";const ehAdmin=admin.papel==="admin";return`
