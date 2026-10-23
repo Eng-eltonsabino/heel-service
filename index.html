@@ -1277,7 +1277,7 @@ const IPTV={
   novo:["+ Novo cliente",()=>abrirCliente()],
   build(t){const v=$("#view");
     if(t==="painel")v.innerHTML=banner()+`
-      <div><h1>IPTV</h1><p class="sub" id="hojeTxt"></p></div>
+      <div class="row spread"><div><h1>IPTV</h1><p class="sub" id="hojeTxt"></p></div><button class="btn" data-act="relatorio" data-neg="iptv">Relatório PDF</button></div>
       <section class="kpis" id="kpis"></section>
       <div class="grid2">
         <section class="panel"><header><div><h2>Precisam de atenção</h2><p class="sub">Contas a expirar e contas expiradas</p></div><div class="row" style="gap:6px"><button class="btn sm" data-act="copiar-emails">Copiar e-mails</button><button class="btn sm" data-act="copiar-tels">Copiar telefones (SMS)</button><button class="btn sm pri" data-act="avisar-todos">Avisar todos</button></div></header><div class="list" id="atencao"></div></section>
@@ -1788,7 +1788,7 @@ const SERV={
   novo:["+ Nova cotação",()=>abrirCotacao()],
   build(t){const v=$("#view");
     if(t==="painel")v.innerHTML=banner()+`
-      <div class="row spread"><div><h1>Prestação de serviços</h1><p class="sub">Cotações no modelo Heel Service a partir do seu catálogo de serviços.</p></div><button class="btn pri" data-act="nova-cotacao">+ Nova cotação</button></div>
+      <div class="row spread"><div><h1>Prestação de serviços</h1><p class="sub">Cotações no modelo Heel Service a partir do seu catálogo de serviços.</p></div><div class="row"><button class="btn" data-act="relatorio" data-neg="serv">Relatório PDF</button><button class="btn pri" data-act="nova-cotacao">+ Nova cotação</button></div></div>
       <section class="kpis" id="vKpis"></section>
       <div class="grid2">
         <section class="panel"><header><div><h2>Cotações pendentes</h2><p class="sub">À espera de resposta do cliente</p></div><button class="btn sm" data-tab="cotacoes">Ver todas</button></header><div class="list" id="vPend"></div></section>
@@ -2067,7 +2067,7 @@ const MICRO={
   novo:["+ Novo empréstimo",()=>abrirNovoEmp()],
   build(t){const v=$("#view");
     if(t==="painel")v.innerHTML=banner()+`
-      <div><h1>Painel de empréstimos</h1><p class="sub">Acompanhe a sua carteira com os empréstimos registados.</p></div>
+      <div class="row spread"><div><h1>Painel de empréstimos</h1><p class="sub">Acompanhe a sua carteira com os empréstimos registados.</p></div><button class="btn" data-act="relatorio" data-neg="micro">Relatório PDF</button></div>
       <section class="panel" style="padding:16px;display:grid;gap:12px">
         <div class="row spread"><div><h2>Quantia investida</h2><p class="sub">O dinheiro que tem disponível para emprestar.</p></div>
           <label class="f" style="width:min(240px,100%)">Quantia investida (MT)<input id="mCapital" type="number" min="0" step="any" value="${esc(S.mcfg.capital||0)}" inputmode="decimal"></label></div>
@@ -2862,6 +2862,310 @@ async function ctrAcao(a,k,id,b){
   if(a==="ctr-apagar"&&c){if(confirmar(b,"Confirmar eliminação")){await store.del(CTR[k].col,id);fechar();toast("Contrato eliminado")}return}
 }
 
+/* ================= RELATÓRIO DE GESTÃO (PDF) ================= */
+/* One report for the three businesses: what came in, how it splits, and how it compares with the period before.
+   Charts are drawn as vector shapes in the PDF (no images), so they stay sharp when printed. */
+const RNEG=[{k:"serv",nome:"Serviços",longo:"Prestação de serviços",cor:[42,120,214]},
+  {k:"iptv",nome:"IPTV",longo:"IPTV",cor:[235,104,52]},
+  {k:"mc",nome:"Microcrédito",longo:"Microcrédito",cor:[27,175,122]}];
+/* categorical slots in fixed order (validated palette), grey for "Outros" */
+const RCAT=[[42,120,214],[235,104,52],[27,175,122],[237,161,0],[232,123,164],[98,80,214]],ROUTROS=[160,167,180];
+const RST={bom:[12,163,12],aviso:[250,178,25],serio:[236,131,90],critico:[208,59,59],neutro:[160,167,180]};
+const RMUT=[82,88,102],RGRID=[226,229,234],RSOFT=[244,246,249],RPREV=[196,201,210];
+const MES3=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+
+/* ---------- months and periods ---------- */
+const kAdd=(k,n)=>{let[y,m]=k.split("-").map(Number);m+=n;while(m>12){m-=12;y++}while(m<1){m+=12;y--}return y+"-"+pad(m)};
+const kRange=(a,b)=>{const o=[];for(let k=a;k<=b&&o.length<240;k=kAdd(k,1))o.push(k);return o};
+const kCurto=(k,ano)=>MES3[+k.slice(5,7)-1]+(ano?"/"+k.slice(2,4):"");
+function relPrimeiroMes(){
+  const ds=[];S.vdocs.forEach(x=>ds.push(x.data));S.docs.forEach(x=>ds.push(x.data));S.clientes.forEach(c=>ds.push(String(c.criadoEm||c.inicio||"")));
+  S.emprestimos.forEach(e=>{ds.push(e.inicio);(e.pagamentos||[]).forEach(p=>ds.push(p.data))});
+  const ks=ds.map(d=>String(d||"").slice(0,7)).filter(k=>/^\d{4}-\d{2}$/.test(k)).sort();return ks[0]||hoje().slice(0,7);
+}
+const relRot=(a,b)=>a===b?mesNome(a):a.slice(0,4)===b.slice(0,4)?mesNome(a,{month:"long"})+" a "+mesNome(b):mesNome(a)+" a "+mesNome(b);
+function relPeriodo(o){
+  const cur=hoje().slice(0,7);let a=cur,b=cur;
+  if(o.op==="mes")a=b=o.de||cur;
+  else if(o.op==="3m")a=kAdd(cur,-2);else if(o.op==="6m")a=kAdd(cur,-5);else if(o.op==="12m")a=kAdd(cur,-11);
+  else if(o.op==="ano")a=cur.slice(0,4)+"-01";
+  else if(o.op==="anoant"){const y=+cur.slice(0,4)-1;a=y+"-01";b=y+"-12"}
+  else if(o.op==="tudo"){a=relPrimeiroMes();if(a>cur)a=cur}
+  else{a=o.de||cur;b=o.ate||cur;if(a>b)[a,b]=[b,a]}
+  const meses=kRange(a,b),n=meses.length,ad=kAdd(a,-n),aa=kAdd(a,-1);
+  return{de:a,ate:b,meses,n,rot:relRot(a,b),ant:{de:ad,ate:aa,meses:kRange(ad,aa),rot:relRot(ad,aa)}};
+}
+
+/* ---------- numbers ---------- */
+function relCalc(P){
+  const inP=d=>{const k=String(d||"").slice(0,7);return k>=P.de&&k<=P.ate};
+  const porMes={};P.meses.forEach(k=>porMes[k]={serv:0,iptv:0,mc:0,prev:0,nIptv:0});
+  const addM=(d,c,v)=>{const k=String(d||"").slice(0,7);if(porMes[k])porMes[k][c]=r2(porMes[k][c]+(Number(v)||0))};
+  /* serviços */
+  const sv={},rec=S.vdocs.filter(x=>x.tipo==="recibo"&&x.estado!=="anulado"&&inP(x.data));
+  rec.forEach(x=>addM(x.data,"serv",x.total));
+  sv.recebido=soma(rec,x=>x.total);sv.nRec=rec.length;sv.medio=rec.length?r2(sv.recebido/rec.length):0;
+  const cot=S.vdocs.filter(x=>x.tipo==="cotacao"&&inP(x.data)),vivas=cot.filter(x=>x.estado!=="anulado");
+  sv.nCot=vivas.length;sv.valCot=soma(vivas,x=>x.total);
+  const est={aceite:0,pendente:0,caducada:0,anulado:0};cot.forEach(d=>{const e=estadoCot(d);est[e]=(est[e]||0)+1});sv.estCot=est;
+  const resp=est.aceite+est.caducada+est.anulado;sv.taxa=resp?Math.round(est.aceite/resp*100):null;
+  const cat={},top={};
+  rec.forEach(d=>(d.itens||[]).forEach(i=>{const ds=String(i.desc||"");if(/^(IVA|Desconto)/i.test(ds))return;const v=linhaTot(itemCot(i));if(!(v>0))return;
+    const s=S.servicos.find(x=>x.id&&(x.id===i.sid||x.id===i.servicoId))||S.servicos.find(x=>x.nome===ds)||S.servicos.find(x=>x.nome&&ds.startsWith(x.nome));
+    const c=(s&&s.categoria)||"Outros",nm=s?s.nome:ds;cat[c]=r2((cat[c]||0)+v);top[nm]=r2((top[nm]||0)+v)}));
+  sv.cat=cat;sv.top=top;sv.nCli=new Set(rec.map(d=>d.clienteId||d.cliente?.nome)).size;
+  /* IPTV */
+  const tv={},tr=S.docs.filter(x=>x.tipo==="recibo"&&x.estado!=="anulado"&&inP(x.data));
+  tr.forEach(x=>{addM(x.data,"iptv",x.total);addM(x.data,"nIptv",1)});
+  tv.recebido=soma(tr,x=>x.total);tv.nRec=tr.length;tv.medio=tr.length?r2(tv.recebido/tr.length):0;
+  tv.novos=S.clientes.filter(c=>inP(String(c.criadoEm||c.inicio||"").slice(0,10))).length;
+  const pl={};tr.forEach(d=>(d.itens||[]).forEach(i=>{const ds=String(i.desc||""),v=r2((Number(i.qtd)||0)*(Number(i.preco)||0));if(!(v>0))return;
+    const p=(S.cfg.planos||[]).find(p=>p.nome&&ds.includes(p.nome));const k=p?p.nome:"Outros";pl[k]=r2((pl[k]||0)+v)}));
+  tv.planos=pl;
+  /* microcrédito */
+  const mc={capRec:0,jurRec:0,recebido:0,nPag:0};
+  S.emprestimos.forEach(e=>{if(e.estado==="anulado")return;const share=Number(e.total)>0?Math.min(1,Number(e.valor)/Number(e.total)):1;
+    (e.pagamentos||[]).forEach(p=>{if(!inP(p.data))return;const v=Number(p.valor)||0;mc.recebido=r2(mc.recebido+v);mc.nPag++;mc.capRec=r2(mc.capRec+v*share);addM(p.data,"mc",v)});
+    (e.prestacoes||[]).forEach(p=>{if(inP(p.venc))addM(p.venc,"prev",p.valor)})});
+  mc.jurRec=r2(mc.recebido-mc.capRec);
+  const conc=S.emprestimos.filter(e=>e.estado!=="anulado"&&inP(e.inicio||String(e.criadoEm||"").slice(0,10)));
+  mc.nEmp=conc.length;mc.emprestado=soma(conc,e=>e.valor);mc.jurosContratados=soma(conc,e=>e.juros);
+  mc.previsto=soma(P.meses,k=>porMes[k].prev);
+  const total=r2(sv.recebido+tv.recebido+mc.recebido);
+  return{P,sv,tv,mc,porMes,total,por:{serv:sv.recebido,iptv:tv.recebido,mc:mc.recebido}};
+}
+/* the state of things today (not tied to a period) */
+function relHoje(){
+  const es={ok:0,warn:0,bad:0,sem:0};S.clientes.forEach(c=>{const k=estado(c).k;es[k]=(es[k]||0)+1});
+  const sit={ativo:0,atraso:0,liquidado:0};S.emprestimos.forEach(e=>{const k=situacao(e).k;if(k in sit)sit[k]++});
+  const r=resumo();return{iptv:es,emp:sit,porReceber:r.saldo,atraso:r.atraso,nAtraso:r.nAtraso,jurosPorReceber:r2(r.prof-r.jurosRec),ativos:r.n};
+}
+const relVar=(a,b)=>b>0.004?(a-b)/b*100:null;
+const relVarTxt=v=>v==null?"—":(v>0?"+":"")+v.toLocaleString("pt-PT",{maximumFractionDigits:1,minimumFractionDigits:v!==0&&Math.abs(v)<10?1:0})+"%";
+const relCmp=v=>{v=Number(v)||0;const a=Math.abs(v),f=(x,d)=>x.toLocaleString("pt-PT",{maximumFractionDigits:d});return a>=1e6?f(v/1e6,1)+" M":a>=1e3?f(v/1e3,a>=1e4?0:1)+" mil":f(v,0)};
+
+/* ---------- drawing ---------- */
+function rT(pdf,t,x,y,{s=8.5,b=false,c=INK,al="left"}={}){pdf.setFont("helvetica",b?"bold":"normal");pdf.setFontSize(s);pdf.setTextColor(...c);pdf.text(String(t),x,y,{align:al})}
+function rPoly(pdf,pts){const d=[];for(let i=1;i<pts.length;i++)d.push([pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]]);pdf.lines(d,pts[0][0],pts[0][1],[1,1],"F",true)}
+function rTitulo(pdf,t,sub,x,y){rT(pdf,t,x,y,{s:10,b:true});if(sub)rT(pdf,sub,x,y+4,{s:7.2,c:RMUT});return y+(sub?8:5)}
+/* up/down marker drawn as a shape (the PDF font has no arrow glyphs) */
+function rSeta(pdf,x,y,v){if(v==null||Math.abs(v)<0.05)return 0;const up=v>0;pdf.setFillColor(...(up?RST.bom:RST.critico));
+  if(up)pdf.triangle(x,y,x+2.6,y,x+1.3,y-2.3,"F");else pdf.triangle(x,y-2.3,x+2.6,y-2.3,x+1.3,y,"F");return 3.6}
+function rKpi(pdf,x,y,w,h,{rot,val,cor,v,nota}){
+  pdf.setFillColor(...RSOFT);pdf.rect(x,y,w,h,"F");if(cor){pdf.setFillColor(...cor);pdf.rect(x,y,1.3,h,"F")}
+  rT(pdf,rot,x+4,y+5.6,{s:7.2,c:RMUT});
+  let fs=13;pdf.setFont("helvetica","bold");pdf.setFontSize(fs);while(fs>8&&pdf.getTextWidth(val)>w-7){fs-=0.5;pdf.setFontSize(fs)}
+  rT(pdf,val,x+4,y+13.4,{s:fs,b:true});
+  if(v!==undefined){const dx=rSeta(pdf,x+4,y+h-4,v);rT(pdf,v==null?"Sem dados anteriores":relVarTxt(v)+" vs período anterior",x+4+dx,y+h-4,{s:6.8,c:RMUT})}
+  else if(nota){pdf.setFontSize(6.8);const ls=pdf.splitTextToSize(nota,w-7).slice(0,2);ls.forEach((l,i)=>rT(pdf,l,x+4,y+h-4-(ls.length-1-i)*3,{s:6.8,c:RMUT}))}
+}
+/* two-line legend rows: name and share, then the value underneath */
+function rLegenda(pdf,x,y,w,its,tot,{valor=mt}={}){
+  its.forEach((it,i)=>{const yy=y+i*8.4;pdf.setFillColor(...it.cor);pdf.rect(x,yy-2.6,3,3,"F");
+    const p=tot>0?Math.round(it.v/tot*100):0;pdf.setFont("helvetica","normal");pdf.setFontSize(7.6);
+    rT(pdf,fit(pdf,it.nome,w-14),x+5,yy,{s:7.6});rT(pdf,p+"%",x+w,yy,{s:7.6,b:true,al:"right"});rT(pdf,valor(it.v),x+5,yy+3.5,{s:6.8,c:RMUT})});
+  return y+its.length*8.4;
+}
+function rDonut(pdf,cx,cy,R,ri,its,centro){
+  const tot=its.reduce((s,x)=>s+Math.max(0,x.v),0);
+  if(!(tot>0)){pdf.setDrawColor(...RGRID);pdf.setLineWidth(R-ri);pdf.circle(cx,cy,(R+ri)/2,"S");rT(pdf,"Sem dados",cx,cy+1.2,{s:7.5,c:RMUT,al:"center"});return}
+  let a=-Math.PI/2;const cortes=[];
+  its.forEach(it=>{if(!(it.v>0))return;const sw=it.v/tot*2*Math.PI,st=Math.max(2,Math.ceil(sw/(Math.PI/90))),pts=[];
+    for(let i=0;i<=st;i++){const t=a+sw*i/st;pts.push([cx+R*Math.cos(t),cy+R*Math.sin(t)])}
+    for(let i=st;i>=0;i--){const t=a+sw*i/st;pts.push([cx+ri*Math.cos(t),cy+ri*Math.sin(t)])}
+    pdf.setFillColor(...it.cor);rPoly(pdf,pts);cortes.push(a);a+=sw});
+  if(cortes.length>1){pdf.setDrawColor(255,255,255);pdf.setLineWidth(0.7);cortes.forEach(t=>pdf.line(cx+(ri-0.3)*Math.cos(t),cy+(ri-0.3)*Math.sin(t),cx+(R+0.3)*Math.cos(t),cy+(R+0.3)*Math.sin(t)))}
+  if(centro){rT(pdf,centro[0],cx,cy+0.4,{s:centro[0].length>8?7.6:9,b:true,al:"center"});rT(pdf,centro[1],cx,cy+4.2,{s:6.4,c:RMUT,al:"center"})}
+}
+/* a donut with its legend beside it, in a box of width w */
+function rDonutBloco(pdf,x,y,w,titulo,sub,its,centro,o){
+  let yy=rTitulo(pdf,titulo,sub,x,y);
+  const tot=its.reduce((s,i)=>s+Math.max(0,i.v),0),R=17,vis=its.filter(i=>i.v>0).slice(0,6);rDonut(pdf,x+R+1,yy+R+2,R,R*0.6,its,centro);
+  const ly=yy+Math.max(5,R+2-vis.length*4.2+2.6),fim=rLegenda(pdf,x+2*R+9,ly,w-(2*R+9),vis,tot,o);
+  if(!vis.length)rT(pdf,"Nada registado neste período.",x+2*R+9,yy+R+3,{s:7.4,c:RMUT});
+  return Math.max(yy+2*R+6,fim);
+}
+/* fold to at most n slices: the rest becomes "Outros" */
+function rFatias(obj,n,nomeOutros="Outros"){
+  const ent=Object.entries(obj).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);let out=ent.slice(0,n),resto=ent.slice(n);
+  const o=out.findIndex(([k])=>k===nomeOutros);let extra=resto.reduce((s,[,v])=>s+v,0);
+  if(o>=0){extra+=out[o][1];out.splice(o,1)}
+  const its=out.map(([k,v],i)=>({nome:k,v,cor:RCAT[i]}));if(extra>0)its.push({nome:nomeOutros,v:r2(extra),cor:ROUTROS});return its;
+}
+function rPasso(m){if(!(m>0))return 1;const raw=m/4,p=10**Math.floor(Math.log10(raw)),f=[1,2,2.5,5,10].find(s=>s*p>=raw);return f*p}
+/* vertical bars: series stacked or side by side; s.cores (one per category) lets a series carry each category's colour */
+function rBarras(pdf,{x,y,w,h,cats,series,modo="stack",rotulos=true,fmt=relCmp,destaque=-1}){
+  const n=cats.length,pl=x+13,pw=w-13,somaCat=i=>series.reduce((s,se)=>s+Math.max(0,se.vals[i]||0),0);
+  const mx=modo==="stack"?Math.max(0,...cats.map((_,i)=>somaCat(i))):Math.max(0,...series.flatMap(s=>s.vals));
+  const st=rPasso(mx),top=Math.max(st,Math.ceil(mx/st)*st),Y=v=>y+h-(v/top)*h;
+  pdf.setLineWidth(0.15);
+  for(let t=0;t<=top+1e-9;t+=st){const yy=Y(t);pdf.setDrawColor(...(t===0?[150,156,168]:RGRID));pdf.line(pl,yy,x+w,yy);rT(pdf,relCmp(t),pl-2,yy+1,{s:6.2,c:RMUT,al:"right"})}
+  const sw=pw/Math.max(1,n),bw=Math.min(sw*(modo==="group"?0.74:0.6),modo==="group"?16:12),salto=n>14?Math.ceil(n/12):1;
+  cats.forEach((c,i)=>{const cx=pl+sw*i+sw/2;
+    if(modo==="stack"){let acc=0;series.forEach(se=>{const v=Math.max(0,se.vals[i]||0);if(!v)return;const y1=Y(acc+v),y0=Y(acc);pdf.setFillColor(...se.cor);pdf.rect(cx-bw/2,y1,bw,Math.max(0.2,y0-y1-0.35),"F");acc+=v});
+      if(rotulos&&acc>0&&(n<=12||i===destaque))rT(pdf,fmt(acc),cx,Y(acc)-1.4,{s:6.2,b:i===destaque,c:i===destaque?INK:RMUT,al:"center"})}
+    else{const ns=series.length,gw=bw/ns;series.forEach((se,j)=>{const v=Math.max(0,se.vals[i]||0),bx=cx-bw/2+j*gw;if(v>0){pdf.setFillColor(...(se.cores?se.cores[i]:se.cor));pdf.rect(bx+0.25,Y(v),gw-0.5,Y(0)-Y(v),"F")}
+      if(rotulos&&n*ns<=16)rT(pdf,v>0?fmt(v):"0",bx+gw/2,Y(v)-1.3,{s:5.8,c:RMUT,al:"center"})})}
+    if(i%salto===0)rT(pdf,c,cx,y+h+4,{s:6.4,b:i===destaque,c:i===destaque?INK:RMUT,al:"center"})});
+  return y+h+9;
+}
+function rLegLinha(pdf,x,y,its){let xx=x;its.forEach(it=>{pdf.setFillColor(...it.cor);pdf.rect(xx,y-2.5,3,3,"F");rT(pdf,it.nome,xx+4.2,y,{s:7.2,c:INK});pdf.setFontSize(7.2);xx+=4.2+pdf.getTextWidth(it.nome)+6})}
+/* horizontal ranking bars */
+function rRanking(pdf,x,y,w,its,cor,vazio){
+  if(!its.length){rT(pdf,vazio,x,y+4,{s:7.4,c:RMUT});return y+8}
+  const mx=Math.max(...its.map(i=>i.v)),lw=w*0.42,bwM=w-lw-26;
+  its.forEach((it,i)=>{const yy=y+i*6.2;rT(pdf,fit(pdf,it.nome,lw-2),x,yy+3.6,{s:7.4});pdf.setFillColor(...cor);pdf.rect(x+lw,yy+0.8,Math.max(0.6,it.v/mx*bwM),3.8,"F");
+    rT(pdf,mt(it.v),x+w,yy+3.6,{s:7.2,c:RMUT,al:"right"})});
+  return y+its.length*6.2+2;
+}
+/* 100% bar split in two or three parts with labels underneath */
+function rPartes(pdf,x,y,w,its){
+  const tot=its.reduce((s,i)=>s+Math.max(0,i.v),0);
+  if(!(tot>0)){pdf.setFillColor(...RGRID);pdf.rect(x,y,w,6,"F");rT(pdf,"Sem pagamentos neste período.",x,y+11,{s:7.4,c:RMUT});return y+14}
+  let xx=x;its.forEach(it=>{if(!(it.v>0))return;const ww=it.v/tot*w;pdf.setFillColor(...it.cor);pdf.rect(xx,y,Math.max(0.3,ww-0.5),6,"F");xx+=ww});
+  its.forEach((it,i)=>{const yy=y+11+i*6;pdf.setFillColor(...it.cor);pdf.rect(x,yy-2.6,3,3,"F");rT(pdf,it.nome,x+5,yy,{s:7.6});rT(pdf,Math.round(it.v/tot*100)+"%",x+w,yy,{s:7.6,b:true,al:"right"});rT(pdf,mt(it.v),x+w-10,yy,{s:7.2,c:RMUT,al:"right"})});
+  return y+11+its.length*6;
+}
+function rComparar(pdf,y,linhas){
+  const cols=[{t:"Indicador",x:X.A,w:72},{t:"Período atual",x:X.A+72,w:38,al:"right"},{t:"Período anterior",x:X.A+110,w:38,al:"right"},{t:"Variação",x:X.A+148,w:X.END-X.A-148,al:"right"}];
+  return pdfTabela(pdf,y,cols,linhas.map(([l,a,b,f])=>[l,(f||mt)(a),(f||mt)(b),relVarTxt(relVar(a,b))]));
+}
+async function rCabecalho(pdf,titulo,P,negs){
+  const PT=38.4;await pdfTopo(pdf,titulo);
+  rT(pdf,"Período: "+P.rot,X.A,PT+6.2,{s:9.5,b:true});
+  rT(pdf,"Comparado com "+P.ant.rot+" · Emitido em "+fmtD(hoje())+(negs?" · "+negs:""),X.A,PT+10.6,{s:7.2,c:RMUT});
+  return PT+15;
+}
+/* months shown in the charts: the period itself, with context when it is a single month */
+function rMesesGraf(P){if(P.n===1)return kRange(kAdd(P.ate,-5),P.ate);return P.meses.slice(-24)}
+
+/* ---------- the PDF ---------- */
+async function pdfRelatorio(o){
+  const pdf=novoPDF();if(!pdf)return null;await precarregar();
+  const P=relPeriodo(o),A=relCalc(P),B=relCalc(P.ant),H=relHoje(),neg=RNEG.filter(n=>o.negs[n.k]);
+  const negTxt=neg.map(n=>n.nome).join(", ").replace(/, ([^,]*)$/," e $1");
+  const W=X.END-X.A,half=(W-8)/2;
+  const gm=rMesesGraf(P),ctx=P.n===1?relCalc({de:gm[0],ate:gm[gm.length-1],meses:gm}):A,anos=gm[0].slice(0,4)!==gm[gm.length-1].slice(0,4);
+  const cats=gm.map(k=>kCurto(k,anos)),dest=gm.indexOf(P.ate);
+
+  /* page 1: everything together */
+  let y=await rCabecalho(pdf,"RELATÓRIO DE GESTÃO · RESUMO GERAL",P,negTxt);
+  const tot=r2(neg.reduce((s,n)=>s+A.por[n.k],0)),totB=r2(neg.reduce((s,n)=>s+B.por[n.k],0));
+  const kw=(W-3*neg.length)/(neg.length+1);
+  rKpi(pdf,X.A,y,kw,24,{rot:"Total recebido",val:mt(tot),v:relVar(tot,totB),cor:NAVY});
+  neg.forEach((n,i)=>rKpi(pdf,X.A+(i+1)*(kw+3),y,kw,24,{rot:n.nome,val:mt(A.por[n.k]),v:relVar(A.por[n.k],B.por[n.k]),cor:n.cor}));
+  y+=32;
+  const yA=rDonutBloco(pdf,X.A,y,half,"Peso de cada negócio","Parte de cada um no total recebido",neg.map(n=>({nome:n.nome,v:A.por[n.k],cor:n.cor})),[relCmp(tot),"MT recebidos"]);
+  let yB=rTitulo(pdf,"Comparação com o período anterior","Atual (cor do negócio) e anterior (cinzento), em MT",X.A+half+8,y);
+  yB=rBarras(pdf,{x:X.A+half+8,y:yB+3,w:half,h:30,cats:neg.map(n=>n.nome),modo:"group",series:[{nome:"Anterior",cor:RPREV,vals:neg.map(n=>B.por[n.k])},{nome:"Atual",cores:neg.map(n=>n.cor),vals:neg.map(n=>A.por[n.k])}]});
+  y=Math.max(yA,yB)+4;
+  y=rTitulo(pdf,"Recebido por mês",P.n===1?"Os 6 meses até "+mesNome(P.ate)+", em MT":"Em MT, por negócio",X.A,y);
+  rLegLinha(pdf,X.END-60,y-6.5,neg.map(n=>({nome:n.nome,cor:n.cor})));
+  y=rBarras(pdf,{x:X.A,y:y+3,w:W,h:44,cats,series:neg.map(n=>({nome:n.nome,cor:n.cor,vals:gm.map(k=>ctx.porMes[k]?.[n.k]||0)})),destaque:P.n===1?dest:-1})+2;
+  y=rTitulo(pdf,"Mês a mês","Valores recebidos e variação face ao mês anterior",X.A,y);
+  {const ext=[kAdd(P.de,-1),...P.meses],todos=relCalc({de:ext[0],ate:P.ate,meses:ext});
+    const MW=36,cw=(W-MW)/(neg.length+2),cols=[{t:"Mês",x:X.A,w:MW},...neg.map((n,i)=>({t:n.nome,x:X.A+MW+i*cw,w:cw,al:"right"})),{t:"Total",x:X.A+MW+neg.length*cw,w:cw,al:"right"},{t:"Variação",x:X.A+MW+(neg.length+1)*cw,w:X.END-(X.A+MW+(neg.length+1)*cw),al:"right"}];
+    const tm=k=>r2(neg.reduce((s,n)=>s+(todos.porMes[k]?.[n.k]||0),0));
+    const rows=P.meses.map(k=>[mesNome(k),...neg.map(n=>mt(todos.porMes[k][n.k])),mt(tm(k)),relVarTxt(relVar(tm(k),tm(kAdd(k,-1))))]);
+    if(P.n>1)rows.push(["Total",...neg.map(n=>mt(A.por[n.k])),mt(tot),relVarTxt(relVar(tot,totB))]);
+    y=pdfTabela(pdf,y,cols,rows)}
+
+  /* page: serviços */
+  if(o.negs.serv){pdf.addPage();const sv=A.sv,sb=B.sv,c=RNEG[0].cor;
+    y=await rCabecalho(pdf,"RELATÓRIO DE GESTÃO · PRESTAÇÃO DE SERVIÇOS",P);
+    const w4=(W-9)/4;
+    rKpi(pdf,X.A,y,w4,24,{rot:"Faturado (recibos)",val:mt(sv.recebido),v:relVar(sv.recebido,sb.recebido),cor:c});
+    rKpi(pdf,X.A+(w4+3),y,w4,24,{rot:"Recibos emitidos",val:String(sv.nRec),nota:"Valor médio: "+mt(sv.medio)});
+    rKpi(pdf,X.A+2*(w4+3),y,w4,24,{rot:"Cotações emitidas",val:String(sv.nCot),nota:mt(sv.valCot)+" em propostas"});
+    rKpi(pdf,X.A+3*(w4+3),y,w4,24,{rot:"Taxa de aceitação",val:sv.taxa==null?"—":sv.taxa+"%",nota:"Das cotações já respondidas"});
+    y+=32;
+    const ec=sv.estCot,yA=rDonutBloco(pdf,X.A,y,half,"Faturação por categoria","Pelas linhas dos recibos, sem IVA",rFatias(sv.cat,5),[relCmp(soma(Object.values(sv.cat),v=>v)),"MT"]);
+    const yB=rDonutBloco(pdf,X.A+half+8,y,half,"Cotações por estado","Cotações emitidas neste período",[{nome:"Aceites",v:ec.aceite,cor:RST.bom},{nome:"Pendentes",v:ec.pendente,cor:RST.aviso},{nome:"Caducadas",v:ec.caducada,cor:RST.serio},{nome:"Anuladas",v:ec.anulado,cor:RST.neutro}],[String(sv.nCot+ec.anulado),"cotações"],{valor:v=>v+(v===1?" cotação":" cotações")});
+    y=Math.max(yA,yB)+4;
+    y=rTitulo(pdf,"Serviços mais faturados","Os 6 com maior valor nos recibos",X.A,y);
+    y=rRanking(pdf,X.A,y+1,W,Object.entries(sv.top).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([nome,v])=>({nome,v})),c,"Sem recibos de serviços neste período.")+3;
+    y=rTitulo(pdf,"Faturado por mês",P.n===1?"Os 6 meses até "+mesNome(P.ate)+", em MT":"Em MT",X.A,y);
+    y=rBarras(pdf,{x:X.A,y:y+3,w:W,h:24,cats,series:[{nome:"Serviços",cor:c,vals:gm.map(k=>ctx.porMes[k]?.serv||0)}],destaque:P.n===1?dest:-1})+2;
+    y=rTitulo(pdf,"Comparação com o período anterior",P.rot+" e "+P.ant.rot,X.A,y);
+    rComparar(pdf,y,[["Faturado (recibos)",sv.recebido,sb.recebido],["Recibos emitidos",sv.nRec,sb.nRec,String],["Valor médio por recibo",sv.medio,sb.medio],["Cotações emitidas",sv.nCot,sb.nCot,String],["Valor das cotações",sv.valCot,sb.valCot],["Cotações aceites",ec.aceite,sb.estCot.aceite,String],["Clientes faturados",sv.nCli,sb.nCli,String]])}
+
+  /* page: IPTV */
+  if(o.negs.iptv){pdf.addPage();const tv=A.tv,tb=B.tv,c=RNEG[1].cor,es=H.iptv;
+    y=await rCabecalho(pdf,"RELATÓRIO DE GESTÃO · IPTV",P);
+    const w4=(W-9)/4;
+    rKpi(pdf,X.A,y,w4,24,{rot:"Recebido",val:mt(tv.recebido),v:relVar(tv.recebido,tb.recebido),cor:c});
+    rKpi(pdf,X.A+(w4+3),y,w4,24,{rot:"Pagamentos (recibos)",val:String(tv.nRec),nota:"Valor médio: "+mt(tv.medio)});
+    rKpi(pdf,X.A+2*(w4+3),y,w4,24,{rot:"Novos clientes",val:String(tv.novos),v:relVar(tv.novos,tb.novos)});
+    rKpi(pdf,X.A+3*(w4+3),y,w4,24,{rot:"Contas ativas hoje",val:String(es.ok+es.warn),nota:es.warn+" a expirar · "+es.bad+" expiradas"});
+    y+=32;
+    const ci=[{nome:"Ativas",v:es.ok,cor:RST.bom},{nome:"A expirar",v:es.warn,cor:RST.aviso},{nome:"Expiradas",v:es.bad,cor:RST.critico},{nome:"Sem validade",v:es.sem,cor:RST.neutro}];
+    const yA=rDonutBloco(pdf,X.A,y,half,"Clientes por estado","Situação das contas hoje",ci,[String(S.clientes.length),"clientes"],{valor:v=>v+(v===1?" cliente":" clientes")});
+    const yB=rDonutBloco(pdf,X.A+half+8,y,half,"Receita por plano","Recibos deste período",rFatias(tv.planos,5),[relCmp(tv.recebido),"MT"]);
+    y=Math.max(yA,yB)+4;
+    y=rTitulo(pdf,"Recebido por mês",P.n===1?"Os 6 meses até "+mesNome(P.ate)+", em MT":"Em MT",X.A,y);
+    y=rBarras(pdf,{x:X.A,y:y+3,w:W,h:34,cats,series:[{nome:"IPTV",cor:c,vals:gm.map(k=>ctx.porMes[k]?.iptv||0)}],destaque:P.n===1?dest:-1})+2;
+    y=rTitulo(pdf,"Pagamentos por mês","Número de recibos emitidos",X.A,y);
+    y=rBarras(pdf,{x:X.A,y:y+3,w:W,h:22,cats,series:[{nome:"Recibos",cor:[244,164,128],vals:gm.map(k=>ctx.porMes[k]?.nIptv||0)}],fmt:v=>String(Math.round(v)),destaque:P.n===1?dest:-1})+2;
+    y=rTitulo(pdf,"Comparação com o período anterior",P.rot+" e "+P.ant.rot,X.A,y);
+    rComparar(pdf,y,[["Recebido",tv.recebido,tb.recebido],["Pagamentos (recibos)",tv.nRec,tb.nRec,String],["Valor médio por pagamento",tv.medio,tb.medio],["Novos clientes",tv.novos,tb.novos,String]])}
+
+  /* page: microcrédito */
+  if(o.negs.mc){pdf.addPage();const mc=A.mc,mb=B.mc,c=RNEG[2].cor,em=H.emp;
+    y=await rCabecalho(pdf,"RELATÓRIO DE GESTÃO · MICROCRÉDITO",P);
+    const w4=(W-9)/4;
+    rKpi(pdf,X.A,y,w4,24,{rot:"Recebido",val:mt(mc.recebido),v:relVar(mc.recebido,mb.recebido),cor:c});
+    rKpi(pdf,X.A+(w4+3),y,w4,24,{rot:"Emprestado no período",val:mt(mc.emprestado),nota:mc.nEmp+(mc.nEmp===1?" empréstimo":" empréstimos")});
+    rKpi(pdf,X.A+2*(w4+3),y,w4,24,{rot:"Por receber hoje",val:mt(H.porReceber),nota:"Juros por receber: "+mt(H.jurosPorReceber)});
+    rKpi(pdf,X.A+3*(w4+3),y,w4,24,{rot:"Em atraso hoje",val:mt(H.atraso),nota:H.nAtraso+(H.nAtraso===1?" empréstimo":" empréstimos")+" em atraso"});
+    y+=32;
+    const yA=rDonutBloco(pdf,X.A,y,half,"Empréstimos por situação","Situação hoje",[{nome:"Em dia",v:em.ativo,cor:RST.bom},{nome:"Em atraso",v:em.atraso,cor:RST.critico},{nome:"Liquidados",v:em.liquidado,cor:RST.neutro}],[String(em.ativo+em.atraso+em.liquidado),"empréstimos"],{valor:v=>v+(v===1?" empréstimo":" empréstimos")});
+    let yB=rTitulo(pdf,"O que foi recebido","Parte do valor emprestado e parte de juros",X.A+half+8,y);
+    yB=rPartes(pdf,X.A+half+8,yB+4,half,[{nome:"Capital devolvido",v:mc.capRec,cor:c},{nome:"Juros",v:mc.jurRec,cor:RCAT[3]}]);
+    rT(pdf,"Cumprimento: "+(mc.previsto>0?Math.round(Math.min(mc.recebido,mc.previsto)/mc.previsto*100)+"% do previsto no período":"sem prestações previstas"),X.A+half+8,yB+3,{s:7.4,c:RMUT});
+    y=Math.max(yA,yB+6)+4;
+    y=rTitulo(pdf,"Previsto e recebido por mês",(P.n===1?"Os 6 meses até "+mesNome(P.ate):"Prestações a vencer e pagamentos recebidos")+", em MT",X.A,y);
+    rLegLinha(pdf,X.END-52,y-6.5,[{nome:"Previsto",cor:RPREV},{nome:"Recebido",cor:c}]);
+    y=rBarras(pdf,{x:X.A,y:y+3,w:W,h:40,cats,modo:"group",series:[{nome:"Previsto",cor:RPREV,vals:gm.map(k=>ctx.porMes[k]?.prev||0)},{nome:"Recebido",cor:c,vals:gm.map(k=>ctx.porMes[k]?.mc||0)}],destaque:P.n===1?dest:-1})+2;
+    y=rTitulo(pdf,"Comparação com o período anterior",P.rot+" e "+P.ant.rot,X.A,y);
+    rComparar(pdf,y,[["Recebido",mc.recebido,mb.recebido],["Capital devolvido",mc.capRec,mb.capRec],["Juros recebidos",mc.jurRec,mb.jurRec],["Prestações previstas",mc.previsto,mb.previsto],["Empréstimos concedidos",mc.nEmp,mb.nEmp,String],["Valor emprestado",mc.emprestado,mb.emprestado],["Juros contratados",mc.jurosContratados,mb.jurosContratados]])}
+
+  /* footer on every page */
+  const np=pdf.getNumberOfPages();
+  for(let i=1;i<=np;i++){pdf.setPage(i);pdf.setDrawColor(...RGRID);pdf.setLineWidth(0.2);pdf.line(X.A,284,X.END,284);
+    rT(pdf,(S.cfg.nome||"Heel Service")+" · Relatório de gestão · "+P.rot,X.A,288.5,{s:7,c:RMUT});rT(pdf,"Página "+i+" de "+np,X.END,288.5,{s:7,c:RMUT,al:"right"})}
+  const nm="relatorio-heel-service-"+(P.de===P.ate?P.de:P.de+"-a-"+P.ate)+".pdf";
+  return pdfOut(pdf,nm);
+}
+
+/* ---------- the dialog ---------- */
+function abrirRelatorio(neg){
+  const cur=hoje().slice(0,7),o=S.rel||(S.rel={op:"mes",de:S.lmes||cur,ate:cur,negs:{serv:true,iptv:true,mc:true}});
+  if(neg)o.negs={serv:neg==="serv",iptv:neg==="iptv",mc:neg==="micro"||neg==="mc"};
+  const meses=kRange(relPrimeiroMes()<cur?relPrimeiroMes():kAdd(cur,-11),cur).reverse(),mo=sel=>meses.map(k=>`<option value="${k}"${k===sel?" selected":""}>${mesNome(k)}</option>`).join("");
+  abrir(hdr("Relatório de gestão","PDF com o logotipo, gráficos circulares, gráficos de barras e a comparação com o período anterior.")+`
+  <div class="body">
+    <div class="fgrid">
+      <label class="f">Período<select id="rOp">${opts([["mes","Um mês"],["3m","Últimos 3 meses"],["6m","Últimos 6 meses"],["12m","Últimos 12 meses"],["ano","Este ano"],["anoant","Ano passado"],["tudo","Desde o início"],["pers","Escolher os meses"]],o.op)}</select></label>
+      <label class="f" id="rDeL">Mês<select id="rDe">${mo(o.de)}</select></label>
+      <label class="f" id="rAteL">Até<select id="rAte">${mo(o.ate)}</select></label>
+    </div>
+    <fieldset><legend>Negócios no relatório</legend><div class="row" style="gap:18px;flex-wrap:wrap">
+      ${RNEG.map(n=>`<label class="f check"><input type="checkbox" data-rneg="${n.k}"${o.negs[n.k]?" checked":""}> ${n.longo}</label>`).join("")}</div></fieldset>
+    <div class="summary" id="rPrev"></div>
+    <p class="note" id="rMsg" style="margin:0">O resumo geral vem sempre na primeira página. Cada negócio escolhido tem uma página com os seus gráficos.</p>
+  </div>
+  <footer><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="button" class="btn pri" id="rGo">Guardar PDF</button></footer>`,{nofocus:true});
+  const ler=()=>{o.op=$("#rOp").value;o.de=$("#rDe").value;o.ate=$("#rAte").value;dlg.querySelectorAll("[data-rneg]").forEach(c=>o.negs[c.dataset.rneg]=c.checked)};
+  const ver=()=>{ler();$("#rDeL").hidden=!["mes","pers"].includes(o.op);$("#rAteL").hidden=o.op!=="pers";$("#rDeL").firstChild.textContent=o.op==="pers"?"De":"Mês";
+    const P=relPeriodo(o),A=relCalc(P),B=relCalc(P.ant),ng=RNEG.filter(n=>o.negs[n.k]),t=r2(ng.reduce((s,n)=>s+A.por[n.k],0)),tb=r2(ng.reduce((s,n)=>s+B.por[n.k],0));
+    $("#rPrev").innerHTML=`<div><em>Período</em><b title="${esc(P.rot)}">${esc(P.rot)}</b></div><div><em>Total recebido</em><b>${mt(t)}</b></div><div><em>Vs ${esc(P.ant.rot)}</em><b>${relVarTxt(relVar(t,tb))}</b></div>`+ng.map(n=>`<div><em>${n.nome}</em><b>${mt(A.por[n.k])}</b></div>`).join("");
+    const g=$("#rGo");g.disabled=!ng.length;$("#rMsg").textContent=ng.length?`${ng.length+1} páginas: o resumo geral e ${ng.length===1?"a página de "+ng[0].nome:"uma página por negócio"}.`:"Escolha pelo menos um negócio."};
+  dlg.querySelector(".body").addEventListener("change",ver);ver();
+  $("#rGo").onclick=async()=>{const g=$("#rGo");ler();g.disabled=true;g.textContent="A preparar…";
+    try{await guardarPDF(()=>pdfRelatorio({...o,negs:{...o.negs}}))}catch(e){console.error(e);toast("Não foi possível criar o relatório.")}
+    g.disabled=false;g.textContent="Guardar PDF"};
+}
+
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
 Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
 const autoCfg=()=>({...AVISOS.AUTO_PADRAO,...(S.acfg||{})});
@@ -3402,9 +3706,9 @@ function ovHTML(){
   const card=(lbl,a,b,cls="")=>`<div class="ovc ${cls}"><em>${lbl}</em><b class="cnt">${mt(a)}</b><small>Total de todos os meses<strong>${mt(b)}</strong></small></div>`;
   const ms=MICRO.stats(),todos=[...S.docs,...S.vdocs],cotPend=todos.filter(x=>x.tipo==="cotacao"&&x.estado==="pendente"&&!(x.validade&&dias(x.validade)<0));
   return`<div class="ov-head"><div><h2>Resumo mensal</h2><p class="sub">Escolha o mês para ver os valores recebidos.</p></div>
-    <div class="mes-pick"><button type="button" class="mp-b" data-mp="1" ${i>=meses.length-1?"disabled":""} aria-label="Mês anterior">‹</button>
+    <div class="row" style="gap:10px;flex-wrap:wrap"><button type="button" class="btn sm" data-act="relatorio">Relatório PDF</button><div class="mes-pick"><button type="button" class="mp-b" data-mp="1" ${i>=meses.length-1?"disabled":""} aria-label="Mês anterior">‹</button>
     <select id="lmesSel" aria-label="Mês">${meses.map(k=>`<option value="${k}" ${k===sel?"selected":""}>${mesNome(k)}</option>`).join("")}</select>
-    <button type="button" class="mp-b" data-mp="-1" ${i<=0?"disabled":""} aria-label="Mês seguinte">›</button></div></div>
+    <button type="button" class="mp-b" data-mp="-1" ${i<=0?"disabled":""} aria-label="Mês seguinte">›</button></div></div></div>
   <div class="ov-grid">${card("Total recebido em "+mesNome(sel,{month:"long"}),tm,tt,"main")}${card("Serviços",v.serv,tot.serv)}${card("IPTV",v.iptv,tot.iptv)}${card("Microcrédito",v.mc,tot.mc)}</div>
   <div class="ov-bars" role="group" aria-label="Recebido nos últimos meses">${ult.map((k,j)=>`<button type="button" class="ovb${k===sel?" on":""}" data-m="${k}" title="${mesNome(k)}: ${mt(vals[j])}" style="--h:${Math.max(4,Math.round(vals[j]/mx*100))}%;--d:${j*40}ms"><i></i><span>${mesNome(k,{month:"short"}).replace(".","")}</span></button>`).join("")}</div>
   <div class="ov-now"><span>A receber de empréstimos <b>${mt(ms.porReceber)}</b></span><span>Juros por receber <b>${mt(ms.jurosPorReceber)}</b></span><span>Cotações pendentes <b>${cotPend.length}</b></span>${ms.nAtraso?`<span class="bad">Em atraso <b>${ms.nAtraso}</b></span>`:""}</div>`;
@@ -3592,6 +3896,7 @@ document.addEventListener("click",async e=>{
   switch(a){
     case"fechar":e.preventDefault();fechar();break;
     case"tema":trocarTema();break;
+    case"relatorio":abrirRelatorio(b.dataset.neg);break;
     case"auto-teste":case"auto-desligar":case"auto-agora":case"wa-teste":case"wa-desligar":autoAcao(a,b);break;
     case"ctr-novo":case"ctr-abrir":case"ctr-pdf":case"ctr-filtro":case"ctr-estado":case"ctr-apagar":ctrAcao(a,b.dataset.k,id,b);break;
     case"ctr-de-cot":{const ex=S.vcontratos.find(c=>c.cotacaoId===id&&c.estado!=="anulado");abrirContrato("serv",ex?.id,ex?null:id);break}
