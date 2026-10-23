@@ -4020,7 +4020,7 @@ const pedEmp=t=>t==="serv"?S.vcfg:t==="iptv"?S.cfg:S.mcfg;
 function pedLauncherHTML(){if(!pedOn())return"";const n=pedPend().length,tot=S.pedidos.length;
   return`<section class="ped-sec"><div class="ped-card"><span class="ped-ic">${NF_IC.pedidos}</span>
     <div class="ped-t"><b>Pedidos dos clientes</b><span>${n?`<em>${n} ${n===1?"pedido à espera":"pedidos à espera"} de resposta</em>`:tot?"Nenhum pedido à espera · "+tot+" no total":"Os pedidos feitos na página dos clientes aparecem aqui"}</span></div>
-    <div class="ped-a"><button type="button" class="btn sm" data-act="ped-link">Página dos clientes</button><button type="button" class="btn sm${n?" pri":""}" data-biz="pedidos">Ver pedidos</button></div></div></section>`}
+    <div class="ped-a"><button type="button" class="btn sm" data-act="ped-link">Partilhar com clientes</button><button type="button" class="btn sm${n?" pri":""}" data-biz="pedidos">Ver pedidos</button></div></div></section>`}
 
 const PEDIDOS={
   nome:"Pedidos online",tabs:[["painel","Por responder"],["todos","Todos"]],
@@ -4028,7 +4028,7 @@ const PEDIDOS={
   build(t){const v=$("#view");
     if(!pedOn()){v.innerHTML='<section class="panel" style="padding:24px"><h2>Pedidos online</h2><p class="sub">Os pedidos dos clientes chegam ao site da Heel Service com login por e-mail. Abra o sistema nesse site para os ver.</p></section>';return}
     v.innerHTML=`<div class="row spread"><div><h1>${t==="painel"?"Pedidos por responder":"Todos os pedidos"}</h1><p class="sub">Pedidos feitos pelos clientes na página <a href="${esc(PORTAL_URL())}" target="_blank" rel="noopener">${esc(PORTAL_URL().replace(/^https?:\/\//,""))}</a>.</p></div>
-      <div class="row"><button class="btn" data-act="ped-link">Copiar link da página</button><button class="btn" data-act="ped-atualizar">Atualizar</button></div></div>
+      <div class="row"><button class="btn" data-act="ped-link">Partilhar com clientes</button><button class="btn" data-act="ped-atualizar">Atualizar</button></div></div>
       ${t==="todos"?`<section class="panel"><div class="toolbar"><input class="search" id="pedQ" type="search" placeholder="Procurar por número, cliente ou telefone" value="${esc(S.pedQ)}"><div class="chips">${[["todos","Todos"],["pendente","Pendentes"],["aceite","Aceites"],["recusado","Recusados"],["cancelado","Cancelados"]].map(([k,l])=>`<button class="chip" data-pedf="${k}" aria-pressed="${S.pedFiltro===k}">${l}</button>`).join("")}</div></div><div class="tbl-wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Negócio</th><th class="num">Total</th><th>Estado</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbPed"></tbody></table></div></section>`:`<div class="ped-list" id="pedLista"></div>`}`;
     const q=$("#pedQ");if(q)q.addEventListener("input",e=>{S.pedQ=e.target.value;refPed()})},
   ref(t){refPed(t)}
@@ -4108,9 +4108,25 @@ async function pedAcao(a,b){
   if(a==="ped-aceitar")return abrirResposta(b.dataset.id,true);
   if(a==="ped-recusar")return abrirResposta(b.dataset.id,false);
   if(a==="ped-pdf"){const p=S.pedidos.find(x=>x.id===+b.dataset.id);if(p){b.disabled=true;await guardarPDF(()=>pdfPedido(p,pedEmp(p.tipo)));b.disabled=false}return}
-  if(a==="ped-link")return copiar(PORTAL_URL());
+  if(a==="ped-link")return abrirPartilha();
+  if(a==="ped-copiar")return copiar(b.dataset.v);
   if(a==="ped-atualizar"){await carregarPedidos();return toast("Pedidos atualizados")}
 }
+
+/* link for customers: opens the home page and offers to add it to the phone */
+const LINK_CLIENTES=()=>PORTAL_URL()+"?instalar=1";
+const MSG_CLIENTES=()=>"Olá! Já pode fazer os seus pedidos à Heel Service pelo telemóvel: serviços, IPTV e microcrédito, com a cotação em PDF e a resposta na hora.\nAbra o link e toque em “Adicionar” para ficar com a Heel Service no ecrã inicial:\n"+LINK_CLIENTES();
+function abrirPartilha(){const L=LINK_CLIENTES();
+  abrir(hdr("Partilhar com os clientes","Quem abrir este link vê a página da Heel Service e pode adicioná-la ao ecrã inicial do telemóvel.")+`<div class="body">
+    <div class="pf-link"><div class="pf-qr" id="shQR" hidden></div><div class="pf-linkt"><span>Link para os clientes</span>
+      <span class="withbtn"><input class="mono" readonly value="${esc(L)}" id="shL"><button type="button" class="btn sm" data-act="ped-copiar" data-v="${esc(L)}">Copiar</button></span>
+      <small>Também pode imprimir ou mostrar o código QR na loja: os clientes apontam a câmara e abrem a página.</small></div></div>
+    <label class="f">Mensagem para enviar<textarea id="shM" rows="5">${esc(MSG_CLIENTES())}</textarea></label></div>
+    <footer><button type="button" class="btn" id="shCopy" style="margin-right:auto">Copiar mensagem</button><a class="btn" id="shSt" target="_blank" rel="noopener" href="#">Estado do WhatsApp</a><a class="btn pri" id="shWa" target="_blank" rel="noopener" href="#">Enviar pelo WhatsApp</a></footer>`,{nofocus:true});
+  const upd=()=>{const t=$("#shM").value;$("#shWa").href="https://wa.me/?text="+encodeURIComponent(t);$("#shSt").href="https://wa.me/?text="+encodeURIComponent(t)};
+  $("#shM").addEventListener("input",upd);upd();$("#shCopy").onclick=()=>copiar($("#shM").value);
+  $("#shSt").remove();
+  pfQR($("#shQR"),L)}
 
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
 Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
@@ -4862,7 +4878,7 @@ document.addEventListener("click",async e=>{
     case"fechar":e.preventDefault();fechar();break;
     case"tema":trocarTema();break;
     case"relatorio":abrirRelatorio(b.dataset.neg);break;
-    case"ver-pedido":case"ped-aceitar":case"ped-recusar":case"ped-pdf":case"ped-link":case"ped-atualizar":await pedAcao(a,b);break;
+    case"ped-copiar":case"ver-pedido":case"ped-aceitar":case"ped-recusar":case"ped-pdf":case"ped-link":case"ped-atualizar":await pedAcao(a,b);break;
     case"falta-ir":faltaIr(+b.dataset.i);break;
     case"falta-ignorar":{const x=(S._faltas||[])[+b.dataset.i];if(x){faltaIgnorar(x.k);refresh();toast("Não volta a aparecer")}break}
     case"copia-fazer":case"copia-baixar":case"copia-repor":await copiaAcao(a,b);break;

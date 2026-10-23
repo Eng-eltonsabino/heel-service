@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "Heel Service · Pedidos online",
+  "short_name": "Heel Service",
+  "description": "Peça serviços, IPTV ou microcrédito à Heel Service e acompanhe as respostas.",
+  "lang": "pt",
+  "start_url": "./?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

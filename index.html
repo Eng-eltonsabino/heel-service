@@ -3,7 +3,9 @@
 <title>Heel Service · Pedidos online</title>
 <meta name="description" content="Peça serviços, IPTV ou um empréstimo à Heel Service, em Maputo. Receba a cotação em PDF e acompanhe o seu pedido.">
 <meta name="theme-color" content="#111827">
-<link rel="icon" href="emblema-digital.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="emblema-digital.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="manifest-clientes.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Heel Service"><meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Heel Service"><meta property="og:title" content="Heel Service · Peça online"><meta property="og:description" content="Serviços, IPTV e microcrédito em Maputo. Faça o seu pedido, receba a cotação em PDF e acompanhe a resposta."><meta property="og:url" content="https://eng-eltonsabino.github.io/heel-service/"><meta property="og:image" content="https://eng-eltonsabino.github.io/heel-service/icon-512.png"><meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script>window.HS_SUPA={url:"https://jyskfokyjptangytmopj.supabase.co",key:"sb_publishable_QF2rjbwRwfXJqcMBpV_dDg_3T6nB7-8"};</script>
@@ -199,6 +201,13 @@ input[type=range]{padding:0;min-height:0;height:32px;border:0;accent-color:var(-
 .admin-lock{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:24px;z-index:25;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--surface);color:var(--muted);border:1px solid var(--line);box-shadow:var(--sh);transition:color .2s,transform .2s}
 .admin-lock:hover{color:var(--ink);transform:scale(1.06)}.admin-lock svg{width:20px;height:20px}
 @media (max-width:820px){.admin-lock{bottom:86px}}
+.inst{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:40;width:min(560px,calc(100vw - 32px));display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:no-preference){.inst{animation:sobe .45s cubic-bezier(.2,.8,.2,1) both}}
+@keyframes sobe{from{opacity:0;transform:translate(-50%,24px)}to{opacity:1;transform:translate(-50%,0)}}
+.inst-ic img{width:44px;height:44px;border-radius:11px;display:block}
+.inst-t{display:grid;gap:2px;min-width:0}.inst-t b{font-size:15px}.inst-t small{color:var(--muted);font-size:13px}
+.inst-x{all:unset;cursor:pointer;width:30px;height:30px;display:grid;place-items:center;border-radius:50%;color:var(--muted);font-size:20px}.inst-x:hover{background:var(--sunk)}
+@media (max-width:820px){.inst{bottom:86px}}
 .foot{padding:28px 0 40px;color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between}
 .loading{padding:60px 0;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.view{animation:entra .35s ease both}}
@@ -222,6 +231,7 @@ input[type=range]{padding:0;min-height:0;height:32px;border:0;accent-color:var(-
 </nav>
 <a class="fab" id="fab" href="https://wa.me/258869252812?text=Ol%C3%A1%20Heel%20Service" target="_blank" rel="noopener" aria-label="Falar pelo WhatsApp"><svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3zm0 23.6c-2 0-4-.5-5.7-1.6l-.4-.2-3.9 1 1-3.8-.3-.4A10.6 10.6 0 1 1 16 26.6zm5.8-7.9c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.7 8.7 0 0 1-4.3-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5 1.9.8 2.6.9 3.6.7.6-.1 1.9-.8 2.1-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.3z"/></svg></a>
 <a class="admin-lock" href="admin.html" aria-label="Acesso do administrador" title="Acesso do administrador"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3" fill="currentColor"/></svg></a>
+<div class="inst" id="inst" hidden><span class="inst-ic"><img src="icon-192.png" alt=""></span><div class="inst-t"><b>Adicione a Heel Service ao seu telemóvel</b><small id="instTxt">Fica com o ícone no ecrã inicial e abre como uma aplicação.</small></div><button class="btn pri sm" id="instOk">Adicionar</button><button class="inst-x" id="instX" aria-label="Fechar">×</button></div>
 <div class="toast" id="toast" hidden></div>
 <script>(function(){
 "use strict";
@@ -646,6 +656,23 @@ LIGA["nova-senha"]=()=>{$("#fNova").onsubmit=async e=>{e.preventDefault();const 
   const{error}=await sb.auth.updateUser({password:v});if(error){er.textContent=erroTxt(error);er.hidden=false;return}P.recup=false;history.replaceState(null,"",location.pathname+"#pedidos");await carregarConta();toast("Senha guardada");render()}};
 const cap=s=>String(s||"").charAt(0).toUpperCase()+String(s||"").slice(1);
 
+/* ---------- add to the phone's home screen ---------- */
+let pedidoInst=null;
+const ehIOSp=()=>/iphone|ipad|ipod/i.test(navigator.userAgent||"");
+const jaApp=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();pedidoInst=e;mostrarInst(false)});
+addEventListener("appinstalled",()=>{pedidoInst=null;$("#inst").hidden=true;toast("Heel Service adicionada ao ecrã inicial")});
+function mostrarInst(forcar){if(jaApp())return;let fechado=false;try{fechado=sessionStorage.getItem("hs_inst_x")==="1"}catch(_){}
+  const pedido=/[?&]instalar/.test(location.search);if(fechado&&!pedido&&!forcar)return;
+  if(!pedidoInst&&!(ehIOSp()&&(pedido||forcar)))return;
+  if(ehIOSp()&&!pedidoInst){$("#instTxt").textContent="No Safari: toque em Partilhar e depois em “Adicionar ao ecrã principal”.";$("#instOk").textContent="Como fazer"}
+  $("#inst").hidden=false}
+document.addEventListener("click",async e=>{
+  if(e.target.closest("#instX")){$("#inst").hidden=true;try{sessionStorage.setItem("hs_inst_x","1")}catch(_){}return}
+  if(e.target.closest("#instOk")){if(pedidoInst){const p=pedidoInst;pedidoInst=null;p.prompt();try{await p.userChoice}catch(_){}$("#inst").hidden=true}
+    else toast("Toque no botão Partilhar do Safari (quadrado com a seta) e escolha “Adicionar ao ecrã principal”.");}});
+if("serviceWorker" in navigator&&location.protocol==="https:")addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+
 /* ---------- start ---------- */
 (async()=>{
   try{const t=localStorage.getItem("hs_tema");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(_){}
@@ -655,7 +682,7 @@ const cap=s=>String(s||"").charAt(0).toUpperCase()+String(s||"").slice(1);
   sb.auth.onAuthStateChange((ev)=>{if(ev==="PASSWORD_RECOVERY"){P.recup=true;render()}});
   try{await Promise.all([carregarCatalogo(),carregarConta()])}catch(e){console.error(e);app().innerHTML=`<div class="wrap"><div class="loading">Não foi possível carregar os serviços. Verifique a Internet e recarregue.<br><br><a class="btn wa" href="${waLink("Olá Heel Service")}">Falar pelo WhatsApp</a></div></div>`;return}
   if(P.recup&&!/^#(nova-senha)?$/.test(location.hash.split("&")[0]))history.replaceState(null,"",location.pathname+"#nova-senha");
-  render();
+  render();setTimeout(()=>mostrarInst(false),1500);
 })();
 
 })();</script>
