@@ -984,6 +984,19 @@ label.f[hidden],div.f[hidden],.f[hidden]{display:none!important}
 .cl-horas small{opacity:.7}.cl-horas b{font-size:13px;font-variant-numeric:tabular-nums}
 .cl-horas .cl-ic{width:20px;height:20px}
 @media (max-width:640px){.ceu-astro{width:80px;height:80px;top:14px;right:10px}.clima{padding:10px 12px}.cl-horas{border-left:0;padding-left:0;width:100%;justify-content:space-between}.cl-agora>b{font-size:30px}}
+
+/* settings pending, shown as notifications */
+.nf-sum .s0{background:color-mix(in srgb,#8e44ad 14%,transparent);color:#8e44ad}
+:root[data-theme="dark"] .nf-sum .s0{color:#c39bd3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nf-sum .s0{color:#c39bd3}}
+.nf-it.cfg::before{background:#8e44ad}
+.nf-it.cfg .nf-ic{background:color-mix(in srgb,#8e44ad 14%,transparent);color:#8e44ad;animation:none}
+:root[data-theme="dark"] .nf-it.cfg .nf-ic{color:#c39bd3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nf-it.cfg .nf-ic{color:#c39bd3}}
+.nf-bt{display:grid;gap:4px;justify-items:end}
+.nf-ign{border:0;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;padding:2px 4px;border-radius:6px}
+.nf-ign:hover{color:var(--ink);background:var(--sunk)}
+.nf-it.cfg .nf-tx b{white-space:normal;overflow:visible;text-overflow:clip}
 </style>
 
 <header class="top">
@@ -3810,7 +3823,8 @@ function faltasHTML(){const l=faltas();if(!l.length)return"";S._faltas=l;
   return`<section class="falta-sec" aria-labelledby="tFalta"><div class="falta-head"><div><h2 id="tFalta">Para tudo funcionar</h2><p class="sub">${l.length===1?"Falta 1 coisa":"Faltam "+l.length+" coisas"} por configurar.</p></div></div>
     <div class="falta-list">${l.map((x,i)=>`<div class="falta nv${x.nv}"><i aria-hidden="true"></i><div class="ft"><b>${esc(x.t)}</b>${x.d?`<small>${esc(x.d)}</small>`:""}</div>
       <div class="fa"><button type="button" class="btn sm${x.nv===3?" pri":""}" data-act="falta-ir" data-i="${i}">${esc(x.btn)}</button><button type="button" class="btn sm ghost" data-act="falta-ignorar" data-i="${i}" title="Não mostrar outra vez">Ignorar</button></div></div>`).join("")}</div></section>`}
-function faltaIr(i){const x=(S._faltas||[])[i];if(!x)return;
+function faltaIr(i){faltaIrX((S._faltas||[])[i])}
+function faltaIrX(x){if(!x)return;
   if(x.act==="instalar")return instalarApp();
   abrirNegocio(x.biz);showTab(x.tab);
   if(x.foco)setTimeout(()=>{const el=document.querySelector(x.foco);if(!el)return;el.scrollIntoView({behavior:calmo()?"auto":"smooth",block:"center"});
@@ -4293,7 +4307,8 @@ const NF_IC={
   micro:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6.5" rx="7" ry="2.8"/><path d="M5 6.5v5c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-5"/><path d="M5 11.5v5c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-5"/></svg>`,
   serv:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><path d="M8.5 12h7M8.5 16h4"/></svg>`};
 NF_IC.pessoal=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="14" rx="3"/><path d="M16 11.5h5.5v5H16a2.5 2.5 0 0 1 0-5z"/><path d="M5 6l9-3 2 3"/></svg>`;
-const NF_NOME={iptv:"IPTV",micro:"Microcrédito",serv:"Serviços",pessoal:"Gestão pessoal"};
+NF_IC.config=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`;
+const NF_NOME={iptv:"IPTV",micro:"Microcrédito",serv:"Serviços",pessoal:"Gestão pessoal",config:"Por configurar"};
 let NOTIFS=[],nfUlt=-1,nfAutoT=null;
 function alertas(){
   const out=[];
@@ -4307,6 +4322,8 @@ function alertas(){
     if(d.tipo!=="cotacao"||d.estado==="anulado"||d.estado==="aceite"||!d.validade)return;const n=dias(d.validade);
     if(n>=0&&n<=3)out.push({biz,tab,nv:1,t:(d.numero||"Cotação")+" · "+((d.cliente&&d.cliente.nome)||"cliente"),d:"Cotação de "+mt(d.total)+(n===0?" caduca hoje":" caduca em "+n+" d"),act:"ver-doc",id:d.id,btn:"Abrir",ord:n})}));
   if(typeof pfPodeVer==="function"&&pfPodeVer()){const n=pfPorClassificar().length;if(n)out.push({biz:"pessoal",tab:"movimentos",nv:1,t:n+(n===1?" movimento":" movimentos")+" por classificar",d:"Diga com o quê gastou ou de onde veio o dinheiro",act:"pf-pend",btn:"Classificar",ord:0,pre:()=>{S.pfiltro="pend";S.pmesF="";S.pcart=""}})}
+  /* settings still missing become pending notifications too */
+  if(typeof faltas==="function")faltas().forEach((x,i)=>out.push({cfg:true,falta:x,biz:"config",nv:Math.min(x.nv,2),t:x.t,d:x.d,btn:x.btn,ord:100+i}));
   return out.sort((a,b)=>b.nv-a.nv||a.ord-b.ord);
 }
 function nfBadge(){
@@ -4317,14 +4334,14 @@ function nfBadge(){
   nfUlt=n;
 }
 function nfHTML(){
-  const urg=NOTIFS.filter(a=>a.nv===3).length,av=NOTIFS.filter(a=>a.nv===2).length,inf=NOTIFS.filter(a=>a.nv===1).length;
+  const neg=NOTIFS.filter(a=>!a.cfg),urg=neg.filter(a=>a.nv===3).length,av=neg.filter(a=>a.nv===2).length,inf=neg.filter(a=>a.nv===1).length,cfg=NOTIFS.length-neg.length;
   const h=new Date().getHours(),saud=h<12?"Bom dia":h<19?"Boa tarde":"Boa noite";
   if(!NOTIFS.length)return`<div class="nf-ok"><svg viewBox="0 0 52 52" width="64" height="64" aria-hidden="true"><circle class="nf-ring" cx="26" cy="26" r="23"/><path class="nf-tick" d="M15 27l7 7 15-16"/></svg>
-    <b>${saud}! Está tudo em dia.</b><small>Sem contas a expirar, prestações em atraso nem cotações a caducar.</small></div>`;
-  return`<div class="nf-sum">${urg?`<span class="s3"><b>${urg}</b> urgente${urg>1?"s":""}</span>`:""}${av?`<span class="s2"><b>${av}</b> a vencer</span>`:""}${inf?`<span class="s1"><b>${inf}</b> aviso${inf>1?"s":""}</span>`:""}</div>
-  <div class="nf-list">${NOTIFS.map((a,i)=>`<div class="nf-it nv${a.nv}" style="--i:${Math.min(i,10)}"><span class="nf-ic">${NF_IC[a.biz]}</span>
-    <div class="nf-tx"><b>${esc(a.t)}</b><small>${esc(a.d)}</small><em>${NF_NOME[a.biz]}</em></div>
-    <button type="button" class="btn sm${a.nv===3?" pri":""}" data-act="notif-ir" data-i="${i}">${a.btn}</button></div>`).join("")}</div>`;
+    <b>${saud}! Está tudo em dia.</b><small>Sem contas a expirar, prestações em atraso, cotações a caducar nem nada por configurar.</small></div>`;
+  return`<div class="nf-sum">${urg?`<span class="s3"><b>${urg}</b> urgente${urg>1?"s":""}</span>`:""}${av?`<span class="s2"><b>${av}</b> a vencer</span>`:""}${inf?`<span class="s1"><b>${inf}</b> aviso${inf>1?"s":""}</span>`:""}${cfg?`<span class="s0"><b>${cfg}</b> por configurar</span>`:""}</div>
+  <div class="nf-list">${NOTIFS.map((a,i)=>`<div class="nf-it nv${a.nv}${a.cfg?" cfg":""}" style="--i:${Math.min(i,10)}"><span class="nf-ic">${NF_IC[a.biz]}</span>
+    <div class="nf-tx"><b>${esc(a.t)}</b>${a.d?`<small>${esc(a.d)}</small>`:""}<em>${NF_NOME[a.biz]}</em></div>
+    <div class="nf-bt"><button type="button" class="btn sm${a.nv===3||(a.cfg&&a.falta.nv===3)?" pri":""}" data-act="notif-ir" data-i="${i}">${esc(a.btn)}</button>${a.cfg?`<button type="button" class="nf-ign" data-act="notif-ignorar" data-i="${i}">Ignorar</button>`:""}</div></div>`).join("")}</div>`;
 }
 function abrirNotif(auto){
   clearTimeout(nfAutoT);NOTIFS=alertas();const p=$("#notif");if(!p)return;
@@ -4343,6 +4360,7 @@ function fecharNotif(){
 }
 function notifIr(i){
   const a=NOTIFS[i];if(!a)return;fecharNotif();fechar();
+  if(a.falta)return faltaIrX(a.falta);
   if(a.pre)a.pre();abrirNegocio(a.biz);showTab(a.tab);
   setTimeout(()=>{try{if(a.act==="renovar")abrirRenovar(a.id);else if(a.act==="ver-emp")abrirEmp(a.id);else if(a.act==="ver-doc")abrirDoc(a.id)}catch(e){console.error(e)}},380);
 }
@@ -4482,7 +4500,6 @@ function refLauncher(){
   const h=new Date().getHours(),saud=h<12?"Bom dia":h<19?"Boa tarde":"Boa noite",nm=(admin?.nome||String(admin?.usuario||"").split("@")[0]).split(" ")[0],quem=nm?nm.charAt(0).toUpperCase()+nm.slice(1):"";
   $("#view").innerHTML=banner()+`
   <section class="hero" data-ceu="${climaEstado().tipo}" data-periodo="${climaEstado().dia?"dia":"noite"}">${climaCenaHTML()}<div class="top"><div><p class="eyebrow">${cap1(new Date().toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</p><h1>${saud}${quem?", "+esc(quem):""}.</h1><p class="sub">Escolha o negócio que quer gerir.</p><div id="climaInfo">${climaInfoHTML()}</div></div></div></section>
-  ${faltasHTML()}
   <section class="bizsec"><div class="biz-grid">${NEG.map(n=>`<button class="biz biz-${n.k}" data-biz="${n.k}"><span class="ill">${ILL[n.k]}</span><span class="bt"><b>${n.nome}</b><span class="tl">${n.tl}</span></span><span class="feat">${n.f.map(x=>`<span>${x}</span>`).join("")}</span><span class="go">Abrir</span></button>`).join("")}</div></section>
   ${pfLauncherHTML()}
   <section class="ovsec" id="ov">${ovHTML()}</section>`;
@@ -4675,6 +4692,7 @@ document.addEventListener("click",async e=>{
     case"notif":{const p=$("#notif");if(p&&!p.hidden&&p.classList.contains("in"))fecharNotif();else abrirNotif(false);break}
     case"notif-fechar":fecharNotif();break;
     case"notif-ir":notifIr(+b.dataset.i);break;
+    case"notif-ignorar":{const x=NOTIFS[+b.dataset.i];if(x&&x.falta){faltaIgnorar(x.falta.k);abrirNotif(false);nfBadge();toast("Não volta a aparecer")}break}
     case"sair":sair("Sessão terminada.");break;
     case"negocios":fechar();launcher();break;
     case"novo-principal":MOD[S.biz]?.novo[1]();break;
