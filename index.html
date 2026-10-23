@@ -997,6 +997,25 @@ label.f[hidden],div.f[hidden],.f[hidden]{display:none!important}
 .nf-ign{border:0;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;padding:2px 4px;border-radius:6px}
 .nf-ign:hover{color:var(--ink);background:var(--sunk)}
 .nf-it.cfg .nf-tx b{white-space:normal;overflow:visible;text-overflow:clip}
+
+/* ===== pedidos online ===== */
+.ped-sec{padding-bottom:20px}
+.ped-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px}
+.ped-ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.ped-ic svg{width:26px;height:26px}
+.ped-t{display:grid;gap:2px;min-width:0}.ped-t b{font-size:19px}.ped-t span{color:var(--muted);font-size:14px}.ped-t em{font-style:normal;color:var(--bad);font-weight:600}
+.ped-a{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:640px){.ped-card{grid-template-columns:auto minmax(0,1fr)}.ped-a{grid-column:1/-1;justify-content:flex-start}}
+.ped-list{display:grid;gap:12px}
+.ped-it{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;padding:16px;display:grid;gap:10px}
+.ped-it.serv{border-left-color:#2a78d6}.ped-it.iptv{border-left-color:#eb6834}.ped-it.micro{border-left-color:#1baf7a}
+.pi-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.pi-h div{display:grid}.pi-h small{color:var(--muted);font-size:13px}
+.pi-v{font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pi-c{display:grid;gap:2px;font-size:14px;color:var(--muted)}.pi-c b{color:var(--ink)}
+.ped-tab{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ped-tab div{display:flex;justify-content:space-between;gap:16px;padding:9px 12px;font-size:14px}.ped-tab div:nth-child(even){background:var(--sunk)}
+.ped-tab b{font-variant-numeric:tabular-nums;text-align:right}
+.ped-tab div:last-child{font-weight:600}
 </style>
 
 <header class="top">
@@ -3936,6 +3955,163 @@ async function climaIniciar(){try{climaAplicar()}catch(e){console.error(e)}const
   const o=await climaBuscar();if(o&&JSON.stringify(o.d.current)!==antes&&!S.biz)climaAplicar();
   clearInterval(climaT);climaT=setInterval(async()=>{if(S.biz||document.hidden)return;const n=await climaBuscar();if(n)climaAplicar()},20*60e3)}
 
+/* ================= cotação de um pedido online (igual no portal do cliente e no sistema) ================= */
+/* p: a row of the "pedidos" table; emp: the company identity (nome, morada, telefone, email, nuit, cidade, signatario) */
+const PED_TIPO={serv:"Serviços",iptv:"IPTV",micro:"Microcrédito"};
+const PED_ESTADO={pendente:"Pendente de confirmação",aceite:"Aceite",recusado:"Não aceite",cancelado:"Cancelado pelo cliente"};
+async function pdfPedido(p,emp){
+  const pdf=novoPDF();if(!pdf)return null;await precarregar();
+  const e={nome:"Heel Service",...(emp||{})},data=String(p.criado_em||hoje()).slice(0,10),micro=p.tipo==="micro";
+  let y=await pdfTopo(pdf,micro?"PEDIDO DE EMPRÉSTIMO · SIMULAÇÃO":"COTAÇÃO "+(p.tipo==="iptv"?"IPTV":"DE SERVIÇOS"));
+  try{const h=125,w=h*888/698;pdf.addImage(imgData_sync[ASSET.marca],"PNG",(X.B+X.END)/2-w/2,y+9*RH+6,w,h)}catch(_){}
+  pdfEmitente(pdf,e,y+RH,[["Nº do pedido:",p.numero||"—"],["Data:",fmtD(data)],["Válido até:",fmtD(p.validade)],["Estado:",PED_ESTADO[p.estado]||p.estado]]);
+  y=y+7*RH;pdfSecao(pdf,micro?"REQUERENTE":"CLIENTE",y);y+=RH;
+  const c=p.cliente||{};
+  const campos=[["Nome:",c.nome],["Contacto:",[c.telefone,c.email].filter(Boolean).join("  ·  ")],["Morada:",c.morada||""]];
+  if(c.bi||c.nuit)campos.push(["BI / NUIT:",[c.bi,c.nuit].filter(Boolean).join("  ·  ")]);
+  if(micro){if(c.ocupacao)campos.push(["Ocupação:",c.ocupacao]);if(c.fiadorNome)campos.push(["Fiador:",[c.fiadorNome,c.fiadorTel].filter(Boolean).join("  ·  ")])}
+  y=pdfCampos(pdf,y,campos,X.D);y+=RH;
+  if(micro){
+    const d=p.detalhes||{},prim=addMeses(data,1);
+    y=pdfCampos(pdf,y,[["Valor pedido:",mt(d.valor)],["Prazo:",d.meses+(d.meses===1?" mês":" meses")],["Juros:",pct(d.taxa)+" ao mês ("+mt(d.jurosMes)+" por mês)"],["Pagamento mensal:",mt(d.pagaMes)],["Finalidade:",d.finalidade||"—"]],X.D);
+    y+=RH;
+    const cols=[{t:"Prestação",x:X.B,w:X.D-X.B,al:"center"},{t:"Vencimento (previsto)",x:X.D,w:X.F-X.D,al:"center"},{t:"Capital (MT)",x:X.F,w:X.G-X.F,al:"right"},{t:"Juros (MT)",x:X.G,w:X.H-X.G,al:"right"},{t:"Valor (MT)",x:X.H,w:X.END-X.H,al:"right"}];
+    const cap=Math.floor(d.valor/d.meses*100)/100;let acc=0;const rows=[];
+    for(let i=0;i<d.meses;i++){const ci=i===d.meses-1?r2(d.valor-acc):cap;acc=r2(acc+ci);rows.push([String(i+1),fmtD(addMeses(prim,i)),mt(ci),mt(d.jurosMes),mt(ci+d.jurosMes)])}
+    y=pdfTabela(pdf,y,cols,rows);
+    y=pdfTotais(pdf,y+RH,[["Valor emprestado",mt(d.valor)],["Juros totais",mt(d.juros)]],["TOTAL A PAGAR",mt(p.total)]);y+=RH;
+    if(y+12*RH>287){pdf.addPage();y=20}
+    pdfSecao(pdf,"CONDIÇÕES",y);
+    y=pdfLinhasTexto(pdf,y+RH,["Juros simples: pagamento mensal = valor ÷ meses + valor × taxa.","As datas são previstas e contam a partir da assinatura do contrato.",`O atraso num pagamento pode dar lugar a uma multa de ${pct(d.multa)} do valor em atraso.`,"Este documento é uma simulação. O empréstimo só existe depois de aprovado e assinado o contrato."]);
+  }else{
+    const cols=[{t:"#",x:X.B,w:X.C-X.B,al:"center"},{t:"Descrição",x:X.C,w:X.D-X.C,wrap:true},{t:"Qtd",x:X.D,w:X.E-X.D,al:"center"},{t:"Unidade",x:X.E,w:X.F-X.E,al:"center",shrink:true},{t:"Preço unit. (MT)",x:X.F,w:X.H-X.F,al:"right"},{t:"Total (MT)",x:X.H,w:X.END-X.H,al:"right"}];
+    const rows=(p.itens||[]).map((it,i)=>[String(i+1),it.desc,String(it.qtd),it.un||"un",mt(it.preco),mt(r2(it.qtd*it.preco))]);
+    y=pdfTabela(pdf,y,cols,rows,8);
+    y=pdfTotais(pdf,y+RH,[["Subtotal",mt(p.subtotal)],["IVA ("+pct(p.iva)+")",mt(p.iva_mt)]],["TOTAL",mt(p.total)]);y+=RH;
+    if(p.tipo==="iptv"&&p.detalhes){y=pdfCampos(pdf,y,[["Plano:",(p.detalhes.planoNome||"")+" · "+p.detalhes.meses+(p.detalhes.meses===1?" mês":" meses")],["Ecrãs:",String(p.detalhes.ecras||1)],["Aparelho:",p.detalhes.aparelho||"—"]],X.D);y+=RH}
+    if(y+12*RH>287){pdf.addPage();y=20}
+    pdfSecao(pdf,"CONDIÇÕES / NOTAS",y);
+    const cd=p.condicoes||{};
+    y=pdfLinhasTexto(pdf,y+RH,[cd.pagamento?"Pagamento: "+cd.pagamento:"",cd.prazo?(p.tipo==="iptv"?"Ativação: ":"Prazo de execução: ")+cd.prazo:"","Cotação pedida online. Os valores ficam confirmados quando a Heel Service aceitar o pedido."]);
+  }
+  if(p.estado==="aceite"&&p.resposta){y+=RH;if(y+8*RH>287){pdf.addPage();y=20}pdfSecao(pdf,"RESPOSTA DA HEEL SERVICE",y);y=pdfLinhasTexto(pdf,y+RH,[p.resposta])}
+  if(p.estado==="recusado"){y+=RH;pdfSecao(pdf,"PEDIDO NÃO ACEITE",y);y=pdfLinhasTexto(pdf,y+RH,["Motivo: "+(p.motivo||"—")])}
+  pdfAssinatura(pdf,Math.min(Math.max(y+4*RH,200),255),e,data,{imagem:p.estado==="aceite"});
+  pdfRodape(pdf,"Heel Service · "+(e.telefone||"+258 86 925 2812")+(e.email?" · "+e.email:""));
+  return pdfOut(pdf,(p.numero||"pedido")+".pdf");
+}
+
+/* ================= pedidos online dos clientes (portal) ================= */
+Object.assign(S,{pedidos:[],pedFiltro:"pendente",pedQ:""});
+let pedCanal=null;
+const PORTAL_URL=()=>location.origin+location.pathname.replace(/[^/]*$/,"")+"clientes.html";
+const pedOn=()=>S.modo==="supa"&&!!sb;
+async function carregarPedidos(){if(!pedOn())return;
+  const{data,error}=await sb.from("pedidos").select("*").order("criado_em",{ascending:false}).limit(500);
+  if(error){console.error(error);return}S.pedidos=data||[];refresh();
+  if(!pedCanal)pedCanal=sb.channel("pedidos-admin").on("postgres_changes",{event:"*",schema:"public",table:"pedidos"},pl=>{const n=pl.new;if(!n||!n.id)return;
+    const i=S.pedidos.findIndex(x=>x.id===n.id);if(i>=0)S.pedidos[i]=n;else S.pedidos.unshift(n);
+    if(pl.eventType==="INSERT"){toast("Novo pedido online: "+n.numero+" · "+(n.cliente?.nome||""));}refresh()}).subscribe()}
+function pararPedidos(){if(pedCanal&&sb){try{sb.removeChannel(pedCanal)}catch(_){}}pedCanal=null;S.pedidos=[]}
+const pedPend=()=>S.pedidos.filter(p=>p.estado==="pendente");
+const pedEmp=t=>t==="serv"?S.vcfg:t==="iptv"?S.cfg:S.mcfg;
+
+/* strip on the start screen */
+function pedLauncherHTML(){if(!pedOn())return"";const n=pedPend().length,tot=S.pedidos.length;
+  return`<section class="ped-sec"><div class="ped-card"><span class="ped-ic">${NF_IC.pedidos}</span>
+    <div class="ped-t"><b>Pedidos dos clientes</b><span>${n?`<em>${n} ${n===1?"pedido à espera":"pedidos à espera"} de resposta</em>`:tot?"Nenhum pedido à espera · "+tot+" no total":"Os pedidos feitos na página dos clientes aparecem aqui"}</span></div>
+    <div class="ped-a"><button type="button" class="btn sm" data-act="ped-link">Página dos clientes</button><button type="button" class="btn sm${n?" pri":""}" data-biz="pedidos">Ver pedidos</button></div></div></section>`}
+
+const PEDIDOS={
+  nome:"Pedidos online",tabs:[["painel","Por responder"],["todos","Todos"]],
+  novo:["Página dos clientes",()=>window.open(PORTAL_URL(),"_blank","noopener")],
+  build(t){const v=$("#view");
+    if(!pedOn()){v.innerHTML='<section class="panel" style="padding:24px"><h2>Pedidos online</h2><p class="sub">Os pedidos dos clientes chegam ao site da Heel Service com login por e-mail. Abra o sistema nesse site para os ver.</p></section>';return}
+    v.innerHTML=`<div class="row spread"><div><h1>${t==="painel"?"Pedidos por responder":"Todos os pedidos"}</h1><p class="sub">Pedidos feitos pelos clientes na página <a href="${esc(PORTAL_URL())}" target="_blank" rel="noopener">${esc(PORTAL_URL().replace(/^https?:\/\//,""))}</a>.</p></div>
+      <div class="row"><button class="btn" data-act="ped-link">Copiar link da página</button><button class="btn" data-act="ped-atualizar">Atualizar</button></div></div>
+      ${t==="todos"?`<section class="panel"><div class="toolbar"><input class="search" id="pedQ" type="search" placeholder="Procurar por número, cliente ou telefone" value="${esc(S.pedQ)}"><div class="chips">${[["todos","Todos"],["pendente","Pendentes"],["aceite","Aceites"],["recusado","Recusados"],["cancelado","Cancelados"]].map(([k,l])=>`<button class="chip" data-pedf="${k}" aria-pressed="${S.pedFiltro===k}">${l}</button>`).join("")}</div></div><div class="tbl-wrap"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Negócio</th><th class="num">Total</th><th>Estado</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbPed"></tbody></table></div></section>`:`<div class="ped-list" id="pedLista"></div>`}`;
+    const q=$("#pedQ");if(q)q.addEventListener("input",e=>{S.pedQ=e.target.value;refPed()})},
+  ref(t){refPed(t)}
+};
+function pedLinha(p){const c=p.cliente||{};return`<article class="ped-it ${p.tipo}"><div class="pi-h"><div><b>${esc(p.numero)} · ${PED_TIPO[p.tipo]}</b><small>${pfDataHora(p.criado_em)}</small></div><b class="pi-v">${mt(p.total)}</b></div>
+  <div class="pi-c"><span><b>${esc(c.nome||"—")}</b> · ${esc(c.telefone||"")}${c.email?" · "+esc(c.email):""}</span><span>${esc(pedResumo(p))}</span></div>
+  <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn sm pri" data-act="ver-pedido" data-id="${p.id}">Abrir e responder</button><button class="btn sm" data-act="ped-pdf" data-id="${p.id}">Cotação (PDF)</button><a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.telefone)}">WhatsApp do cliente</a></div></article>`}
+function pedResumo(p){if(p.tipo==="micro"){const d=p.detalhes||{};return mt(d.valor)+" em "+d.meses+(d.meses===1?" mês":" meses")+(d.finalidade?" · "+d.finalidade:"")}
+  if(p.tipo==="iptv"){const d=p.detalhes||{};return"Plano "+(d.planoNome||"")+" · "+(d.ecras||1)+(d.ecras>1?" ecrãs":" ecrã")+" · "+(d.aparelho||"")}
+  return(p.itens||[]).map(i=>i.qtd+" × "+i.desc).join(", ")}
+const pedPill=p=>`<span class="pill ${p.estado==="aceite"?"ok":p.estado==="recusado"?"bad":p.estado==="pendente"?"warn":"sem"}">${PED_ESTADO[p.estado]}</span>`;
+function refPed(t){t=t||S.tab;
+  const el=$("#pedLista");if(el){const L=pedPend();el.innerHTML=L.length?L.map(pedLinha).join(""):'<div class="panel empty" style="padding:28px">Nenhum pedido à espera de resposta. Partilhe a página dos clientes para começar a receber pedidos.</div>'}
+  const tb=$("#tbPed");if(tb){const q=String(S.pedQ||"").toLowerCase();const L=S.pedidos.filter(p=>(S.pedFiltro==="todos"||p.estado===S.pedFiltro)&&(!q||[p.numero,p.cliente?.nome,p.cliente?.telefone,p.cliente?.email].join(" ").toLowerCase().includes(q)));
+    document.querySelectorAll("[data-pedf]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.pedf===S.pedFiltro)));
+    tb.innerHTML=L.length?L.map(p=>`<tr><td class="cname"><b class="mono">${esc(p.numero)}</b><small>${pfDataHora(p.criado_em)}</small></td><td class="cname"><b>${esc(p.cliente?.nome||"—")}</b><small>${esc(p.cliente?.telefone||"")}</small></td><td>${PED_TIPO[p.tipo]}</td><td class="num">${mt(p.total)}</td><td>${pedPill(p)}</td><td><div class="acts"><button class="btn sm" data-act="ver-pedido" data-id="${p.id}">Abrir</button></div></td></tr>`).join(""):`<tr><td colspan="6"><div class="empty">Sem pedidos com estes filtros.</div></td></tr>`;rotularTabelas()}}
+
+/* detail and answer */
+function abrirPedido(id){const p=S.pedidos.find(x=>x.id===+id);if(!p)return toast("Pedido não encontrado");const c=p.cliente||{},d=p.detalhes||{};
+  const linhas=p.tipo==="micro"?[["Valor pedido",mt(d.valor)],["Prazo",d.meses+(d.meses===1?" mês":" meses")],["Juros",pct(d.taxa)+" ao mês · "+mt(d.jurosMes)+"/mês"],["Pagamento mensal",mt(d.pagaMes)],["Total a pagar",mt(p.total)],["Finalidade",d.finalidade||"—"]]
+    :[...(p.itens||[]).map(i=>[i.qtd+" × "+i.desc,mt(r2(i.qtd*i.preco))]),["IVA ("+pct(p.iva)+")",mt(p.iva_mt)],["Total",mt(p.total)],...(p.tipo==="iptv"?[["Aparelho",d.aparelho||"—"]]:[])];
+  abrir(hdr("Pedido "+esc(p.numero),PED_TIPO[p.tipo]+" · feito a "+pfDataHora(p.criado_em))+`<div class="body">
+    <div class="row spread">${pedPill(p)}<span class="note" style="margin:0">${p.descarregado_em?"O cliente descarregou a cotação a "+pfDataHora(p.descarregado_em):"O cliente ainda não descarregou a cotação"}</span></div>
+    <fieldset><legend>Cliente</legend><div class="summary">${[["Nome",c.nome],["Telefone",c.telefone],["E-mail",c.email],["Morada",c.morada],["BI",c.bi],["NUIT",c.nuit],...(p.tipo==="micro"?[["Ocupação",c.ocupacao],["Fiador",[c.fiadorNome,c.fiadorTel].filter(Boolean).join(" · ")]]:[])].map(([l,v])=>`<div><em>${l}</em><b title="${esc(v||"")}">${esc(v||"—")}</b></div>`).join("")}</div></fieldset>
+    <fieldset><legend>Pedido</legend><div class="ped-tab">${linhas.map(([l,v])=>`<div><span>${esc(l)}</span><b>${esc(v)}</b></div>`).join("")}</div></fieldset>
+    ${p.estado==="aceite"?`<div class="calc"><b>Aceite${p.respondido_em?" a "+pfDataHora(p.respondido_em):""}</b><p style="margin:6px 0 0;white-space:pre-wrap">${esc(p.resposta||"")}</p>${p.registado?`<p class="note" style="margin:6px 0 0">Registado no sistema${p.registado.docNumero?" · cotação "+esc(p.registado.docNumero):""}.</p>`:""}</div>`:""}
+    ${p.estado==="recusado"?`<div class="calc"><b>Não aceite${p.respondido_em?" a "+pfDataHora(p.respondido_em):""}</b><p style="margin:6px 0 0">Motivo: ${esc(p.motivo||"—")}</p></div>`:""}
+  </div><footer><button type="button" class="btn" data-act="ped-pdf" data-id="${p.id}" style="margin-right:auto">Cotação (PDF)</button>
+    ${p.estado==="pendente"?`<button type="button" class="btn danger" data-act="ped-recusar" data-id="${p.id}">Não aceitar</button><button type="button" class="btn pri" data-act="ped-aceitar" data-id="${p.id}">Aceitar</button>`:`<a class="btn" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.telefone)}?text=${encodeURIComponent(p.estado==="aceite"?(p.resposta||""):"Olá "+(c.nome||"")+", o seu pedido "+p.numero+" não foi aceite. Motivo: "+(p.motivo||""))}">Avisar pelo WhatsApp</a><button type="button" class="btn" data-act="fechar">Fechar</button>`}</footer>`,{wide:true,nofocus:true})}
+function pedMsgAceite(p){const c=p.cliente||{},d=p.detalhes||{},e=pedEmp(p.tipo),nome=String(c.nome||"").split(" ")[0],tel=e.telefone||"+258 86 925 2812",pag=PH(e.pagamento)?"":e.pagamento;
+  if(p.tipo==="micro")return`Olá ${nome}, o seu pedido de empréstimo ${p.numero} foi aprovado: ${mt(d.valor)} em ${d.meses} ${d.meses===1?"mês":"meses"}, a pagar ${mt(d.pagaMes)} por mês.\nVenha ter connosco (${e.morada||"Rua das Dálias, Maputo"}) com o seu BI${c.fiadorNome?" e o fiador":""} para assinarmos o contrato e receber o valor.\nQualquer dúvida: ${tel}.`;
+  return`Olá ${nome}, o seu pedido ${p.numero} foi aceite.\nValor a pagar: ${mt(p.total)}.\n${pag?"Pagamento para: "+pag:"Vamos contactá-lo com os dados para o pagamento."}\nDepois de pagar, envie o comprovativo pelo WhatsApp ${tel}${p.tipo==="iptv"?" e ativamos o serviço em até 24 horas":""}.`}
+const MOTIVOS=["Serviço indisponível neste momento","Dados incompletos ou incorretos","Valor acima do que podemos emprestar","Fora da nossa área de atendimento","Precisamos de falar consigo primeiro"];
+function abrirResposta(id,aceitar){const p=S.pedidos.find(x=>x.id===+id);if(!p)return;const c=p.cliente||{};
+  abrir(hdr(aceitar?"Aceitar o pedido "+esc(p.numero):"Não aceitar o pedido "+esc(p.numero),aceitar?"O cliente recebe esta mensagem com o pedido de pagamento.":"O cliente vê o motivo na sua página.")+`<div class="body">
+    ${aceitar?`<label class="f">Mensagem para o cliente<textarea id="prTxt" rows="7">${esc(pedMsgAceite(p))}</textarea></label>
+      <label class="f check"><input type="checkbox" id="prReg" checked> Registar ${esc(c.nome||"o cliente")} no sistema (${p.tipo==="micro"?"mutuário":p.tipo==="iptv"?"cliente IPTV e cotação":"cliente de serviços e cotação"})</label>`
+     :`<div class="chips">${MOTIVOS.map(m=>`<button type="button" class="chip" data-mot="${esc(m)}">${esc(m)}</button>`).join("")}</div>
+      <label class="f">Motivo (o cliente vê este texto)<textarea id="prTxt" rows="4" placeholder="Explique em poucas palavras porque não pode aceitar"></textarea></label>`}
+    ${waOk()&&waNum(c.telefone).length>=11?`<label class="f check"><input type="checkbox" id="prWa" checked> Enviar também pelo WhatsApp automático</label>`:""}
+    ${gmailOk()&&emailOk(c.email)?`<label class="f check"><input type="checkbox" id="prEm" checked> Enviar também por e-mail para ${esc(c.email)}</label>`:""}
+    <p class="note" id="prMsg" style="margin:0"></p></div>
+    <footer><button type="button" class="btn" data-act="ver-pedido" data-id="${p.id}">Voltar</button><button type="submit" class="btn ${aceitar?"pri":"danger"}">${aceitar?"Aceitar e avisar":"Não aceitar e avisar"}</button></footer>`,{nofocus:!aceitar});
+  dlg.querySelectorAll("[data-mot]").forEach(b=>b.onclick=()=>{$("#prTxt").value=b.dataset.mot;$("#prTxt").focus()});
+  $("#dform").onsubmit=async e=>{e.preventDefault();const txt=$("#prTxt").value.trim(),m=$("#prMsg"),bt=dlg.querySelector("[type=submit]");
+    if(!txt){m.style.color="var(--bad)";m.textContent=aceitar?"Escreva a mensagem para o cliente.":"Indique o motivo.";return}
+    bt.disabled=true;bt.textContent="A guardar…";m.style.color="";m.textContent="";
+    try{let registado=null;if(aceitar&&$("#prReg")?.checked)registado=await registarPedido(p);
+      const upd=aceitar?{estado:"aceite",resposta:txt,motivo:null,registado}:{estado:"recusado",motivo:txt,resposta:`Olá ${String(c.nome||"").split(" ")[0]}, o seu pedido ${p.numero} não foi aceite. Motivo: ${txt}`};
+      const{data,error}=await sb.from("pedidos").update({...upd,respondido_em:new Date().toISOString(),respondido_por:admin?.usuario||"",visto_cliente:false}).eq("id",p.id).eq("estado","pendente").select().single();
+      if(error)throw error;const i=S.pedidos.findIndex(x=>x.id===p.id);if(i>=0)S.pedidos[i]=data;
+      const msg=aceitar?txt:data.resposta,avisos=[];
+      if($("#prWa")?.checked){try{await enviarWA(c.telefone,msg);avisos.push("WhatsApp")}catch(err){console.error(err)}}
+      if($("#prEm")?.checked){try{await enviarGmail({to:c.email,subject:(aceitar?"Pedido aceite · ":"Pedido não aceite · ")+p.numero,body:msg}); avisos.push("e-mail")}catch(err){console.error(err)}}
+      toast((aceitar?"Pedido aceite":"Pedido não aceite")+(avisos.length?" · enviado por "+avisos.join(" e "):" · o cliente vê a resposta na sua página"));
+      refresh();abrirPedido(p.id)}
+    catch(err){console.error(err);m.style.color="var(--bad)";m.textContent="Não foi possível guardar: "+(err.message||err);bt.disabled=false;bt.textContent=aceitar?"Aceitar e avisar":"Não aceitar e avisar"}}}
+/* the customer becomes a record of the business: client (or borrower) and an accepted quote */
+async function registarPedido(p){const c=p.cliente||{},tel=waNum(c.telefone),agora=new Date().toISOString(),nota="Pedido online "+p.numero;
+  const mesmo=x=>(tel&&waNum(x.telefone)===tel)||(c.email&&String(x.email||"").toLowerCase()===String(c.email).toLowerCase());
+  const doc=(col,cfg,cid)=>{const vd=Number(cfg.validade)||15;return{id:novoId("d"),tipo:"cotacao",numero:proxNumero("cotacao"),data:hoje(),validadeDias:vd,validade:addDias(hoje(),vd),clienteId:cid,
+    cliente:{nome:c.nome,telefone:c.telefone||"",email:c.email||"",morada:[c.morada,c.nuit?"NUIT "+c.nuit:""].filter(Boolean).join(" · ")},
+    itens:(p.itens||[]).map(i=>({desc:i.desc,qtd:Number(i.qtd)||1,un:i.un||"un",preco:Number(i.preco)||0,dpct:0})),descGlobal:0,iva:Number(p.iva)||0,subtotal:Number(p.subtotal),descGlobalMT:0,base:Number(p.subtotal),ivaMT:Number(p.iva_mt),total:Number(p.total),
+    condPagamento:cfg.cotPagamento||"",condBanco:PH(cfg.pagamento)?"":cfg.pagamento,condPrazo:PH(cfg.cotPrazo)?"":cfg.cotPrazo||"",estado:"aceite",origem:"portal",pedidoId:p.id,pedidoNumero:p.numero,criadoEm:agora}};
+  if(p.tipo==="serv"){let cl=S.vclientes.find(mesmo);if(!cl){cl={id:novoId("v"),nome:c.nome,contacto:"",telefone:c.telefone||"",email:c.email||"",morada:[c.morada,c.nuit?"NUIT "+c.nuit:""].filter(Boolean).join(" · "),origem:"portal",criadoEm:agora};await store.put("sv_clientes",cl)}
+    const d=doc("sv_documentos",S.vcfg,cl.id);await store.put("sv_documentos",d);return{clienteId:cl.id,docId:d.id,docNumero:d.numero}}
+  if(p.tipo==="iptv"){const det=p.detalhes||{};let cl=S.clientes.find(mesmo);
+    if(!cl){cl={id:novoId("c"),nome:c.nome,telefone:c.telefone||"",email:c.email||"",planoId:det.plano||"",ecras:Number(det.ecras)||1,inicio:"",expira:"",servidor:S.cfg.servidor&&!/^https?:\/\/?$/.test(S.cfg.servidor)?S.cfg.servidor:"",usuario:"",senha:"",m3u:"",notas:nota+" · "+(det.aparelho||""),origem:"portal",criadoEm:agora};await store.put("clientes",cl)}
+    const d=doc("documentos",S.cfg,cl.id);await store.put("documentos",d);return{clienteId:cl.id,docId:d.id,docNumero:d.numero}}
+  const det=p.detalhes||{};let m=S.mutuarios.find(x=>(c.bi&&x.bi&&String(x.bi).trim().toLowerCase()===String(c.bi).trim().toLowerCase())||mesmo(x));
+  const dados={nome:c.nome,telefone:c.telefone||"",email:c.email||"",bi:c.bi||"",ocupacao:c.ocupacao||"",morada:c.morada||"",fiadorNome:c.fiadorNome||"",fiadorTel:c.fiadorTel||""};
+  const nm=nota+": "+mt(det.valor)+" em "+det.meses+(det.meses===1?" mês":" meses")+(det.finalidade?" · "+det.finalidade:"");
+  m=m?{...m,...Object.fromEntries(Object.entries(dados).filter(([,v])=>v)),notas:[m.notas,nm].filter(Boolean).join("\n")}:{id:novoId("m"),...dados,notas:nm,origem:"portal",criadoEm:agora};
+  await store.put("mc_mutuarios",m);return{mutuarioId:m.id}}
+async function pedAcao(a,b){
+  if(a==="ver-pedido")return abrirPedido(b.dataset.id);
+  if(a==="ped-aceitar")return abrirResposta(b.dataset.id,true);
+  if(a==="ped-recusar")return abrirResposta(b.dataset.id,false);
+  if(a==="ped-pdf"){const p=S.pedidos.find(x=>x.id===+b.dataset.id);if(p){b.disabled=true;await guardarPDF(()=>pdfPedido(p,pedEmp(p.tipo)));b.disabled=false}return}
+  if(a==="ped-link")return copiar(PORTAL_URL());
+  if(a==="ped-atualizar"){await carregarPedidos();return toast("Pedidos atualizados")}
+}
+
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
 Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
 const autoCfg=()=>({...AVISOS.AUTO_PADRAO,...(S.acfg||{})});
@@ -4158,7 +4334,8 @@ function telaLoginEmail(aviso){
     <label class="f">E-mail<input id="lU" type="email" autocomplete="username" autocapitalize="none" inputmode="email"></label>
     <label class="f">Senha<span class="withbtn"><input id="lP" type="password" autocomplete="current-password"><button type="button" class="btn sm" id="lVer">Mostrar</button></span></label>
     <p class="err" id="lErr" hidden></p><button class="btn pri" type="submit" id="lBtn">Entrar</button>
-    <button type="button" class="btn" id="lEsq">Esqueci a senha</button></form>`);
+    <button type="button" class="btn" id="lEsq">Esqueci a senha</button></form>
+    <p class="note" style="text-align:center;margin:14px 0 0">É cliente? <a href="clientes.html">Faça o seu pedido aqui</a>.</p>`);
   $("#lEsq").onclick=()=>telaRecuperar($("#lU").value.trim());
   $("#lVer").onclick=()=>{const p=$("#lP"),v=p.type==="password";p.type=v?"text":"password";$("#lVer").textContent=v?"Ocultar":"Mostrar"};
   $("#lForm").onsubmit=async e=>{e.preventDefault();const er=$("#lErr"),bt=$("#lBtn");er.hidden=true;
@@ -4216,10 +4393,10 @@ async function supaEntrar(email){
   try{const{data:m,error}=await sb.from("membros").select("email,nome,papel").eq("email",email.toLowerCase()).maybeSingle();if(error)throw error;
     if(!m){await sb.auth.signOut();return telaLoginEmail("A conta "+email+" não tem acesso a este sistema. Peça ao administrador para a adicionar.")}
     admin={usuario:m.email,nome:m.nome,papel:m.papel,supa:true};
-    await db.carregar();entrar();srvEstado();
+    await db.carregar();entrar();srvEstado();carregarPedidos();
   }catch(err){console.error(err);telaAuth("Erro ao carregar","Não foi possível carregar os dados. Verifique a Internet e tente de novo.",`<button class="btn pri" onclick="location.reload()">Tentar de novo</button>`)}
 }
-async function supaSair(msg){try{db.parar();await sb.auth.signOut()}catch(_){}telaLoginEmail(msg)}
+async function supaSair(msg){try{pararPedidos();db.parar();await sb.auth.signOut()}catch(_){}telaLoginEmail(msg)}
 
 /* ---------- conta e utilizadores (Definições) ---------- */
 function contaSupaHTML(){if(!admin)return"";const ehAdmin=admin.papel==="admin";return`
@@ -4307,8 +4484,9 @@ const NF_IC={
   micro:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6.5" rx="7" ry="2.8"/><path d="M5 6.5v5c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-5"/><path d="M5 11.5v5c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-5"/></svg>`,
   serv:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><path d="M8.5 12h7M8.5 16h4"/></svg>`};
 NF_IC.pessoal=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="14" rx="3"/><path d="M16 11.5h5.5v5H16a2.5 2.5 0 0 1 0-5z"/><path d="M5 6l9-3 2 3"/></svg>`;
+NF_IC.pedidos=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h9l4 4V21a.5.5 0 0 1-.5.5h-12A.5.5 0 0 1 6 21z"/><path d="M14.5 2.5V7h4.5M9 12h6M9 16h4"/><circle cx="18" cy="18" r="3.5" fill="currentColor" stroke="none"/></svg>`;
 NF_IC.config=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`;
-const NF_NOME={iptv:"IPTV",micro:"Microcrédito",serv:"Serviços",pessoal:"Gestão pessoal",config:"Por configurar"};
+const NF_NOME={iptv:"IPTV",micro:"Microcrédito",serv:"Serviços",pessoal:"Gestão pessoal",config:"Por configurar",pedidos:"Pedido online"};
 let NOTIFS=[],nfUlt=-1,nfAutoT=null;
 function alertas(){
   const out=[];
@@ -4322,6 +4500,7 @@ function alertas(){
     if(d.tipo!=="cotacao"||d.estado==="anulado"||d.estado==="aceite"||!d.validade)return;const n=dias(d.validade);
     if(n>=0&&n<=3)out.push({biz,tab,nv:1,t:(d.numero||"Cotação")+" · "+((d.cliente&&d.cliente.nome)||"cliente"),d:"Cotação de "+mt(d.total)+(n===0?" caduca hoje":" caduca em "+n+" d"),act:"ver-doc",id:d.id,btn:"Abrir",ord:n})}));
   if(typeof pfPodeVer==="function"&&pfPodeVer()){const n=pfPorClassificar().length;if(n)out.push({biz:"pessoal",tab:"movimentos",nv:1,t:n+(n===1?" movimento":" movimentos")+" por classificar",d:"Diga com o quê gastou ou de onde veio o dinheiro",act:"pf-pend",btn:"Classificar",ord:0,pre:()=>{S.pfiltro="pend";S.pmesF="";S.pcart=""}})}
+  if(typeof pedPend==="function")pedPend().forEach(p=>out.push({biz:"pedidos",tab:"painel",nv:3,t:"Pedido "+p.numero+" · "+(p.cliente&&p.cliente.nome||"cliente"),d:PED_TIPO[p.tipo]+" · "+mt(p.total)+" · à espera de resposta",act:"ver-pedido",id:p.id,btn:"Responder",ord:-1}));
   /* settings still missing become pending notifications too */
   if(typeof faltas==="function")faltas().forEach((x,i)=>out.push({cfg:true,falta:x,biz:"config",nv:Math.min(x.nv,2),t:x.t,d:x.d,btn:x.btn,ord:100+i}));
   return out.sort((a,b)=>b.nv-a.nv||a.ord-b.ord);
@@ -4362,7 +4541,7 @@ function notifIr(i){
   const a=NOTIFS[i];if(!a)return;fecharNotif();fechar();
   if(a.falta)return faltaIrX(a.falta);
   if(a.pre)a.pre();abrirNegocio(a.biz);showTab(a.tab);
-  setTimeout(()=>{try{if(a.act==="renovar")abrirRenovar(a.id);else if(a.act==="ver-emp")abrirEmp(a.id);else if(a.act==="ver-doc")abrirDoc(a.id)}catch(e){console.error(e)}},380);
+  setTimeout(()=>{try{if(a.act==="renovar")abrirRenovar(a.id);else if(a.act==="ver-emp")abrirEmp(a.id);else if(a.act==="ver-doc")abrirDoc(a.id);else if(a.act==="ver-pedido")abrirPedido(a.id)}catch(e){console.error(e)}},380);
 }
 function notifAuto(){
   if(document.body.classList.contains("locked"))return;
@@ -4411,7 +4590,7 @@ function revelar(){
 }
 
 /* ================= navegação ================= */
-const MOD={serv:SERV,iptv:IPTV,micro:MICRO,pessoal:PESSOAL};
+const MOD={serv:SERV,iptv:IPTV,micro:MICRO,pessoal:PESSOAL,pedidos:PEDIDOS};
 function abrirNegocio(b){
   S.biz=b;store_("sessionStorage","hs_negocio",b);
   document.body.classList.remove("launch");
@@ -4501,7 +4680,7 @@ function refLauncher(){
   $("#view").innerHTML=banner()+`
   <section class="hero" data-ceu="${climaEstado().tipo}" data-periodo="${climaEstado().dia?"dia":"noite"}">${climaCenaHTML()}<div class="top"><div><p class="eyebrow">${cap1(new Date().toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</p><h1>${saud}${quem?", "+esc(quem):""}.</h1><p class="sub">Escolha o negócio que quer gerir.</p><div id="climaInfo">${climaInfoHTML()}</div></div></div></section>
   <section class="bizsec"><div class="biz-grid">${NEG.map(n=>`<button class="biz biz-${n.k}" data-biz="${n.k}"><span class="ill">${ILL[n.k]}</span><span class="bt"><b>${n.nome}</b><span class="tl">${n.tl}</span></span><span class="feat">${n.f.map(x=>`<span>${x}</span>`).join("")}</span><span class="go">Abrir</span></button>`).join("")}</div></section>
-  ${pfLauncherHTML()}
+  ${pedLauncherHTML()}${pfLauncherHTML()}
   <section class="ovsec" id="ov">${ovHTML()}</section>`;
   ligarOv();if(!climaT)climaIniciar();
 }
@@ -4532,6 +4711,7 @@ function refresh(){
   if(!S.ready)$("#liveTxt").textContent="a carregar…";
   else if(S.biz==="micro"){const m=MICRO.stats();$("#liveTxt").textContent=m.ativos+(m.ativos===1?" empréstimo ativo":" empréstimos ativos")+(m.nAtraso?" · "+m.nAtraso+" em atraso":"")}
   else if(S.biz==="iptv"){const n=IPTV.stats().ativos;$("#liveTxt").textContent=n+(n===1?" conta ativa":" contas ativas")}
+  else if(S.biz==="pedidos"){const n=pedPend().length;$("#liveTxt").textContent=n?n+(n===1?" pedido por responder":" pedidos por responder"):"Pedidos online"}
   else if(S.biz==="pessoal"){const n=pfPorClassificar().length;$("#liveTxt").textContent=n?n+(n===1?" movimento por classificar":" movimentos por classificar"):"Gestão pessoal"}
   else $("#liveTxt").textContent=S.cfg.nome||"Heel Service";
   nfBadge();
@@ -4673,6 +4853,7 @@ document.addEventListener("click",async e=>{
   const vf=e.target.closest("[data-vfiltro]");if(vf){S.vfiltro=vf.dataset.vfiltro;refresh();return}
   const vk=e.target.closest("[data-vkpi]");if(vk){S.vfiltro=vk.dataset.vkpi;showTab("cotacoes");return}
   const pfk=e.target.closest("[data-pfkpi]");if(pfk){S.pfiltro=pfk.dataset.pfkpi;S.pmesF="";S.pcart="";showTab("movimentos");return}
+  const pdf_=e.target.closest("[data-pedf]");if(pdf_){S.pedFiltro=pdf_.dataset.pedf;refPed();return}
   const pff=e.target.closest("[data-pfiltro]");if(pff){S.pfiltro=pff.dataset.pfiltro;refPMov();return}
   const b=e.target.closest("[data-act]");if(!b)return;
   const a=b.dataset.act,id=b.dataset.id;
@@ -4681,6 +4862,7 @@ document.addEventListener("click",async e=>{
     case"fechar":e.preventDefault();fechar();break;
     case"tema":trocarTema();break;
     case"relatorio":abrirRelatorio(b.dataset.neg);break;
+    case"ver-pedido":case"ped-aceitar":case"ped-recusar":case"ped-pdf":case"ped-link":case"ped-atualizar":await pedAcao(a,b);break;
     case"falta-ir":faltaIr(+b.dataset.i);break;
     case"falta-ignorar":{const x=(S._faltas||[])[+b.dataset.i];if(x){faltaIgnorar(x.k);refresh();toast("Não volta a aparecer")}break}
     case"copia-fazer":case"copia-baixar":case"copia-repor":await copiaAcao(a,b);break;
