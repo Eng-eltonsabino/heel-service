@@ -816,6 +816,12 @@ body:not(.launch) .subnav #bizName{animation:navIn .45s var(--ease)}
 .auto-prox h3,#pAuto h3{font-size:17px;margin-bottom:4px}
 .auto-prox{display:grid;gap:10px}
 #pAuto .pill{flex:none}
+
+.auto-wa{border-left:3px solid #25d366}
+.auto-tpl summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--accent)}
+.auto-tpl-l{display:grid;gap:10px;margin-top:10px}
+.auto-tpl-l>div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+.auto-tpl-l p{margin:4px 0 0;color:var(--muted);user-select:all}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 
@@ -1057,6 +1063,12 @@ function erroGmail(e){const c=e&&e.code;
   return"Não foi possível enviar agora. Tente de novo dentro de momentos.";}
 const srvOk=()=>S.modo==="supa"&&!!(S.srv&&S.srv.configurado);
 const gmailOk=()=>!!mcp||srvOk();
+const waOk=()=>S.modo==="supa"&&!!(S.srv&&S.srv.wa&&S.srv.wa.configurado);
+async function enviarWA(tel,texto,{modelo="",params=[],gerar=null,meta={}}={}){
+  if(!waOk())throw new Error("O WhatsApp automático não está ligado. Ligue-o em Definições → Mensagens automáticas.");
+  let anexo=null;if(gerar){const r=await gerar();if(r)anexo={nome:r.nome,base64:await b64(r.blob)}}
+  return fnMensagens({acao:"enviar",wa:{tel,texto,modelo,params,comAnexo:!!anexo},anexo,...meta});
+}
 async function enviarGmail({to,subject,body,gerar,meta}){
   if(!mcp){if(!srvOk())throw{code:"server_not_connected"};let anexo=null;if(gerar){const r=await gerar();if(r)anexo={nome:r.nome,base64:await b64(r.blob)}}
     return fnMensagens({acao:"enviar",para:to.trim(),assunto:subject,texto:body,anexo,...(meta||{})})}
@@ -1117,7 +1129,7 @@ function modalEmail(o){
       <label class="f">Para<span class="withbtn"><input id="eTo" type="email" value="${esc(o.para||"")}" placeholder="sem e-mail registado"><button type="button" class="btn sm" data-act="copy-to">Copiar</button></span></label>
       <label class="f">Assunto<input id="eSub" value="${esc(o.assunto)}"></label>
       <label class="f">Mensagem<textarea id="eBody" rows="10">${esc(o.corpo)}</textarea></label>
-      ${o.anexo?`<div class="row">${gmailOk()?`<label class="f check"><input type="checkbox" id="eAnexo" checked> Anexar ${esc(o.anexo.rotulo)} (PDF)</label>`:""}<button type="button" class="btn sm" id="eDl">Descarregar PDF</button></div>`:""}
+      ${o.anexo?`<div class="row">${gmailOk()||waOk()?`<label class="f check"><input type="checkbox" id="eAnexo" checked> Anexar ${esc(o.anexo.rotulo)} (PDF)</label>`:""}<button type="button" class="btn sm" id="eDl">Descarregar PDF</button></div>`:""}
       <p class="note" id="eStatus">${gmailOk()?"O e-mail sai da sua conta Gmail.":"O envio pelo Gmail não está ligado. Use “Abrir no e-mail” ou ligue-o em Definições → Mensagens automáticas."}</p>
       <div class="row" style="justify-content:flex-end;gap:8px"><button type="button" class="btn sm" data-act="copy-msg">Copiar e-mail</button>${gmailOk()?`<button type="button" class="btn pri" id="eSend">Enviar e-mail</button>`:`<a class="btn pri" id="eMail" href="#">Abrir no e-mail</a>`}</div>
     </fieldset>
@@ -1126,7 +1138,7 @@ function modalEmail(o){
       <label class="f">Mensagem SMS<textarea id="sBody" rows="4" style="font-family:var(--f-body)">${esc(smsLimpo(o.sms||""))}</textarea></label>
       <div class="row spread"><span class="note" id="sCount"></span><label class="f check" style="font-size:13px"><input type="checkbox" id="sLimpo" checked> Sem acentos (SMS mais barato)</label></div>
       <p class="note" style="margin:0" id="sStatus">${smsAuto()?"O SMS é enviado automaticamente pelo serviço de SMS configurado.":"O SMS é enviado pela aplicação de mensagens do seu telemóvel. Se o botão não abrir nada, copie o texto. Para envio automático, configure “SMS automático” em Definições."}</p>
-      <div class="row" style="justify-content:flex-end;gap:8px"><button type="button" class="btn sm" id="sCopy">Copiar SMS</button>${o.tel?`<a class="btn sm" id="eWa" target="_blank" rel="noopener" href="#">WhatsApp</a>`:""}${smsAuto()?`<a class="btn sm" id="sOpen" href="#">Abrir SMS</a><button type="button" class="btn pri" id="sSend">Enviar SMS</button>`:`<a class="btn pri" id="sOpen" href="#">Abrir SMS</a>`}</div>
+      <div class="row" style="justify-content:flex-end;gap:8px"><button type="button" class="btn sm" id="sCopy">Copiar SMS</button>${o.tel?`<a class="btn sm" id="eWa" target="_blank" rel="noopener" href="#">Abrir WhatsApp</a>`:""}${o.tel&&waOk()?`<button type="button" class="btn sm" id="waSend">Enviar WhatsApp</button>`:""}${smsAuto()?`<a class="btn sm" id="sOpen" href="#">Abrir SMS</a><button type="button" class="btn pri" id="sSend">Enviar SMS</button>`:`<a class="btn pri" id="sOpen" href="#">Abrir SMS</a>`}</div>
     </fieldset>
   </div>
   <footer>
@@ -1148,6 +1160,11 @@ function modalEmail(o){
     ss.disabled=true;ss.textContent="A enviar…";st.style.color="";
     try{await enviarSMS(tel,$("#sBody").value);ss.textContent="SMS enviado";st.style.color="var(--ok)";st.textContent="SMS enviado para "+smsNum(tel)+".";toast("SMS enviado para "+smsNum(tel));if(o.aposSMS)await o.aposSMS()}
     catch(e){console.error(e);st.style.color="var(--bad)";st.textContent=e&&e.code==="sem_telefone"?"Telefone inválido.":erroGmail(e).replace("Verifique o endereço do destinatário","Verifique o endereço do serviço de SMS");ss.disabled=false;ss.textContent="Tentar de novo"}};
+  const ws=$("#waSend");if(ws)ws.onclick=async()=>{const st=$("#sStatus"),tel=$("#sTo").value;
+    if(waNum(tel).length<11){st.style.color="var(--bad)";st.textContent="Indique o telefone do cliente.";return}
+    ws.disabled=true;ws.textContent="A enviar…";st.style.color="";const anx=o.anexo&&$("#eAnexo")?.checked?o.anexo.gerar:null;
+    try{await enviarWA(tel,o.wa||$("#sBody").value,{gerar:anx,meta:{nome:(/Olá ([^,\n]+)/.exec(o.corpo||"")||[])[1]||""}});ws.textContent="WhatsApp enviado";st.style.color="var(--ok)";st.textContent="WhatsApp enviado para "+smsNum(tel)+(anx?" com o PDF.":".");toast("WhatsApp enviado")}
+    catch(e){console.error(e);st.style.color="var(--bad)";st.textContent=e.message||"Não foi possível enviar o WhatsApp.";ws.disabled=false;ws.textContent="Tentar de novo"}};
   const d=$("#eDl");if(d)d.onclick=async()=>{d.disabled=true;await guardarPDF(o.anexo.gerar);d.disabled=false};
   const ex=$("#eExtra");if(ex)ex.onclick=()=>o.extraBtn.fn();
   const bs=$("#eSend");if(bs)bs.onclick=async()=>{
@@ -1164,7 +1181,7 @@ function modalEmail(o){
 
 /* ===== Avisos automáticos: lógica partilhada pelo site e pelo servidor (sem DOM) ===== */
 const AVISOS=(()=>{
-  const AUTO_PADRAO={ativo:true,recibos:true,email:true,sms:true,iptv:true,iptvAntes:"7,3,1",iptvNoDia:true,iptvDepois:"1,3",mc:true,mcAntes:"3,1",mcNoDia:true,mcAtraso:"1,7,15"};
+  const AUTO_PADRAO={ativo:true,recibos:true,email:true,sms:true,whatsapp:true,waLang:"pt_PT",waTplIptv:"heel_aviso_iptv",waTplLembrete:"heel_lembrete_pagamento",waTplAtraso:"heel_pagamento_atraso",waTplRecibo:"heel_recibo",iptv:true,iptvAntes:"7,3,1",iptvNoDia:true,iptvDepois:"1,3",mc:true,mcAntes:"3,1",mcNoDia:true,mcAtraso:"1,7,15"};
   const r2=v=>Math.round((Number(v)||0)*100)/100;
   const mt=v=>{const n=r2(v),[i,d]=Math.abs(n).toFixed(2).split(".");return(n<0?"-":"")+i.replace(/\B(?=(\d{3})+(?!\d))/g," ")+","+d+" MT"};
   const fmtD=s=>{if(!s)return"—";const[y,m,d]=String(s).slice(0,10).split("-");return d+"/"+m+"/"+y};
@@ -1193,10 +1210,12 @@ const AVISOS=(()=>{
   function planear(d){
     const A={...AUTO_PADRAO,...(d.auto||{})},out=[];if(!A.ativo)return out;
     const smsOn=A.sms&&d.sms&&d.sms.ativo;
-    const add=(o,email,smsTxt,tel)=>{if(d.enviados&&d.enviados.has(o.id))return;
+    const waOn=A.whatsapp&&d.wa;
+    const add=(o,email,smsTxt,tel,wa)=>{if(d.enviados&&d.enviados.has(o.id))return;
       const em=A.email&&emailOk(email)?{para:String(email).trim(),assunto:o.assunto,texto:o.texto}:null;
       const end=smsOn?smsEndereco(tel,d.sms):"";const sm=end?{numero:"+"+waNum(tel),para:end,texto:limpo(smsTxt)}:null;
-      if(!em&&!sm)return;out.push({id:o.id,tipo:o.tipo,ref:o.ref,nome:o.nome,marco:o.marco,email:em,sms:sm})};
+      const w=waOn&&wa&&waNum(tel).length>=11?{numero:waNum(tel),texto:wa.texto,modelo:wa.modelo,params:wa.params.map(x=>String(x??"").replace(/\s+/g," ").trim()||"—")}:null;
+      if(!em&&!sm&&!w)return;out.push({id:o.id,tipo:o.tipo,ref:o.ref,nome:o.nome,marco:o.marco,email:em,sms:sm,wa:w})};
     if(A.iptv){const c=d.iptvCfg||{},pag=semPh(c.pagamento),N=c.nome||"Heel Service";
       (d.clientes||[]).forEach(cl=>{if(!cl.expira)return;const n=diasEntre(d.hoje,cl.expira),m=marcoAtual(n,lista(A.iptvAntes),A.iptvNoDia,lista(A.iptvDepois));if(m===null)return;
         const p=(c.planos||[]).find(x=>x.id===cl.planoId),nome=String(cl.nome||"").split(" ")[0];
@@ -1204,20 +1223,26 @@ const AVISOS=(()=>{
         add({id:`iptv_${cl.id}_${cl.expira}_${m}`,tipo:"iptv",ref:cl.id,nome:cl.nome,marco:m,
           assunto:n<0?"A sua subscrição IPTV expirou — renove já":n===0?"A sua subscrição IPTV expira hoje":"A sua subscrição IPTV está a terminar",
           texto:`Olá ${nome},\n\nInformamos que a sua subscrição IPTV (${p?.nome||"—"}) ${quando}.\n\nPara continuar a ver sem interrupções, renove${p?" com o pagamento de "+mt(p.preco):""}${pag?" para:\n"+pag:"."}\n\nDepois de pagar, responda a esta mensagem com o comprovativo e enviamos o recibo e a confirmação da renovação.${assinatura(c)}`},
-          cl.email,`${N}: Ola ${nome}, a sua subscricao IPTV ${n<0?"expirou a "+fmtD(cl.expira):n===0?"expira hoje":"expira a "+fmtD(cl.expira)}.${p?" Renove com "+mt(p.preco):" Renove"}${pag?" via "+pag:""} e envie o comprovativo.`,cl.telefone)})}
+          cl.email,`${N}: Ola ${nome}, a sua subscricao IPTV ${n<0?"expirou a "+fmtD(cl.expira):n===0?"expira hoje":"expira a "+fmtD(cl.expira)}.${p?" Renove com "+mt(p.preco):" Renove"}${pag?" via "+pag:""} e envie o comprovativo.`,cl.telefone,
+          {modelo:"iptv",texto:`Olá ${nome}, a sua subscrição IPTV${p?" ("+p.nome+")":""} ${n<0?"expirou a "+fmtD(cl.expira):n===0?"expira hoje":"expira a "+fmtD(cl.expira)}. Para continuar a ver, renove${p?" com "+mt(p.preco):""}${pag?" via "+pag:""} e envie-nos o comprovativo. Obrigado! — ${N}`,
+           params:[nome,n<0?"expirou a "+fmtD(cl.expira):n===0?"expira hoje":"expira a "+fmtD(cl.expira),p?mt(p.preco):"o valor do seu plano",pag||"os meios habituais"]})})}
     if(A.mc){const c=d.mcfg||{},pag=semPh(c.pagamento),N=c.nome||"Heel Service";
       (d.emprestimos||[]).forEach(e=>{if(e.estado==="anulado")return;const s=situacaoEmp(e,d.hoje);if(s.saldo<=0.004)return;const mu=e.mutuario||{},nome=String(mu.nome||"").split(" ")[0];
         if(s.primeira){const n=diasEntre(d.hoje,s.primeira.venc),m=marcoAtual(n,[],false,lista(A.mcAtraso));if(m===null)return;const da=-n;
           add({id:`mc_${e.id}_${s.primeira.venc}_${m}`,tipo:"mc",ref:e.id,nome:mu.nome,marco:m,assunto:`Pagamento em atraso — empréstimo ${e.numero}`,
             texto:`Olá ${nome},\n\nO seu empréstimo ${e.numero} tem ${mt(s.atraso)} em atraso desde ${fmtD(s.primeira.venc)} (${da} dia${da===1?"":"s"}).\n\nPedimos que regularize o pagamento o mais breve possível${pag?" para:\n"+pag:""}.\n\nSaldo total em dívida: ${mt(s.saldo)}.\nDepois de pagar, envie-nos o comprovativo para emitirmos o recibo.${assinatura(c)}`},
-            mu.email,`${N}: Ola ${nome}, o emprestimo ${e.numero} tem ${mt(s.atraso)} em atraso desde ${fmtD(s.primeira.venc)}.${pag?" Regularize via "+pag+".":" Regularize o pagamento."} Saldo: ${mt(s.saldo)}.`,mu.telefone);return}
+            mu.email,`${N}: Ola ${nome}, o emprestimo ${e.numero} tem ${mt(s.atraso)} em atraso desde ${fmtD(s.primeira.venc)}.${pag?" Regularize via "+pag+".":" Regularize o pagamento."} Saldo: ${mt(s.saldo)}.`,mu.telefone,
+            {modelo:"atraso",texto:`Olá ${nome}, o empréstimo ${e.numero} tem ${mt(s.atraso)} em atraso desde ${fmtD(s.primeira.venc)}. Saldo em dívida: ${mt(s.saldo)}.${pag?" Regularize via "+pag+"":" Regularize o pagamento"} e envie-nos o comprovativo. — ${N}`,
+             params:[nome,e.numero,mt(s.atraso),fmtD(s.primeira.venc),mt(s.saldo),pag||"os meios habituais"]});return}
         if(s.proxima){const n=diasEntre(d.hoje,s.proxima.venc),m=marcoAtual(n,lista(A.mcAntes),A.mcNoDia,[]);if(m===null)return;
           add({id:`mc_${e.id}_${s.proxima.venc}_${m}`,tipo:"mc",ref:e.id,nome:mu.nome,marco:m,assunto:n===0?`Hoje: pagamento do empréstimo ${e.numero}`:`Lembrete: pagamento a ${fmtD(s.proxima.venc)}`,
             texto:`Olá ${nome},\n\nLembramos que o pagamento n.º ${s.proxima.n} de ${(e.prestacoes||[]).length} do seu empréstimo ${e.numero}, no valor de ${mt(s.proxima.falta)}, vence ${n===0?"hoje":"a "+fmtD(s.proxima.venc)}.${pag?"\n\nPagamento para:\n"+pag:""}\n\nDepois de pagar, envie-nos o comprovativo para emitirmos o recibo.${assinatura(c)}`},
-            mu.email,`${N}: Ola ${nome}, o pagamento de ${mt(s.proxima.falta)} do emprestimo ${e.numero} vence ${n===0?"hoje":"a "+fmtD(s.proxima.venc)}.${pag?" Pague via "+pag+".":""}`,mu.telefone)}})}
+            mu.email,`${N}: Ola ${nome}, o pagamento de ${mt(s.proxima.falta)} do emprestimo ${e.numero} vence ${n===0?"hoje":"a "+fmtD(s.proxima.venc)}.${pag?" Pague via "+pag+".":""}`,mu.telefone,
+            {modelo:"lembrete",texto:`Olá ${nome}, lembramos que o pagamento de ${mt(s.proxima.falta)} do empréstimo ${e.numero} vence ${n===0?"hoje":"a "+fmtD(s.proxima.venc)}. ${pag?"Pague via "+pag:"Pague"} e envie-nos o comprovativo. Obrigado! — ${N}`,
+             params:[nome,mt(s.proxima.falta),e.numero,n===0?"hoje":"a "+fmtD(s.proxima.venc),pag||"os meios habituais"]})}})}
     return out;
   }
-  return{AUTO_PADRAO,planear,diasEntre,smsEndereco,limpo,marcoAtual};
+  return{AUTO_PADRAO,planear,diasEntre,smsEndereco,limpo,marcoAtual,waNum};
 })();
 
 /* ================= IPTV ================= */
@@ -2840,19 +2865,19 @@ async function ctrAcao(a,k,id,b){
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
 Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
 const autoCfg=()=>({...AVISOS.AUTO_PADRAO,...(S.acfg||{})});
-function autoLigado(k){const A=autoCfg();return!!(A[k]&&gmailOk())}
+function autoLigado(k){const A=autoCfg();return!!(A[k]&&(gmailOk()||waOk()))}
 const enviosIds=()=>new Set((S.envios||[]).map(x=>x.id));
 async function registarLocal(id,dados){if(S.modo==="supa"||!db)return;try{await db.collection("envios").doc(String(id).replace(/[^\w.-]/g,"_").slice(0,120)).set({...dados,quando:new Date().toISOString()})}catch(e){console.error(e)}}
 
 /* ---- recibo emitido: envia logo por e-mail (com PDF) e SMS ---- */
 async function envioAuto(o){
-  const temEmail=emailOk(o.para),temSms=!!(o.sms&&smsAuto()&&waNum(o.tel));
-  if(!temEmail&&!temSms)return modalEmail(o);
+  const A=autoCfg(),temEmail=A.email!==false&&gmailOk()&&emailOk(o.para),temSms=!!(A.sms!==false&&o.sms&&smsAuto()&&waNum(o.tel)),temWa=!!(A.whatsapp&&waOk()&&waNum(o.tel).length>=11&&(o.sms||o.wa));
+  if(!temEmail&&!temSms&&!temWa)return modalEmail(o);
   const linha=(k,rot,dest)=>`<div class="item"><div class="who"><b>${rot}</b><small>${esc(dest)}</small></div><span class="pill sem" id="aSt${k}">A enviar…</span></div>`;
   abrir(hdr(o.titulo,"Enviado automaticamente ao cliente")+`<div class="body">
     ${o.info?`<div class="calc">${o.info}</div>`:""}
-    <div class="list auto-list">${temEmail?linha("E","E-mail"+(o.anexo?" com o "+esc(o.anexo.rotulo)+" em PDF":""),o.para):""}${temSms?linha("S","SMS",smsNum(o.tel)):""}</div>
-    <p class="note" id="aNota">${!temEmail?"O cliente não tem e-mail registado: segue só o SMS.":!temSms&&o.tel?(smsAuto()?"":"O SMS automático está desligado: segue só o e-mail."):""}</p></div>
+    <div class="list auto-list">${temEmail?linha("E","E-mail"+(o.anexo?" com o "+esc(o.anexo.rotulo)+" em PDF":""),o.para):""}${temSms?linha("S","SMS",smsNum(o.tel)):""}${temWa?linha("W","WhatsApp"+(o.anexo?" com o PDF":""),smsNum(o.tel)):""}</div>
+    <p class="note" id="aNota">${!temEmail&&!emailOk(o.para)?"O cliente não tem e-mail registado.":""}</p></div>
   <footer><button type="button" class="btn" id="aRever" style="margin-right:auto">Rever e reenviar</button><button type="button" class="btn pri" data-act="fechar">Concluído</button></footer>`,{nofocus:true});
   $("#aRever").onclick=()=>modalEmail(o);
   const set=(k,ok,t)=>{const p=$("#aSt"+k);if(p){p.className="pill "+(ok?"ok":"bad");p.textContent=t}};
@@ -2862,6 +2887,10 @@ async function envioAuto(o){
     catch(e){console.error(e);set("E",false,"Falhou");nota(erroGmail(e))}}
   if(temSms){try{await enviarSMS(o.tel,smsLimpo(o.sms),meta);set("S",true,"Enviado ✓");feitos.push("SMS");if(o.aposSMS)try{await o.aposSMS()}catch(_){}}
     catch(e){console.error(e);set("S",false,"Falhou");nota(e&&e.code==="sem_telefone"?"Telefone inválido.":erroGmail(e))}}
+  if(temWa){const txt=o.corpo+" "+(o.assunto||""),num=(/(?:REC|MC)-\d{4}-\d+/.exec(o.assunto+" "+o.corpo)||[])[0]||"",valor=(/(\d[\d \u00a0]*,\d{2} MT)/.exec(o.corpo||"")||[])[1]||"";
+    const waTxt=o.wa||(/dados de acesso/i.test(o.assunto||"")||!num?o.sms:`Olá ${meta.nome||""}, segue em anexo o recibo ${num}${valor?", no valor de "+valor:""}. Obrigado pela preferência! — ${S.cfg.nome||"Heel Service"}`);
+    try{await enviarWA(o.tel,waTxt,{modelo:num?"recibo":"",params:[meta.nome||"cliente",num||"—",valor||"—"],gerar:o.anexo?.gerar,meta});set("W",true,"Enviado ✓");feitos.push("WhatsApp")}
+    catch(e){console.error(e);set("W",false,"Falhou");nota(e.message||"Não foi possível enviar o WhatsApp.")}}
   if(feitos.length){toast("Recibo enviado ao cliente por "+feitos.join(" e "));registarLocal("rec_"+Date.now(),{...meta,ok:true,canais:feitos,assunto:o.assunto,email:temEmail?o.para:"",sms:temSms?smsNum(o.tel):""})}
 }
 
@@ -2888,10 +2917,10 @@ function autoDiario(){
 const tick=(n,l,v)=>`<label class="f check"><input type="checkbox" name="${n}"${v?" checked":""}> ${l}</label>`;
 function autoHTML(){
   const A=autoCfg(),hojeK=hoje(),sup=S.modo==="supa",srv=S.srv;
-  const plano=S.ready?AVISOS.planear({hoje:hojeK,auto:A,iptvCfg:S.cfg,mcfg:S.mcfg,sms:S.scfg,clientes:S.clientes,emprestimos:S.emprestimos,enviados:enviosIds()}):[];
+  const plano=S.ready?AVISOS.planear({hoje:hojeK,auto:A,wa:waOk(),iptvCfg:S.cfg,mcfg:S.mcfg,sms:S.scfg,clientes:S.clientes,emprestimos:S.emprestimos,enviados:enviosIds()}):[];
   const ult=S.aestado||srv?.ultima;
   const reg=[...(S.envios||[])].sort((a,b)=>String(b.quando||"").localeCompare(String(a.quando||""))).slice(0,25);
-  const estadoPill=gmailOk()?(A.ativo||A.recibos?'<span class="pill ok">Ligado</span>':'<span class="pill sem">Pausado</span>'):'<span class="pill warn">Por configurar</span>';
+  const estadoPill=gmailOk()||waOk()?(A.ativo||A.recibos?'<span class="pill ok">Ligado</span>':'<span class="pill sem">Pausado</span>'):'<span class="pill warn">Por configurar</span>';
   let srvBox="";
   if(sup){
     if(!srv)srvBox=`<div class="calc">A verificar o envio pelo Gmail…</div>`;
@@ -2909,14 +2938,38 @@ function autoHTML(){
     else srvBox=`<div class="calc">O envio automático ainda não foi ligado. Peça ao administrador para o ligar nesta secção.</div>`;
   }else if(mcp)srvBox=`<div class="calc auto-ok"><b>Usa o Gmail ligado ao claude.ai.</b> Nesta versão, os avisos do dia são enviados quando abre o sistema. Para envio com o site fechado, use o site online.</div>`;
   else srvBox=`<div class="calc">O envio automático funciona no site online (com a base de dados na Internet). Nesta cópia, use os botões de envio em cada cliente.</div>`;
+  const wa=srv?.wa,TPL=[["waTplIptv","Aviso de fim da subscrição IPTV","Olá {{1}}, a sua subscrição IPTV {{2}}. Para continuar a ver, renove com {{3}} via {{4}} e envie-nos o comprovativo. Obrigado!"],
+    ["waTplLembrete","Lembrete de prestação","Olá {{1}}, lembramos que o pagamento de {{2}} do empréstimo {{3}} vence {{4}}. Pague via {{5}} e envie-nos o comprovativo. Obrigado!"],
+    ["waTplAtraso","Prestação em atraso","Olá {{1}}, o empréstimo {{2}} tem {{3}} em atraso desde {{4}}. Saldo em dívida: {{5}}. Regularize via {{6}} e envie-nos o comprovativo."],
+    ["waTplRecibo","Recibo (cabeçalho: Documento)","Olá {{1}}, segue em anexo o recibo {{2}}, no valor de {{3}}. Obrigado pela preferência!"]];
+  const tplLista=`<details class="auto-tpl"><summary>Modelos a criar na Meta (categoria Utilidade, idioma ${esc(A.waLang)})</summary><div class="auto-tpl-l">${TPL.map(([k,l,t])=>`<div><b class="mono">${esc(A[k])}</b> · ${l}<p>${esc(t)}</p></div>`).join("")}</div></details>`;
+  let waBox="";
+  if(sup){
+    if(!srv)waBox="";
+    else if(wa?.configurado)waBox=`<div class="calc auto-ok auto-wa"><b>WhatsApp ligado</b> · ${wa.provedor==="cloud"?"WhatsApp Cloud API (oficial da Meta)":"Green API (o seu WhatsApp por código QR)"}${wa.numero?` · número <b class="mono">+${esc(String(wa.numero).replace(/\D/g,""))}</b>`:""}
+      <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><input id="waTestNum" inputmode="tel" style="max-width:200px;min-height:36px" value="${esc(waNum(S.cfg.telefone||""))}" placeholder="258841234567"><button type="button" class="btn sm" data-act="wa-teste">Enviar WhatsApp de teste</button>${srv.admin?`<button type="button" class="btn sm danger" data-act="wa-desligar">Desligar</button>`:""}</div>
+      ${wa.provedor==="cloud"?`<form id="fWaTpl" style="display:grid;gap:10px;margin-top:12px">${tplLista}<div class="fgrid">${TPL.map(([k,l])=>`<label class="f">${l.replace(/ \(.*\)/,"")}<input name="${k}" value="${esc(A[k])}"></label>`).join("")}<label class="f">Idioma dos modelos<input name="waLang" value="${esc(A.waLang)}" placeholder="pt_PT"></label></div><div class="row" style="justify-content:flex-end"><button class="btn sm pri" type="submit">Guardar modelos</button></div></form>`:""}</div>`;
+    else if(srv.admin)waBox=`<form class="calc auto-wa" id="fWa" style="display:grid;gap:12px" autocomplete="off">
+      <b>Ligar o WhatsApp automático</b>
+      <div class="row" style="gap:18px;flex-wrap:wrap"><label class="f check"><input type="radio" name="prov" value="green" checked> Green API — o seu número atual, por código QR (mais simples)</label><label class="f check"><input type="radio" name="prov" value="cloud"> WhatsApp Cloud API — oficial da Meta</label></div>
+      <div data-prov="green" style="display:grid;gap:10px"><ol class="auto-passos"><li>Crie uma conta em <a href="https://green-api.com/en" target="_blank" rel="noopener">green-api.com</a> e crie uma instância.</li><li>No telemóvel, abra o WhatsApp → <b>Dispositivos ligados</b> → <b>Ligar dispositivo</b> e leia o código QR da instância.</li><li>Copie para aqui o <b>apiUrl</b>, o <b>idInstance</b> e o <b>apiTokenInstance</b>.</li></ol>
+        <p class="note" style="margin:0;color:var(--warn)">Não é um serviço oficial do WhatsApp: use com moderação, porque o WhatsApp pode bloquear números que enviam muitas mensagens automáticas. O plano grátis só fala com 3 contactos; para todos os clientes é preciso o plano pago.</p>
+        <div class="fgrid"><label class="f">apiUrl<input id="waUrl" value="https://api.green-api.com" autocomplete="off"></label><label class="f">idInstance<input id="waId" inputmode="numeric" autocomplete="off"></label><label class="f full">apiTokenInstance<input id="waTok" type="password" autocomplete="new-password"></label></div></div>
+      <div data-prov="cloud" style="display:none;gap:10px"><ol class="auto-passos"><li>Em <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a>, crie uma app do tipo <b>Empresa</b> e adicione o produto <b>WhatsApp</b>.</li><li>Registe um número para o negócio (não pode estar a ser usado na aplicação WhatsApp) e copie o <b>Phone number ID</b>.</li><li>Crie um <b>token permanente</b> (Definições do negócio → Utilizadores do sistema) com a permissão <span class="mono">whatsapp_business_messaging</span>.</li><li>Em <b>Gestor do WhatsApp → Modelos de mensagem</b>, crie os 4 modelos abaixo e espere pela aprovação.</li></ol>
+        <p class="note" style="margin:0">A Meta cobra cada mensagem entregue, conforme o país. As mensagens automáticas usam sempre modelos aprovados.</p>${tplLista}
+        <div class="fgrid"><label class="f full">Token de acesso<input id="waCTok" type="password" autocomplete="new-password"></label><label class="f">Phone number ID<input id="waPid" inputmode="numeric" autocomplete="off"></label><label class="f">Versão da API<input id="waVer" value="v23.0"></label></div></div>
+      <p class="note" id="waMsg" style="margin:0">Os dados ficam guardados só no servidor, nunca no navegador.</p>
+      <div class="row" style="justify-content:flex-end"><button class="btn pri" type="submit">Ligar WhatsApp</button></div></form>`;
+    else waBox=`<div class="calc">O WhatsApp automático ainda não foi ligado. Peça ao administrador.</div>`;
+  }
   const quando=ult?`Última execução: ${fmtD(ult.hoje)} às ${String(ult.quando||"").slice(11,16)} UTC · ${ult.enviados||0} enviado${ult.enviados===1?"":"s"}${ult.falhas?" · "+ult.falhas+" falhou":""}`:"Ainda não correu nenhuma vez.";
   return`<section class="panel" id="pAuto" style="padding:18px;display:grid;gap:18px">
   <div class="row spread"><div><h2>Mensagens automáticas</h2><p class="sub">Avisos de expiração, lembretes de pagamento e recibos enviados aos clientes sem precisar de abrir cada um.</p></div>${estadoPill}</div>
-  ${srvBox}
+  ${srvBox}${waBox}
   <form id="fAuto" style="display:grid;gap:14px">
     <div class="auto-grid">
       <fieldset><legend>Geral</legend>${tick("ativo","Enviar avisos automáticos todos os dias",A.ativo)}${tick("recibos","Enviar o recibo ao cliente logo que é emitido",A.recibos)}
-        <div class="row" style="gap:16px">${tick("email","Por e-mail",A.email)}${tick("sms","Por SMS",A.sms)}</div>
+        <div class="row" style="gap:16px;flex-wrap:wrap">${tick("email","Por e-mail",A.email)}${tick("sms","Por SMS",A.sms)}${tick("whatsapp","Por WhatsApp",A.whatsapp)}</div>
         <p class="note" style="margin:0">O SMS usa o serviço “e-mail para SMS” configurado abaixo${S.scfg.ativo?"":" (ainda desligado)"}.</p></fieldset>
       <fieldset><legend>IPTV — fim da subscrição</legend>${tick("iptv","Avisar os clientes",A.iptv)}
         <div class="fgrid"><label class="f">Dias antes<input name="iptvAntes" value="${esc(A.iptvAntes)}" placeholder="7,3,1"></label><label class="f">Dias depois de expirar<input name="iptvDepois" value="${esc(A.iptvDepois)}" placeholder="1,3"></label></div>${tick("iptvNoDia","Também no dia em que expira",A.iptvNoDia)}</fieldset>
@@ -2927,22 +2980,35 @@ function autoHTML(){
     <div class="row" style="justify-content:flex-end"><button class="btn pri" type="submit">Guardar</button></div>
   </form>
   <div class="auto-prox"><div class="row spread"><div><h3>Por enviar hoje</h3><p class="note" style="margin:0">${quando}</p></div>
-    ${gmailOk()&&plano.length?`<button type="button" class="btn pri" data-act="auto-agora">Enviar ${plano.length} agora</button>`:""}</div>
-    ${plano.length?`<div class="list auto-list">${plano.slice(0,8).map(p=>`<div class="item"><div class="who"><b>${esc(p.nome||"")}</b><small>${esc(p.email?.assunto||p.sms?.texto.slice(0,60)||"")}</small></div><span class="tag">${[p.email?"e-mail":"",p.sms?"SMS":""].filter(Boolean).join(" + ")}</span></div>`).join("")}</div>${plano.length>8?`<p class="note">+${plano.length-8} outros</p>`:""}`:`<p class="note">${S.ready?"Nenhum aviso pendente para hoje.":"A carregar…"}</p>`}</div>
-  <div><h3>Registo de envios</h3>${reg.length?`<div class="tbl-wrap"><table class="sched"><thead><tr><th>Quando</th><th>Cliente</th><th>Mensagem</th><th>Canais</th><th>Estado</th></tr></thead><tbody>${reg.map(x=>`<tr><td>${fmtD(String(x.quando||"").slice(0,10))} ${String(x.quando||"").slice(11,16)}</td><td>${esc(x.nome||"—")}</td><td style="white-space:normal">${esc(x.assunto||x.tipo||"")}${x.auto?' <span class="tag">auto</span>':""}</td><td>${esc((x.canais||[]).join(" + ")||"—")}</td><td>${x.ok?'<span class="pill ok">Enviado</span>':`<span class="pill bad" title="${esc(x.erroEmail||x.erroSms||"")}">Falhou</span>`}</td></tr>`).join("")}</tbody></table></div>`:'<p class="note">Ainda não foi enviada nenhuma mensagem.</p>'}</div>
+    ${(gmailOk()||waOk())&&plano.length?`<button type="button" class="btn pri" data-act="auto-agora">Enviar ${plano.length} agora</button>`:""}</div>
+    ${plano.length?`<div class="list auto-list">${plano.slice(0,8).map(p=>`<div class="item"><div class="who"><b>${esc(p.nome||"")}</b><small>${esc(p.email?.assunto||p.wa?.texto.slice(0,70)||p.sms?.texto.slice(0,60)||"")}</small></div><span class="tag">${[p.email?"e-mail":"",p.sms?"SMS":"",p.wa?"WhatsApp":""].filter(Boolean).join(" + ")}</span></div>`).join("")}</div>${plano.length>8?`<p class="note">+${plano.length-8} outros</p>`:""}`:`<p class="note">${S.ready?"Nenhum aviso pendente para hoje.":"A carregar…"}</p>`}</div>
+  <div><h3>Registo de envios</h3>${reg.length?`<div class="tbl-wrap"><table class="sched"><thead><tr><th>Quando</th><th>Cliente</th><th>Mensagem</th><th>Canais</th><th>Estado</th></tr></thead><tbody>${reg.map(x=>`<tr><td>${fmtD(String(x.quando||"").slice(0,10))} ${String(x.quando||"").slice(11,16)}</td><td>${esc(x.nome||"—")}</td><td style="white-space:normal">${esc(x.assunto||x.tipo||"")}${x.auto?' <span class="tag">auto</span>':""}</td><td>${esc((x.canais||[]).join(" + ")||"—")}</td><td>${x.ok?'<span class="pill ok">Enviado</span>':`<span class="pill bad" title="${esc(x.erroEmail||x.erroSms||x.erroWa||"")}">Falhou</span>`}</td></tr>`).join("")}</tbody></table></div>`:'<p class="note">Ainda não foi enviada nenhuma mensagem.</p>'}</div>
 </section>`;
 }
 function reAuto(){const p=$("#pAuto");if(!p)return;p.outerHTML=autoHTML();ligarAuto()}
-function ligarAuto(){
+function ligarAuto(){ligarWa();
   const f=$("#fAuto");if(f)f.onsubmit=async e=>{e.preventDefault();const fd=new FormData(f),l=k=>String(fd.get(k)||"").replace(/[^\d,;\s]/g,"").trim();
-    const c={ativo:!!fd.get("ativo"),recibos:!!fd.get("recibos"),email:!!fd.get("email"),sms:!!fd.get("sms"),iptv:!!fd.get("iptv"),iptvAntes:l("iptvAntes"),iptvDepois:l("iptvDepois"),iptvNoDia:!!fd.get("iptvNoDia"),mc:!!fd.get("mc"),mcAntes:l("mcAntes"),mcAtraso:l("mcAtraso"),mcNoDia:!!fd.get("mcNoDia")};
+    const c={...autoCfg(),ativo:!!fd.get("ativo"),recibos:!!fd.get("recibos"),email:!!fd.get("email"),sms:!!fd.get("sms"),whatsapp:!!fd.get("whatsapp"),iptv:!!fd.get("iptv"),iptvAntes:l("iptvAntes"),iptvDepois:l("iptvDepois"),iptvNoDia:!!fd.get("iptvNoDia"),mc:!!fd.get("mc"),mcAntes:l("mcAntes"),mcAtraso:l("mcAtraso"),mcNoDia:!!fd.get("mcNoDia")};
     await store.cfg("acfg","config/automacao",c);toast("Mensagens automáticas guardadas")};
   const g=$("#fGmail");if(g)g.onsubmit=async e=>{e.preventDefault();const m=$("#gMsg"),bt=g.querySelector("button[type=submit]");
     bt.disabled=true;bt.textContent="A verificar…";m.style.color="";m.textContent="A ligar ao Gmail para confirmar os dados…";
     try{const r=await fnMensagens({acao:"configurar",gmail:$("#gUser").value,senha:$("#gPass").value});$("#gPass").value="";S.srv={...(S.srv||{}),configurado:true,remetente:r.remetente};toast("Gmail ligado");reAuto()}
     catch(err){m.style.color="var(--bad)";m.textContent=err.message;bt.disabled=false;bt.textContent="Ligar Gmail"}};
 }
+function ligarWa(){
+  const f=$("#fWa");if(f){const troca=()=>{const v=f.querySelector("[name=prov]:checked").value;f.querySelectorAll("[data-prov]").forEach(d=>d.style.display=d.dataset.prov===v?"grid":"none")};
+    f.querySelectorAll("[name=prov]").forEach(r=>r.onchange=troca);troca();
+    f.onsubmit=async e=>{e.preventDefault();const m=$("#waMsg"),bt=f.querySelector("button[type=submit]"),prov=f.querySelector("[name=prov]:checked").value;
+      const corpo=prov==="green"?{acao:"wa_configurar",provedor:"green",url:$("#waUrl").value,id:$("#waId").value,token:$("#waTok").value}:{acao:"wa_configurar",provedor:"cloud",token:$("#waCTok").value,phone_id:$("#waPid").value,versao:$("#waVer").value};
+      bt.disabled=true;bt.textContent="A verificar…";m.style.color="";m.textContent="A confirmar os dados com o "+(prov==="green"?"Green API":"WhatsApp da Meta")+"…";
+      try{const r=await fnMensagens(corpo);S.srv={...(S.srv||{}),wa:{configurado:true,provedor:r.provedor,numero:r.numero}};toast("WhatsApp ligado");reAuto()}
+      catch(err){m.style.color="var(--bad)";m.textContent=err.message;bt.disabled=false;bt.textContent="Ligar WhatsApp"}}}
+  const t=$("#fWaTpl");if(t)t.onsubmit=async e=>{e.preventDefault();const fd=Object.fromEntries(new FormData(t));Object.keys(fd).forEach(k=>fd[k]=String(fd[k]).trim());
+    await store.cfg("acfg","config/automacao",{...autoCfg(),...fd});toast("Modelos do WhatsApp guardados")};
+}
 async function autoAcao(a,b){
+  if(a==="wa-teste"){const n=$("#waTestNum")?.value||"";b.disabled=true;try{const r=await fnMensagens({acao:"wa_testar",numero:waNum(n)});toast("WhatsApp de teste enviado para +"+r.numero)}catch(e){toast(e.message)}b.disabled=false;return}
+  if(a==="wa-desligar"){if(!confirmar(b,"Confirmar: desligar"))return;try{await fnMensagens({acao:"wa_desligar"});S.srv={...S.srv,wa:{configurado:false}};toast("WhatsApp desligado");reAuto()}catch(e){toast(e.message)}return}
   if(a==="auto-teste"){b.disabled=true;try{const r=await fnMensagens({acao:"testar"});toast("E-mail de teste enviado para "+r.para)}catch(e){toast(e.message)}b.disabled=false;return}
   if(a==="auto-desligar"){if(!confirmar(b,"Confirmar: desligar"))return;try{await fnMensagens({acao:"desligar"});S.srv={...S.srv,configurado:false,remetente:""};toast("Envio pelo Gmail desligado");reAuto()}catch(e){toast(e.message)}return}
   if(a==="auto-agora"){b.disabled=true;b.textContent="A enviar…";
@@ -3526,7 +3592,7 @@ document.addEventListener("click",async e=>{
   switch(a){
     case"fechar":e.preventDefault();fechar();break;
     case"tema":trocarTema();break;
-    case"auto-teste":case"auto-desligar":case"auto-agora":autoAcao(a,b);break;
+    case"auto-teste":case"auto-desligar":case"auto-agora":case"wa-teste":case"wa-desligar":autoAcao(a,b);break;
     case"ctr-novo":case"ctr-abrir":case"ctr-pdf":case"ctr-filtro":case"ctr-estado":case"ctr-apagar":ctrAcao(a,b.dataset.k,id,b);break;
     case"ctr-de-cot":{const ex=S.vcontratos.find(c=>c.cotacaoId===id&&c.estado!=="anulado");abrirContrato("serv",ex?.id,ex?null:id);break}
     case"ctr-de-emp":{const ex=S.mcontratos.find(c=>c.emprestimoId===id&&c.estado!=="anulado");abrirContrato("micro",ex?.id,ex?null:id);break}
