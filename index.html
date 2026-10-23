@@ -823,6 +823,86 @@ body:not(.launch) .subnav #bizName{animation:navIn .45s var(--ease)}
 .auto-tpl-l>div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
 .auto-tpl-l p{margin:4px 0 0;color:var(--muted);user-select:all}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* ===== gestão pessoal ===== */
+:root{--pf-1:#2a78d6;--pf-2:#eb6834;--pf-3:#1baf7a;--pf-4:#eda100;--pf-5:#e87ba4;--pf-6:#6250d6;--pf-in:#1baf7a;--pf-out:#eb6834}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--pf-1:#3987e5;--pf-2:#d95926;--pf-3:#199e70;--pf-4:#c98500;--pf-5:#d55181;--pf-6:#9085e9;--pf-in:#199e70;--pf-out:#d95926}}
+:root[data-theme="dark"]{--pf-1:#3987e5;--pf-2:#d95926;--pf-3:#199e70;--pf-4:#c98500;--pf-5:#d55181;--pf-6:#9085e9;--pf-in:#199e70;--pf-out:#d95926}
+.pf-sec{padding-bottom:28px}
+.pf-card{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto;gap:18px 28px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 22px;transition:border-color .25s}
+.pf-card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.pf-open{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:18px;min-width:0}
+.pf-open:focus-visible{outline:2px solid var(--accent-focus);outline-offset:3px;border-radius:12px}
+.pf-ill{width:120px;height:90px;border-radius:14px;background:var(--pearl);display:grid;place-items:center;flex:none;overflow:hidden}
+.pf-ill .ill-svg{width:110px;height:82px}
+.pf-open:hover .ill-svg{transform:scale(1.07)}
+.pf-open .bt b{font-size:24px}.pf-open .bt .tl{font-size:14px;letter-spacing:-.224px}
+.pf-nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pf-nums div{display:grid;gap:2px;min-width:0}
+.pf-nums em{font-style:normal;font-size:12px;color:var(--muted)}
+.pf-nums b{font-family:var(--f-display);font-size:20px;font-weight:600;letter-spacing:-.2px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-acts{display:flex;align-items:center;gap:8px;justify-self:end;flex-wrap:wrap}
+.pf-eye{border:1px solid var(--line);background:var(--surface);color:var(--ink);width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:background-color .2s,transform .15s}
+.pf-eye:hover{background:var(--sunk)}.pf-eye:active{transform:scale(.92)}
+.pf-pend{border:0;background:var(--warn-soft);color:var(--warn);border-radius:999px;padding:9px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.pf-acts .go{border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:var(--accent);color:#fff;padding:10px 20px;font:inherit;font-size:15px;transition:background-color .2s,gap .25s}
+.pf-acts .go::after{content:"›";font-size:19px;line-height:.8}
+.pf-acts .go:hover{background:var(--accent-focus);gap:10px}
+.p-card{fill:color-mix(in srgb,var(--accent) 14%,transparent)!important;stroke:var(--accent)}
+.p-wallet{fill:var(--surface)!important;stroke:var(--ink)}
+.p-flap{fill:var(--pearl)!important;stroke:var(--ink)}
+.p-dot{fill:var(--accent)!important;stroke:none}
+.p-in path{stroke:var(--pf-in)}
+@media (prefers-reduced-motion:no-preference){.p-in{animation:pfIn 2.6s ease-in-out infinite}}
+@keyframes pfIn{0%,100%{transform:translateY(-5px);opacity:.25}50%{transform:translateY(5px);opacity:1}}
+@media (max-width:1240px){.pf-card{grid-template-columns:minmax(0,1fr) auto}.pf-nums{grid-column:1/-1;grid-row:2;border-top:1px solid var(--line);padding-top:14px}}
+@media (max-width:560px){.pf-card{grid-template-columns:minmax(0,1fr);padding:16px}.pf-acts{justify-self:start;grid-row:3}.pf-ill{width:84px;height:64px}.pf-ill .ill-svg{width:76px;height:58px}.pf-open .bt b{font-size:21px}
+  .pf-nums{grid-template-columns:repeat(2,minmax(0,1fr))}.pf-nums div:first-child{grid-column:1/-1}.pf-nums div:first-child b{font-size:24px}}
+.pf-wallets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;padding:12px 16px 16px}
+.pf-w{background:var(--pearl);border:1px solid var(--line);border-top:4px solid var(--pf-c,var(--accent));border-radius:14px;padding:14px 16px;display:grid;gap:6px;min-width:0}
+.pf-mpesa{--pf-c:#e34948}.pf-emola{--pf-c:var(--pf-2)}.pf-mkesh{--pf-c:var(--pf-1)}.pf-banco{--pf-c:var(--pf-6)}.pf-dinheiro{--pf-c:var(--pf-3)}.pf-outra{--pf-c:var(--muted)}
+.pf-wt{display:grid;gap:1px;min-width:0}
+.pf-wt b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pf-wt span{font-size:12px;color:var(--muted);white-space:nowrap}
+.pf-ws{font-family:var(--f-display);font-size:26px;font-weight:600;letter-spacing:-.28px;font-variant-numeric:tabular-nums}
+.pf-ws.neg{color:var(--bad)}
+.pf-w small{font-size:12px;color:var(--muted)}
+.pf-wa{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pf-donut{display:grid;grid-template-columns:minmax(150px,210px) minmax(0,1fr);gap:18px;align-items:center}
+.pf-donut .donut{margin:0;max-width:210px}
+.pf-leg{display:grid;gap:8px;min-width:0}
+.pf-leg div{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:0 8px;align-items:center;font-size:13px}
+.pf-leg i{width:10px;height:10px;border-radius:3px}
+.pf-leg span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf-leg b{font-variant-numeric:tabular-nums}
+.pf-leg small{grid-column:2/-1;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.pf-donut{grid-template-columns:minmax(0,1fr)}.pf-donut .donut{max-width:200px;margin:0 auto}}
+.pf-bars{display:flex;align-items:stretch;gap:10px;height:200px}
+.pf-bm{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pf-bb{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:3px;border-bottom:1px solid var(--line)}
+.pf-bb i{display:block;width:min(18px,42%);height:var(--h);min-height:2px;border-radius:4px 4px 0 0;transform-origin:bottom}
+@media (prefers-reduced-motion:no-preference){.pf-bb i{animation:pfGrow .7s cubic-bezier(.2,.8,.2,1) both}}
+@keyframes pfGrow{from{transform:scaleY(0)}to{transform:none}}
+.pf-bb .e{background:var(--pf-in)}.pf-bb .s{background:var(--pf-out)}
+.pf-bm span{font-size:11px;color:var(--muted);text-align:center;text-transform:capitalize}
+.pf-bm.on span{color:var(--ink);font-weight:600}
+.pf-v{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pf-v.entrada{color:var(--ok)}.pf-v.transferencia{color:var(--muted)}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--sunk);border-radius:999px;padding:4px;gap:2px;justify-self:start}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:8px 16px;border-radius:999px;font-size:14px;cursor:pointer;color:var(--muted);transition:background-color .2s,color .2s}
+.seg input:checked+span{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg input:focus-visible+span{outline:2px solid var(--accent-focus);outline-offset:1px}
+.pf-steps{margin:0;padding-left:20px;display:grid;gap:8px;font-size:14px;line-height:1.45}
+.pf-smsraw{font-size:13px;color:var(--muted)}
+.pf-smsraw p{margin:6px 0 0;font-family:var(--f-mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pf-qcat{width:auto;max-width:180px}
+#psPrev select{width:auto;min-width:0;max-width:170px;padding-block:6px}
+small.bad{color:var(--bad);display:block}
+.dlg .body>.seg{margin-bottom:2px}
+label.f[hidden],div.f[hidden],.f[hidden]{display:none!important}
+#psPrev td small,#tbPMov td small{display:block;font-size:12px;color:var(--muted)}
+@media (max-width:560px){#pPend .item{grid-template-columns:minmax(0,1fr)}#pPend .pf-qcat{max-width:none;width:100%}}
 </style>
 
 <header class="top">
@@ -1949,14 +2029,15 @@ function backupJSON(){
   const dados={exportadoEm:new Date().toISOString(),sistema:"Heel Service Gestão",
     servicos:{config:{...S.vcfg,carimboImg:S.vcfg.carimboImg?"(imagem)":""},catalogo:S.servicos,clientes:S.vclientes,documentos:S.vdocs,contratos:S.vcontratos},
     iptv:{config:{...S.cfg,carimboImg:S.cfg.carimboImg?"(imagem)":""},clientes:S.clientes.map(limpa),documentos:S.docs},
-    microcredito:{config:{...S.mcfg,carimboImg:S.mcfg.carimboImg?"(imagem)":""},mutuarios:S.mutuarios,emprestimos:S.emprestimos,contratos:S.mcontratos}};
+    microcredito:{config:{...S.mcfg,carimboImg:S.mcfg.carimboImg?"(imagem)":""},mutuarios:S.mutuarios,emprestimos:S.emprestimos,contratos:S.mcontratos},
+    ...(pfPodeVer()?{pessoal:{config:S.pcfg,carteiras:S.pcarteiras,movimentos:S.pmovs}}:{})};
   salvarFicheiro("backup-heel-service-"+hoje()+".json",JSON.stringify(dados,null,2));
 }
 
 /* ---------- importar cópia de segurança ---------- */
 const MAPA_IMPORT=[["servicos","catalogo","sv_servicos","Serviços"],["servicos","clientes","sv_clientes","Clientes de serviços"],["servicos","documentos","sv_documentos","Cotações e recibos"],
-  ["iptv","clientes","clientes","Clientes IPTV"],["iptv","documentos","documentos","Documentos IPTV"],["microcredito","mutuarios","mc_mutuarios","Mutuários"],["microcredito","emprestimos","mc_emprestimos","Empréstimos"],["servicos","contratos","sv_contratos","Contratos de serviços"],["microcredito","contratos","mc_contratos","Contratos de mútuo"]];
-const CFG_IMPORT=[["servicos","config/servicos","vcfg"],["iptv","config/negocio","cfg"],["microcredito","config/microcredito","mcfg"]];
+  ["iptv","clientes","clientes","Clientes IPTV"],["iptv","documentos","documentos","Documentos IPTV"],["microcredito","mutuarios","mc_mutuarios","Mutuários"],["microcredito","emprestimos","mc_emprestimos","Empréstimos"],["servicos","contratos","sv_contratos","Contratos de serviços"],["microcredito","contratos","mc_contratos","Contratos de mútuo"],["pessoal","carteiras","pf_carteiras","Carteiras pessoais"],["pessoal","movimentos","pf_movimentos","Movimentos pessoais"]];
+const CFG_IMPORT=[["servicos","config/servicos","vcfg"],["iptv","config/negocio","cfg"],["microcredito","config/microcredito","mcfg"],["pessoal","config/pessoal","pcfg"]];
 function abrirImportar(b){
   if(!b||b.sistema!=="Heel Service Gestão"){toast("Este ficheiro não é uma cópia de segurança da Heel Service Gestão.");return}
   const linhas=MAPA_IMPORT.map(([g,k,col,rot])=>{const l=(b[g]?.[k]||[]).filter(x=>x&&x.id);const novos=l.filter(x=>!S[COL[col]].some(y=>y.id===x.id)).length;return{g,k,col,rot,l,novos}});
@@ -3166,6 +3247,434 @@ function abrirRelatorio(neg){
     g.disabled=false;g.textContent="Guardar PDF"};
 }
 
+/* ================= GESTÃO PESSOAL ================= */
+/* Personal money: wallets (M-Pesa, e-Mola, mKesh, bank, cash), money in and out with a category, and the
+   wallets' confirmation SMS read into movements. No mobile-money operator offers a personal balance API, so
+   the balance comes from the SMS ("novo saldo") plus the movements registered after it. */
+const PF_TIPOS=[["mpesa","M-Pesa","*150#"],["emola","e-Mola","*898#"],["mkesh","mKesh",""],["banco","Conta bancária",""],["dinheiro","Dinheiro (numerário)",""],["outra","Outra",""]];
+const PF_TIPO=k=>(PF_TIPOS.find(t=>t[0]===k)||PF_TIPOS[5])[1];
+const PF_CAT_SAIDA=["Alimentação","Transporte","Casa e renda","Energia e água","Comunicações e internet","Saúde","Educação","Família","Lazer","Vestuário","Negócios","Poupança","Taxas e comissões","Levantamentos","Outros"];
+const PF_CAT_ENTRADA=["Salário","Negócios (Heel Service)","Transferências recebidas","Vendas","Empréstimos recebidos","Depósitos","Outros"];
+const CFG_PESSOAL={catSaida:PF_CAT_SAIDA,catEntrada:PF_CAT_ENTRADA,regras:[{palavra:"EDM",categoria:"Energia e água"},{palavra:"CREDELEC",categoria:"Energia e água"},{palavra:"FIPAG",categoria:"Energia e água"},{palavra:"AGUAS",categoria:"Energia e água"},{palavra:"VODACOM",categoria:"Comunicações e internet"},{palavra:"MOVITEL",categoria:"Comunicações e internet"},{palavra:"TMCEL",categoria:"Comunicações e internet"},{palavra:"RECARGA",categoria:"Comunicações e internet"},{palavra:"CREDITO",categoria:"Comunicações e internet"},{palavra:"PACOTE",categoria:"Comunicações e internet"},{palavra:"DSTV",categoria:"Lazer"},{palavra:"ZAP",categoria:"Lazer"},{palavra:"SHOPRITE",categoria:"Alimentação"},{palavra:"FARMACIA",categoria:"Saúde"}],memoria:{}};
+Object.assign(S,{pcfg:CFG_PESSOAL,pcarteiras:[],pmovs:[],psms:[],pmes:null,pfiltro:"todos",pq:"",pcart:"",pmesF:"",pfOlho:false,pfLidos:null});
+Object.assign(COL,{pf_carteiras:"pcarteiras",pf_movimentos:"pmovs",pf_sms:"psms"});
+const pfPodeVer=()=>!(S.modo==="supa"&&admin&&admin.papel!=="admin");
+const pfCarteira=id=>S.pcarteiras.find(c=>c.id===id);
+const pfDia=t=>{if(!t)return"";const d=new Date(t);return isNaN(d)?String(t).slice(0,10):iso(d)};
+const pfDataHora=t=>{const d=new Date(t);return isNaN(d)?"—":fmtD(iso(d))+" às "+pad(d.getHours())+":"+pad(d.getMinutes())};
+/* when a movement happened, to compare with the moment a balance was confirmed */
+const pfQuando=m=>m.quando||(m.data===pfDia(m.criadoEm)?m.criadoEm:pfISO(m.data,"23:59"));
+const pfISO=(data,hora)=>{const d=new Date(data+"T"+(hora||"12:00")+":00");return isNaN(d)?new Date().toISOString():d.toISOString()};
+const pfNorm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+
+/* ---------- balances ---------- */
+/* the most recent confirmed balance (set by hand or read from an SMS), plus every movement after it */
+function pfSaldo(c){
+  let base={v:Number(c.saldoInicial)||0,em:c.saldoEm||c.criadoEm||"",fonte:"manual"};
+  S.pmovs.forEach(m=>{if(m.carteiraId===c.id&&m.saldoApos!=null&&c.seguirSms!==false){const q=pfQuando(m);if(q>base.em)base={v:Number(m.saldoApos),em:q,fonte:"sms",mov:m}}});
+  let v=base.v;
+  S.pmovs.forEach(m=>{const q=pfQuando(m);if(!(q>base.em))return;if(base.mov&&m.id===base.mov.id)return;v+=pfEfeito(m,c.id)});
+  return{saldo:r2(v),base};
+}
+function pfEfeito(m,cid){const val=Number(m.valor)||0,tx=Number(m.taxa)||0;
+  if(m.tipo==="entrada")return m.carteiraId===cid?val-tx:0;
+  if(m.tipo==="saida")return m.carteiraId===cid?-(val+tx):0;
+  if(m.tipo==="transferencia")return(m.carteiraId===cid?-(val+tx):0)+(m.destinoId===cid?val:0);return 0}
+function pfTotal(){return r2(S.pcarteiras.filter(c=>c.ativa!==false).reduce((s,c)=>s+pfSaldo(c).saldo,0))}
+/* month figures: transfers between own wallets are neither income nor spending; fees count as spending */
+function pfMes(k){
+  const o={ent:0,sai:0,cat:{},catE:{},n:0};
+  S.pmovs.forEach(m=>{if(!String(m.data||"").startsWith(k))return;o.n++;const v=Number(m.valor)||0,tx=Number(m.taxa)||0;
+    if(m.tipo==="entrada"){o.ent=r2(o.ent+v);const c=m.categoria||"Por classificar";o.catE[c]=r2((o.catE[c]||0)+v);if(tx){o.sai=r2(o.sai+tx);o.cat["Taxas e comissões"]=r2((o.cat["Taxas e comissões"]||0)+tx)}}
+    else if(m.tipo==="saida"){o.sai=r2(o.sai+v+tx);const c=m.categoria||"Por classificar";o.cat[c]=r2((o.cat[c]||0)+v);if(tx)o.cat["Taxas e comissões"]=r2((o.cat["Taxas e comissões"]||0)+tx)}
+    else if(m.tipo==="transferencia"&&tx){o.sai=r2(o.sai+tx);o.cat["Taxas e comissões"]=r2((o.cat["Taxas e comissões"]||0)+tx)}});
+  o.liq=r2(o.ent-o.sai);return o;
+}
+const pfPorClassificar=()=>S.pmovs.filter(m=>m.tipo!=="transferencia"&&!m.categoria);
+
+/* ---------- reading wallet SMS ---------- */
+/* amounts come as 1,500.00 / 1.500,00 / 1 500,00 / 1500 */
+function pfNum(s){s=String(s).replace(/\s|\u00a0/g,"");const c=s.lastIndexOf(","),d=s.lastIndexOf(".");
+  if(c>=0&&d>=0){const dec=c>d?",":".",mil=dec===","?".":",";s=s.split(mil).join("").replace(dec,".")}
+  else if(c>=0||d>=0){const sep=c>=0?",":".",i=s.lastIndexOf(sep),aft=s.length-i-1;s=(aft===1||aft===2)&&s.split(sep).length===2?s.replace(sep,"."):s.split(sep).join("")}
+  const n=Number(s);return Number.isFinite(n)?n:NaN}
+const PF_NUM="(\\d{1,3}(?:[.,\\s\\u00a0]\\d{3})+(?:[.,]\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?)";
+const PF_RE_VAL=new RegExp(PF_NUM+"\\s*(?:MT|MZN|Mt|mt)\\b|(?:MT|MZN)\\s*"+PF_NUM,"g");
+function pfDividir(txt){
+  return String(txt||"").replace(/\r/g,"").split(/\n\s*\n/).flatMap(b=>b.split(/(?=\b(?:Confirmad[oa]|ID da transac)\b)/i)).map(s=>s.replace(/\s*\n\s*/g," ").trim()).filter(s=>s.length>12&&/\d/.test(s));
+}
+/* one SMS -> movement fields, or null when it is not a money movement */
+function pfLerSMS(t,{padrao,recebidoEm}={}){
+  const raw=String(t||"").trim(),n=pfNorm(raw);if(!raw)return null;
+  const vals=[];let mm;PF_RE_VAL.lastIndex=0;while((mm=PF_RE_VAL.exec(raw))){vals.push({v:pfNum(mm[1]||mm[2]),i:mm.index,fim:mm.index+mm[0].length})}
+  if(!vals.length)return null;
+  const ctx=(i,re)=>re.test(pfNorm(raw.slice(Math.max(0,i-38),i)));
+  const saldoV=[...vals].reverse().find(x=>ctx(x.i,/saldo[^.]*$/));
+  const taxaV=vals.find(x=>ctx(x.i,/(taxa|comiss[a-z]*|custo|tarifa)[^.]{0,20}$/));
+  const valor=vals.find(x=>x!==saldoV&&x!==taxaV&&x.v>0);
+  if(!valor&&!saldoV)return null;
+  let tipo=null;
+  const E=/\b(recebe(u|ste|ram|mos)?|recebido|recebimento|deposit(o|ou|aste|ado|ados)|creditad[oa]|credito de|reembols\w*|estorn\w*)\b/,
+        Sx=/\b(transferi(u|ste|do)|transferencia (de|para)|envi(ou|aste|ado)|pag(ou|aste|o|amento)|levant(ou|aste|amento)|compr(ou|aste|a)|debitad[oa]|retirad\w*|levantado)\b/;
+  const pe=n.search(E),ps=n.search(Sx);
+  if(pe>=0&&(ps<0||pe<ps))tipo="entrada";else if(ps>=0)tipo="saida";
+  const levant=/\blevant(ou|aste|amento|ado)\b/.test(n),deposito=/\bdeposit(ou|aste|o)\b/.test(n)&&!/recebe/.test(n);
+  let carteira=/m-?pesa/i.test(raw)?"mpesa":/e-?mola/i.test(raw)?"emola":/m-?kesh/i.test(raw)?"mkesh":"";
+  /* reference */
+  const rf=/^([A-Z0-9]*\d[A-Z0-9]*)\s+Confirm/i.exec(raw)||/Confirmad[oa]\.?\s+([A-Z0-9]*\d[A-Z0-9]*)\b/i.exec(raw)||/ID da transac[cç]?[aã]o[:\s]*([A-Z0-9][A-Z0-9.\-]{5,30}[A-Z0-9])/i.exec(raw)||/\b(?:Ref(?:er[eê]ncia)?|Transac[cç]?[aã]o|Trans\.? ?ID|ID)[:\s]+([A-Z0-9]*\d[A-Z0-9.\-]{4,30}[A-Z0-9])/i.exec(raw);
+  /* date and time */
+  let data="",hora="";const dm=/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/.exec(raw);
+  if(dm){let y=+dm[3];if(y<100)y+=2000;const d=+dm[1],m=+dm[2];if(m>=1&&m<=12&&d>=1&&d<=31)data=y+"-"+pad(m)+"-"+pad(d)}
+  const hm=/\b(?:as|às|a)?\s?(\d{1,2})[:h](\d{2})\b/i.exec(raw.replace(/\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}/,""));if(hm&&+hm[1]<24)hora=pad(+hm[1])+":"+hm[2];
+  const rec=recebidoEm?new Date(recebidoEm).toISOString():new Date().toISOString();if(!data)data=pfDia(rec);
+  /* who: after "de" for money in, "para"/"a" for money out, until a date, a full stop or a comma */
+  let quem="";if(valor){const resto=raw.slice(valor.fim);
+    const q=(tipo==="entrada"?/^\s*(?:de|do|da)\s+(.{2,70}?)(?=\s+(?:aos?|em|no dia|as|às|\d{1,2}[\/.\-]\d)|[.,;]\s|\.$|$)/i:/^\s*(?:e a taxa foi de [^ ]+\s+)?(?:para|a|ao|à|no|na)\s+(.{2,70}?)(?=\s+(?:aos?|em|no dia|as|às|\d{1,2}[\/.\-]\d)|[.,;]\s|\.$|$)/i).exec(resto);
+    if(q)quem=q[1].replace(/\s+/g," ").replace(/^[-–\s]+|[-–\s]+$/g,"").trim()}
+  {const q=/(?:nome|benefici[aá]rio|destinat[aá]rio|remetente)[:\s]+([^.,;]{2,50})/i.exec(raw);if(q&&(!quem||/^\+?[\d\s]+$/.test(quem)))quem=q[1].trim()+(quem?" ("+quem+")":"")}
+  {const q=/^(\+?\d{9,12})\s*-\s*(.+)$/.exec(quem);if(q)quem=q[2]+" ("+q[1].replace(/^\+?258/,"")+")"}
+  const o={tipo:tipo||(saldoV&&!valor?"saldo":"saida"),valor:valor?r2(valor.v):0,taxa:taxaV?r2(taxaV.v):0,saldoApos:saldoV?r2(saldoV.v):null,data,hora,ref:rf?rf[1].toUpperCase():"",contraparte:quem.slice(0,60),carteiraTipo:carteira||padrao||"",levantamento:levant,deposito,duvida:!tipo,sms:raw.slice(0,600)};
+  o.quando=pfISO(data,hora);if(!hora&&data===pfDia(rec))o.quando=rec;
+  return o;
+}
+/* category guess: the user's keyword rules, then what this person/company was classified as before */
+function pfSugerir(o){
+  if(o.tipo==="transferencia")return"";
+  if(o.levantamento&&o.tipo==="saida")return"Levantamentos";
+  if(o.deposito&&o.tipo==="entrada")return"Depósitos";
+  const txt=pfNorm((o.contraparte||"")+" "+(o.descricao||"")+" "+(o.sms||"")),lista=o.tipo==="entrada"?S.pcfg.catEntrada:S.pcfg.catSaida;
+  const mem=S.pcfg.memoria||{},k=pfNorm(o.contraparte).replace(/\d+/g,"").trim();
+  if(k&&mem[k]&&lista.includes(mem[k]))return mem[k];
+  for(const r of S.pcfg.regras||[]){if(r.palavra&&txt.includes(pfNorm(r.palavra))&&lista.includes(r.categoria))return r.categoria}
+  if(o.tipo==="entrada"&&o.contraparte)return lista.includes("Transferências recebidas")?"Transferências recebidas":"";
+  return"";
+}
+async function pfLembrar(m){if(!m.contraparte||!m.categoria)return;const k=pfNorm(m.contraparte).replace(/\d+/g,"").trim();if(!k)return;
+  const mem={...(S.pcfg.memoria||{})};if(mem[k]===m.categoria)return;mem[k]=m.categoria;const ks=Object.keys(mem);if(ks.length>400)delete mem[ks[0]];
+  await store.cfg("pcfg","config/pessoal",{...S.pcfg,memoria:mem})}
+/* wallet of an SMS: the one of that kind, else the chosen default */
+function pfCarteiraDe(o,padraoId){const c=o.carteiraTipo&&S.pcarteiras.find(c=>c.tipo===o.carteiraTipo&&c.ativa!==false);return c?c.id:(padraoId||S.pcarteiras[0]?.id||"")}
+function pfMovDeSMS(o,cid,origem){
+  let tipo=o.tipo,destinoId="";const cash=S.pcarteiras.find(c=>c.tipo==="dinheiro"&&c.ativa!==false&&c.id!==cid);
+  if(o.levantamento&&tipo==="saida"&&cash){tipo="transferencia";destinoId=cash.id}
+  const m={id:novoId("pm"),tipo,valor:o.valor,taxa:o.taxa,data:o.data,hora:o.hora,quando:o.quando,categoria:"",carteiraId:cid,destinoId,descricao:"",contraparte:o.contraparte,ref:o.ref,saldoApos:o.saldoApos,origem,sms:o.sms,criadoEm:new Date().toISOString()};
+  m.categoria=pfSugerir({...o,tipo});return m;
+}
+const pfJaTem=ref=>!!ref&&S.pmovs.some(m=>m.ref&&m.ref===ref);
+
+/* SMS that reached the server from the phone become movements here, once */
+let pfProcA=false;
+async function pfProcessar(){
+  if(pfProcA||!S.ready||!pfPodeVer()||S.modo==="demo")return;const novos=S.psms.filter(s=>s.estado==="novo");if(!novos.length)return;
+  pfProcA=true;let n=0;
+  try{for(const s of novos.sort((a,b)=>(a.recebidoEm||"").localeCompare(b.recebidoEm||""))){
+    const o=pfLerSMS(s.texto,{recebidoEm:s.enviadoEm||s.recebidoEm});let estado="ignorado",movId="";
+    if(o&&o.tipo==="saldo"&&o.saldoApos!=null){const cid=pfCarteiraDe(o);const c=pfCarteira(cid);if(c){await store.put("pf_carteiras",{...c,saldoInicial:o.saldoApos,saldoEm:o.quando});estado="saldo"}}
+    else if(o&&o.valor>0){if(pfJaTem(o.ref))estado="repetido";else{const cid=pfCarteiraDe(o);if(cid){const m=pfMovDeSMS(o,cid,"auto");await store.put("pf_movimentos",m);movId=m.id;estado="importado";n++}else estado="sem-carteira"}}
+    await store.put("pf_sms",{...s,estado,movId,processadoEm:new Date().toISOString()})}
+  }catch(e){console.error(e)}
+  pfProcA=false;if(n)toast(n+(n===1?" movimento novo":" movimentos novos")+" das mensagens da carteira");
+}
+
+/* ---------- module ---------- */
+const ILL_PF=`<svg class="ill-svg" viewBox="0 0 160 120" aria-hidden="true">
+  <rect class="p-card" x="30" y="20" width="96" height="62" rx="9"/>
+  <rect class="p-wallet" x="22" y="40" width="116" height="66" rx="12"/>
+  <path class="p-flap" d="M104 62h34v24h-34a12 12 0 0 1 0-24z"/><circle class="p-dot" cx="108" cy="74" r="3.5"/>
+  <g class="p-in"><path d="M60 12v20M52 24l8 8 8-8"/></g>
+</svg>`;
+const OLHO=a=>a?`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
+let pfOlhoMem=false;
+function pfOlhoLer(){try{const v=localStorage.getItem("hs_pf_olho");if(v!==null)return v==="1"}catch(_){}return pfOlhoMem}
+function pfOlhoGravar(v){pfOlhoMem=!!v;try{localStorage.setItem("hs_pf_olho",v?"1":"0")}catch(_){}}
+const pfMt=v=>S.pfOlho?mt(v):"•••••• MT";
+/* card on the start screen, under the three businesses */
+function pfLauncherHTML(){if(!pfPodeVer())return"";S.pfOlho=pfOlhoLer();const m=pfMes(hoje().slice(0,7)),pc=pfPorClassificar().length;
+  return`<section class="pf-sec"><div class="pf-card">
+    <button type="button" class="pf-open" data-biz="pessoal"><span class="ill pf-ill">${ILL_PF}</span>
+      <span class="bt"><b>Gestão pessoal</b><span class="tl">Entradas, saídas e o saldo das suas carteiras</span></span></button>
+    <div class="pf-nums"><div><em>Saldo das carteiras</em><b class="pf-val">${S.pcarteiras.length?pfMt(pfTotal()):"Sem carteiras"}</b></div>
+      <div><em>Entrou este mês</em><b class="pf-in">${pfMt(m.ent)}</b></div><div><em>Saiu este mês</em><b class="pf-out">${pfMt(m.sai)}</b></div></div>
+    <div class="pf-acts"><button type="button" class="pf-eye" data-act="pf-olho" aria-pressed="${S.pfOlho}" aria-label="${S.pfOlho?"Esconder valores":"Mostrar valores"}" title="${S.pfOlho?"Esconder valores":"Mostrar valores"}">${OLHO(!S.pfOlho)}</button>
+      ${pc?`<button type="button" class="pf-pend" data-biz="pessoal">${pc} por classificar</button>`:""}<button type="button" class="go" data-biz="pessoal">Abrir</button></div>
+  </div></section>`}
+
+const PESSOAL={
+  nome:"Gestão pessoal",tabs:[["painel","Painel"],["movimentos","Movimentos"],["carteiras","Carteiras"],["sms","Mensagens da carteira"],["categorias","Categorias"]],
+  novo:["+ Novo movimento",()=>abrirMov(null,"saida")],
+  build(t){const v=$("#view");S.pfOlho=true;
+    if(!pfPodeVer()){v.innerHTML='<section class="panel" style="padding:24px"><h2>Sem acesso</h2><p class="sub">A gestão pessoal só está disponível para administradores.</p></section>';return}
+    if(t==="painel")v.innerHTML=banner()+`
+      <div class="row spread"><div><h1>Gestão pessoal</h1><p class="sub">O seu dinheiro: o que entrou, o que saiu e quanto tem em cada carteira.</p></div>
+        <div class="row"><button class="btn" data-act="pf-novo" data-t="entrada">+ Entrada</button><button class="btn pri" data-act="pf-novo" data-t="saida">+ Saída</button></div></div>
+      <section class="kpis" id="pKpis"></section>
+      <section class="panel"><header><div><h2>Carteiras</h2><p class="sub">Saldo calculado a partir do último saldo confirmado e dos movimentos seguintes.</p></div><button class="btn sm" data-tab="carteiras">Gerir carteiras</button></header><div class="pf-wallets" id="pWallets"></div></section>
+      <div class="ov-head" style="margin-top:4px"><div><h2 style="font-size:22px">Mês</h2></div><div class="mes-pick" id="pMesPick"></div></div>
+      <div class="grid2">
+        <section class="panel"><header><div><h2>Para onde foi o dinheiro</h2><p class="sub" id="pDonutSub">Saídas por categoria</p></div></header><div style="padding:12px 16px 16px" id="pDonut"></div></section>
+        <section class="panel"><header><div><h2>Entradas e saídas</h2><p class="sub">Os últimos 6 meses</p></div></header><div style="padding:12px 16px 16px" id="pBars"></div></section>
+      </div>
+      <div class="grid2">
+        <section class="panel"><header><div><h2>Por classificar</h2><p class="sub">Diga com o quê gastou ou de onde veio</p></div></header><div class="list" id="pPend"></div></section>
+        <section class="panel"><header><div><h2>Últimos movimentos</h2><p class="sub">Os 8 mais recentes</p></div><button class="btn sm" data-tab="movimentos">Ver todos</button></header><div class="list" id="pUlt"></div></section>
+      </div>`;
+    if(t==="movimentos")v.innerHTML=banner()+`
+      <div class="row spread"><div><h1>Movimentos</h1><p class="sub" id="pCount"></p></div>
+        <div class="row"><button class="btn" data-act="pf-novo" data-t="entrada">+ Entrada</button><button class="btn" data-act="pf-novo" data-t="saida">+ Saída</button><button class="btn" data-act="pf-novo" data-t="transferencia">+ Transferência</button><button class="btn" data-act="pf-csv">Exportar (CSV)</button></div></div>
+      <section class="panel"><div class="toolbar"><input class="search" id="pq" type="search" placeholder="Procurar por descrição, pessoa ou categoria" value="${esc(S.pq)}">
+        <div class="chips">${[["todos","Todos"],["entrada","Entradas"],["saida","Saídas"],["transferencia","Transferências"],["pend","Por classificar"]].map(([k,l])=>`<button class="chip" data-pfiltro="${k}" aria-pressed="${S.pfiltro===k}">${l}</button>`).join("")}</div>
+        <div class="row" style="gap:8px"><select id="pCartF" aria-label="Carteira" style="width:auto"></select><select id="pMesF" aria-label="Mês" style="width:auto"></select></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Carteira</th><th class="num">Valor</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbPMov"></tbody><tfoot id="tfPMov"></tfoot></table></div></section>`;
+    if(t==="carteiras")v.innerHTML=banner()+`
+      <div class="row spread"><div><h1>Carteiras</h1><p class="sub">M-Pesa, e-Mola, mKesh, banco e dinheiro. Indique o saldo de hoje ao criar; daí em diante os movimentos e as mensagens da carteira atualizam-no.</p></div><button class="btn pri" data-act="pf-cart-nova">+ Nova carteira</button></div>
+      <section class="panel"><div class="tbl-wrap"><table><thead><tr><th>Carteira</th><th>Número</th><th>Último saldo confirmado</th><th class="num">Saldo agora</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbPCart"></tbody></table></div></section>
+      <p class="note">“Ver saldo no telemóvel” abre o marcador com o código da carteira (por exemplo *150# no M-Pesa). Funciona no Android; no iPhone o sistema não deixa abrir códigos com * e #, por isso marque-o à mão.</p>`;
+    if(t==="sms"){v.innerHTML=banner()+pfSmsHTML();ligarPfSms()}
+    if(t==="categorias"){v.innerHTML=banner()+pfCatHTML();ligarPfCat()}
+    const q=$("#pq");if(q)q.addEventListener("input",e=>{S.pq=e.target.value;refPMov()});
+    ["#pCartF","#pMesF"].forEach(s=>{const el=$(s);if(el)el.addEventListener("change",()=>{S.pcart=$("#pCartF").value;S.pmesF=$("#pMesF").value;refPMov()})});
+  },
+  ref(t){pfProcessar();if(t==="painel")refPPainel();if(t==="movimentos")refPMov();if(t==="carteiras")refPCart();if(t==="sms")refPSms()}
+};
+
+/* ---------- painel ---------- */
+function pfMesesLista(){const ks=new Set([hoje().slice(0,7)]);S.pmovs.forEach(m=>{if(/^\d{4}-\d{2}/.test(m.data||""))ks.add(m.data.slice(0,7))});return[...ks].filter(k=>k<=hoje().slice(0,7)).sort().reverse()}
+function refPPainel(){
+  if(!$("#pKpis"))return;const ms=pfMesesLista();if(!S.pmes||!ms.includes(S.pmes))S.pmes=ms[0];
+  const k=S.pmes,m=pfMes(k),ant=pfMes(kAdd(k,-1)),pc=pfPorClassificar();
+  const nm=mesNome(k,{month:"long"});
+  $("#pKpis").innerHTML=`
+    <div class="kpi"><span>Saldo das carteiras</span><b class="money">${mt(pfTotal())}</b><em>${S.pcarteiras.filter(c=>c.ativa!==false).length} carteira${S.pcarteiras.length===1?"":"s"}</em></div>
+    <div class="kpi ok"><span>Entrou em ${esc(nm)}</span><b class="money">${mt(m.ent)}</b><em>${relVarTxt(relVar(m.ent,ant.ent))} vs mês anterior</em></div>
+    <div class="kpi warn"><span>Saiu em ${esc(nm)}</span><b class="money">${mt(m.sai)}</b><em>${relVarTxt(relVar(m.sai,ant.sai))} vs mês anterior</em></div>
+    <button class="kpi" data-pfkpi="pend"><span>${m.liq>=0?"Sobrou":"Faltou"} em ${esc(nm)}</span><b class="money">${mt(Math.abs(m.liq))}</b><em>${pc.length?pc.length+" por classificar":"tudo classificado"}</em></button>`;
+  const i=ms.indexOf(k);
+  $("#pMesPick").innerHTML=`<button type="button" class="mp-b" data-pmes="${ms[i+1]||""}" ${i>=ms.length-1?"disabled":""} aria-label="Mês anterior">‹</button><select id="pMesSel" aria-label="Mês">${ms.map(x=>`<option value="${x}"${x===k?" selected":""}>${mesNome(x)}</option>`).join("")}</select><button type="button" class="mp-b" data-pmes="${ms[i-1]||""}" ${i<=0?"disabled":""} aria-label="Mês seguinte">›</button>`;
+  $("#pMesSel").onchange=e=>{S.pmes=e.target.value;refPPainel()};
+  /* wallets */
+  const cs=S.pcarteiras.filter(c=>c.ativa!==false);
+  $("#pWallets").innerHTML=cs.length?cs.map(c=>{const s=pfSaldo(c),u=c.ussd;return`<div class="pf-w pf-${esc(c.tipo)}"><div class="pf-wt"><b>${esc(c.nome)}</b><span>${esc(PF_TIPO(c.tipo))}${c.numero?" · "+esc(c.numero):""}</span></div>
+      <b class="pf-ws${s.saldo<0?" neg":""}">${mt(s.saldo)}</b><small>${s.base.fonte==="sms"?"Saldo da mensagem de "+pfDataHora(s.base.em):"Saldo indicado a "+pfDataHora(s.base.em)}</small>
+      <div class="pf-wa">${u?`<a class="btn sm" href="tel:${encodeURIComponent(u)}">Ver saldo no telemóvel</a>`:""}<button type="button" class="btn sm" data-act="pf-acertar" data-id="${c.id}">Acertar saldo</button></div></div>`}).join(""):
+    `<div class="empty" style="padding:20px">Ainda não tem carteiras. <button type="button" class="btn sm pri" data-act="pf-cart-nova">+ Criar a primeira</button></div>`;
+  /* donut: spending by category */
+  const its=Object.entries(m.cat).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);let top=its.slice(0,6);const rest=its.slice(6).reduce((s,[,v])=>s+v,0);if(rest>0)top.push(["Outras",rest]);
+  const cores=["var(--pf-1)","var(--pf-2)","var(--pf-3)","var(--pf-4)","var(--pf-5)","var(--pf-6)","var(--c-bruto)"];
+  $("#pDonutSub").textContent="Saídas de "+mesNome(k)+" por categoria";
+  if(!top.length)$("#pDonut").innerHTML='<p class="note">Sem saídas neste mês.</p>';
+  else{const C=2*Math.PI*70,tot=top.reduce((s,[,v])=>s+v,0);let acc=0;
+    $("#pDonut").innerHTML=`<div class="pf-donut"><div class="donut"><svg viewBox="0 0 200 200" role="img" aria-label="Saídas por categoria"><g transform="rotate(-90 100 100)"><circle cx="100" cy="100" r="70" fill="none" style="stroke:var(--sunk)" stroke-width="26"/>${top.map(([c,v],j)=>{const p=v/tot,el=`<circle cx="100" cy="100" r="70" fill="none" style="stroke:${cores[j]}" stroke-width="26" stroke-dasharray="${Math.max(0,p*C-2)} ${C}" stroke-dashoffset="${-acc*C}"><title>${esc(c)}: ${mt(v)}</title></circle>`;acc+=p;return el}).join("")}</g></svg>
+      <div class="mid"><small>Saiu</small><b>${mt(m.sai)}</b></div></div>
+      <div class="pf-leg">${top.map(([c,v],j)=>`<div><i style="background:${cores[j]}"></i><span>${esc(c)}</span><b>${Math.round(v/tot*100)}%</b><small>${mt(v)}</small></div>`).join("")}</div></div>`}
+  /* bars: in vs out, 6 months */
+  const ks=kRange(kAdd(k,-5),k),dd=ks.map(x=>pfMes(x)),mx=Math.max(1,...dd.map(d=>Math.max(d.ent,d.sai)));
+  $("#pBars").innerHTML=`<div class="pf-bars" role="img" aria-label="Entradas e saídas por mês">${ks.map((x,j)=>`<div class="pf-bm${x===k?" on":""}" title="${mesNome(x)}: entrou ${mt(dd[j].ent)}, saiu ${mt(dd[j].sai)}"><div class="pf-bb"><i class="e" style="--h:${Math.round(dd[j].ent/mx*100)}%"></i><i class="s" style="--h:${Math.round(dd[j].sai/mx*100)}%"></i></div><span>${kCurto(x)}</span></div>`).join("")}</div>
+    <div class="legend"><span><i style="background:var(--pf-in)"></i>Entradas</span><span><i style="background:var(--pf-out)"></i>Saídas</span></div>`;
+  /* to classify + recent */
+  $("#pPend").innerHTML=pc.length?[...pc].sort((a,b)=>pfQuando(b).localeCompare(pfQuando(a))).slice(0,6).map(x=>`<div class="item"><div class="who"><b>${x.tipo==="entrada"?"+":"−"} ${mt(x.valor)} · ${esc(x.contraparte||x.descricao||"sem descrição")}</b><small>${fmtD(x.data)} · ${esc(pfCarteira(x.carteiraId)?.nome||"—")}${x.origem!=="manual"?" · da mensagem":""}</small></div>
+      <select class="pf-qcat" data-id="${x.id}" aria-label="Categoria"><option value="">Escolher…</option>${opts((x.tipo==="entrada"?S.pcfg.catEntrada:S.pcfg.catSaida).map(c=>[c,c]),"")}</select></div>`).join("")+(pc.length>6?`<div class="item"><small>Mais ${pc.length-6}.</small><button class="btn sm" data-pfkpi="pend">Ver todos</button></div>`:""):'<div class="empty">Tudo classificado.</div>';
+  const ult=[...S.pmovs].sort((a,b)=>pfQuando(b).localeCompare(pfQuando(a))).slice(0,8);
+  $("#pUlt").innerHTML=ult.length?ult.map(pfLinhaItem).join(""):'<div class="empty">Ainda sem movimentos.</div>';
+  $("#view").querySelectorAll("[data-pmes]").forEach(b=>b.onclick=()=>{if(b.dataset.pmes){S.pmes=b.dataset.pmes;refPPainel()}});
+  $("#view").querySelectorAll(".pf-qcat").forEach(s=>s.onchange=async()=>{const mv=S.pmovs.find(z=>z.id===s.dataset.id);if(!mv||!s.value)return;const n={...mv,categoria:s.value};await store.put("pf_movimentos",n);pfLembrar(n);toast("Classificado: "+s.value)});
+}
+function pfSinal(m){return m.tipo==="entrada"?"+":m.tipo==="saida"?"−":"⇄"}
+function pfLinhaItem(m){const c=pfCarteira(m.carteiraId),d=pfCarteira(m.destinoId);
+  return`<div class="item"><div class="who"><b><span class="pf-v ${m.tipo}">${pfSinal(m)} ${mt(m.valor)}</span> ${esc(m.descricao||m.contraparte||(m.tipo==="transferencia"?"Transferência":"—"))}</b><small>${fmtD(m.data)} · ${m.tipo==="transferencia"?esc((c?.nome||"—")+" → "+(d?.nome||"—")):esc(m.categoria||"por classificar")+" · "+esc(c?.nome||"—")}</small></div><button class="btn sm" data-act="pf-editar" data-id="${m.id}">Abrir</button></div>`}
+
+/* ---------- movimentos ---------- */
+function pfFiltrados(){const q=pfNorm(S.pq);
+  return S.pmovs.filter(m=>{if(S.pfiltro==="pend"){if(m.tipo==="transferencia"||m.categoria)return false}else if(S.pfiltro!=="todos"&&m.tipo!==S.pfiltro)return false;
+    if(S.pcart&&m.carteiraId!==S.pcart&&m.destinoId!==S.pcart)return false;if(S.pmesF&&!String(m.data||"").startsWith(S.pmesF))return false;
+    if(q&&!pfNorm([m.descricao,m.contraparte,m.categoria,m.ref,pfCarteira(m.carteiraId)?.nome].join(" ")).includes(q))return false;return true})
+    .sort((a,b)=>pfQuando(b).localeCompare(pfQuando(a)))}
+function refPMov(){const tb=$("#tbPMov");if(!tb)return;
+  const cf=$("#pCartF"),mf=$("#pMesF");
+  if(cf&&!cf.options.length){cf.innerHTML=`<option value="">Todas as carteiras</option>`+S.pcarteiras.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("");cf.value=S.pcart}
+  if(mf&&!mf.options.length){mf.innerHTML=`<option value="">Todos os meses</option>`+pfMesesLista().map(k=>`<option value="${k}">${mesNome(k)}</option>`).join("");mf.value=S.pmesF}
+  document.querySelectorAll("[data-pfiltro]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.pfiltro===S.pfiltro)));
+  const l=pfFiltrados();let ent=0,sai=0;l.forEach(m=>{if(m.tipo==="entrada")ent+=Number(m.valor)||0;else if(m.tipo==="saida")sai+=(Number(m.valor)||0)+(Number(m.taxa)||0)});
+  $("#pCount").textContent=l.length+" movimento"+(l.length===1?"":"s")+(S.pmovs.length!==l.length?" de "+S.pmovs.length:"");
+  tb.innerHTML=l.length?l.map(m=>{const c=pfCarteira(m.carteiraId),d=pfCarteira(m.destinoId);return`<tr><td class="mono">${fmtD(m.data)}${m.hora?" "+esc(m.hora):""}</td>
+    <td class="cname"><b>${esc(m.descricao||m.contraparte||(m.tipo==="transferencia"?"Transferência":"—"))}</b>${m.descricao&&m.contraparte?`<small>${esc(m.contraparte)}</small>`:""}${m.origem!=="manual"?`<small>${m.origem==="auto"?"Mensagem automática":"Mensagem colada"}${m.ref?" · "+esc(m.ref):""}</small>`:""}</td>
+    <td>${m.tipo==="transferencia"?'<span class="pill sem">Transferência</span>':m.categoria?`<span class="pill doc">${esc(m.categoria)}</span>`:'<span class="pill warn">Por classificar</span>'}</td>
+    <td>${esc(c?.nome||"—")}${m.tipo==="transferencia"?" → "+esc(d?.nome||"—"):""}</td>
+    <td class="num"><b class="pf-v ${m.tipo}">${pfSinal(m)} ${mt(m.valor)}</b>${m.taxa?`<small>taxa ${mt(m.taxa)}</small>`:""}</td>
+    <td><div class="acts"><button class="btn sm" data-act="pf-editar" data-id="${m.id}">Editar</button></div></td></tr>`}).join(""):`<tr><td colspan="6"><div class="empty">${S.pmovs.length?"Nenhum movimento com estes filtros.":"Ainda sem movimentos. Registe uma entrada ou uma saída, ou cole as mensagens da sua carteira."}</div></td></tr>`;
+  $("#tfPMov").innerHTML=l.length?`<tr><td colspan="4"><b>Entradas ${mt(ent)} · Saídas ${mt(sai)}</b></td><td class="num"><b>${mt(r2(ent-sai))}</b></td><td></td></tr>`:"";
+  rotularTabelas();
+}
+function abrirMov(id,tipo0){
+  if(!S.pcarteiras.length){toast("Crie primeiro uma carteira.");abrirCarteira();return}
+  const ed=id?S.pmovs.find(m=>m.id===id):null,m=ed||{tipo:tipo0||"saida",data:hoje(),carteiraId:S.pcarteiras.find(c=>c.ativa!==false)?.id||"",valor:"",taxa:"",categoria:"",descricao:"",contraparte:""};
+  const cs=S.pcarteiras.filter(c=>c.ativa!==false||c.id===m.carteiraId||c.id===m.destinoId).map(c=>[c.id,c.nome+" · "+PF_TIPO(c.tipo)]);
+  const catOpts=t=>opts([["","Escolher…"],...(t==="entrada"?S.pcfg.catEntrada:S.pcfg.catSaida).map(c=>[c,c]),["__nova","+ Nova categoria…"]],m.categoria);
+  abrir(hdr(ed?"Movimento":"Novo movimento",ed?(ed.origem!=="manual"?"Lido de uma mensagem da carteira":"Registado à mão"):"Registe o dinheiro que entrou, que saiu ou que passou de uma carteira para outra.")+`
+  <div class="body">
+    <div class="seg" role="radiogroup" aria-label="Tipo">${[["entrada","Entrada"],["saida","Saída"],["transferencia","Transferência"]].map(([k,l])=>`<label><input type="radio" name="ptipo" value="${k}"${m.tipo===k?" checked":""}><span>${l}</span></label>`).join("")}</div>
+    <div class="fgrid">
+      <label class="f">Valor (MT)<input id="pmV" type="number" min="0" step="any" inputmode="decimal" value="${esc(m.valor)}" required></label>
+      <label class="f">Data<input id="pmD" type="date" value="${esc(m.data)}" max="${hoje()}"></label>
+      <label class="f" id="pmCatL">Categoria<select id="pmCat">${catOpts(m.tipo)}</select></label>
+      <label class="f" id="pmNovaL" hidden>Nome da nova categoria<input id="pmNova" maxlength="40"></label>
+      <label class="f"><span id="pmCartT">Carteira</span><select id="pmC">${opts(cs,m.carteiraId)}</select></label>
+      <label class="f" id="pmDestL">Para a carteira<select id="pmDest">${opts(cs,m.destinoId||cs.find(c=>c[0]!==m.carteiraId)?.[0])}</select></label>
+      <label class="f"><span id="pmQuemT">Pessoa ou empresa</span><input id="pmQ" value="${esc(m.contraparte||"")}" maxlength="60" placeholder="Opcional"></label>
+      <label class="f">Taxa cobrada (MT)<input id="pmT" type="number" min="0" step="any" inputmode="decimal" value="${esc(m.taxa||"")}" placeholder="0"></label>
+      <label class="f full">Descrição<input id="pmDesc" value="${esc(m.descricao||"")}" maxlength="80" placeholder="Por exemplo: compras do mês no mercado"></label>
+    </div>
+    ${ed&&ed.sms?`<details class="pf-smsraw"><summary>Mensagem original</summary><p>${esc(ed.sms)}</p></details>`:""}
+    <p class="err" id="pmErr" hidden></p>
+  </div>
+  <footer>${ed?`<button type="button" class="btn" id="pmDel" style="margin-right:auto;color:var(--bad)">Apagar</button>`:""}<button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn pri">${ed?"Guardar":"Registar"}</button></footer>`);
+  const tipo=()=>dlg.querySelector("[name=ptipo]:checked").value;
+  const ver=()=>{const t=tipo();$("#pmCatL").hidden=t==="transferencia";$("#pmDestL").hidden=t!=="transferencia";$("#pmCartT").textContent=t==="transferencia"?"Da carteira":t==="entrada"?"Entrou na carteira":"Saiu da carteira";
+    $("#pmQuemT").textContent=t==="entrada"?"Quem pagou / de onde veio":"Pago a quem";$("#pmNovaL").hidden=$("#pmCat").value!=="__nova"||t==="transferencia"};
+  dlg.querySelectorAll("[name=ptipo]").forEach(r=>r.onchange=()=>{const cur=$("#pmCat").value;$("#pmCat").innerHTML=catOpts(tipo());if([...$("#pmCat").options].some(o=>o.value===cur))$("#pmCat").value=cur;ver()});
+  $("#pmCat").onchange=ver;ver();
+  const del=$("#pmDel");if(del)del.onclick=async()=>{if(!confirmar(del,"Confirmar: apagar"))return;await store.del("pf_movimentos",ed.id);fechar();toast("Movimento apagado")};
+  $("#dform").onsubmit=async e=>{e.preventDefault();const er=$("#pmErr"),t=tipo(),v=Number($("#pmV").value);er.hidden=true;
+    const err=s=>{er.textContent=s;er.hidden=false};
+    if(!(v>0))return err("Indique um valor maior que zero.");
+    if(t==="transferencia"&&$("#pmDest").value===$("#pmC").value)return err("Escolha duas carteiras diferentes.");
+    let cat=t==="transferencia"?"":$("#pmCat").value;
+    if(cat==="__nova"){const nn=$("#pmNova").value.trim();if(!nn)return err("Escreva o nome da nova categoria.");cat=nn;const key=t==="entrada"?"catEntrada":"catSaida";if(!S.pcfg[key].includes(nn))await store.cfg("pcfg","config/pessoal",{...S.pcfg,[key]:[...S.pcfg[key],nn]})}
+    const d=$("#pmD").value||hoje();
+    const o={...(ed||{id:novoId("pm"),origem:"manual",criadoEm:new Date().toISOString()}),tipo:t,valor:r2(v),taxa:r2(Number($("#pmT").value)||0),data:d,categoria:cat,carteiraId:$("#pmC").value,destinoId:t==="transferencia"?$("#pmDest").value:"",contraparte:$("#pmQ").value.trim(),descricao:$("#pmDesc").value.trim()};
+    if(!ed||ed.data!==d)o.quando=d===hoje()?new Date().toISOString():pfISO(d,"23:59");
+    await store.put("pf_movimentos",o);pfLembrar(o);fechar();toast(ed?"Movimento guardado":t==="entrada"?"Entrada registada":t==="saida"?"Saída registada":"Transferência registada")};
+}
+function csvPessoal(){const rows=[["Data","Hora","Tipo","Valor","Taxa","Categoria","Carteira","Para carteira","Pessoa/empresa","Descricao","Referencia","Saldo apos (SMS)","Origem"]];
+  [...S.pmovs].sort((a,b)=>pfQuando(a).localeCompare(pfQuando(b))).forEach(m=>rows.push([fmtD(m.data),m.hora||"",m.tipo,csvNum(m.valor),csvNum(m.taxa||0),m.categoria||"",pfCarteira(m.carteiraId)?.nome||"",pfCarteira(m.destinoId)?.nome||"",m.contraparte||"",m.descricao||"",m.ref||"",m.saldoApos==null?"":csvNum(m.saldoApos),m.origem]));
+  salvarFicheiro("movimentos-pessoais-"+hoje()+".csv",csvDe(rows))}
+
+/* ---------- carteiras ---------- */
+function refPCart(){const tb=$("#tbPCart");if(!tb)return;
+  tb.innerHTML=S.pcarteiras.length?S.pcarteiras.map(c=>{const s=pfSaldo(c),n=S.pmovs.filter(m=>m.carteiraId===c.id||m.destinoId===c.id).length;return`<tr${c.ativa===false?' style="opacity:.55"':""}><td class="cname"><b>${esc(c.nome)}</b><small>${esc(PF_TIPO(c.tipo))}${c.ativa===false?" · arquivada":""} · ${n} movimento${n===1?"":"s"}</small></td><td class="mono">${esc(c.numero||"—")}</td>
+    <td>${mt(s.base.v)} <small>${s.base.fonte==="sms"?"do SMS de ":"indicado a "}${fmtD(pfDia(s.base.em))}</small></td><td class="num"><b>${mt(s.saldo)}</b></td>
+    <td><div class="acts">${c.ussd?`<a class="btn sm" href="tel:${encodeURIComponent(c.ussd)}">Ver saldo no telemóvel</a>`:""}<button class="btn sm" data-act="pf-acertar" data-id="${c.id}">Acertar saldo</button><button class="btn sm" data-act="pf-cart-editar" data-id="${c.id}">Editar</button></div></td></tr>`}).join(""):
+    `<tr><td colspan="5"><div class="empty">Ainda sem carteiras. Crie a sua carteira M-Pesa, e-Mola ou mKesh e indique o saldo de hoje.</div></td></tr>`;
+  rotularTabelas()}
+function abrirCarteira(id){
+  const ed=id?pfCarteira(id):null,c=ed||{tipo:S.pcarteiras.some(x=>x.tipo==="mpesa")?"emola":"mpesa",nome:"",numero:"",saldoInicial:"",ussd:"",seguirSms:true};
+  const nMov=ed?S.pmovs.filter(m=>m.carteiraId===ed.id||m.destinoId===ed.id).length:0;
+  abrir(hdr(ed?"Carteira":"Nova carteira",ed?"":"Indique quanto tem hoje nesta carteira. Os movimentos seguintes atualizam o saldo.")+`
+  <div class="body"><div class="fgrid">
+    <label class="f">Tipo<select id="pcT">${opts(PF_TIPOS.map(t=>[t[0],t[1]]),c.tipo)}</select></label>
+    <label class="f">Nome<input id="pcN" value="${esc(c.nome)}" maxlength="40" placeholder="Por exemplo: M-Pesa pessoal"></label>
+    <label class="f">Número (opcional)<input id="pcNum" value="${esc(c.numero||"")}" inputmode="tel" maxlength="30"></label>
+    ${ed?"":`<label class="f">Saldo de hoje (MT)<input id="pcS" type="number" step="any" inputmode="decimal" value="" placeholder="0,00"></label>`}
+    <label class="f">Código para ver o saldo<input id="pcU" value="${esc(c.ussd||"")}" class="mono" maxlength="20" placeholder="Por exemplo *150#"></label>
+    <label class="f check full"><input type="checkbox" id="pcSms"${c.seguirSms!==false?" checked":""}> Usar o “novo saldo” das mensagens desta carteira como saldo confirmado</label>
+    ${ed?`<label class="f check full"><input type="checkbox" id="pcA"${ed.ativa===false?" checked":""}> Arquivar (deixa de contar no saldo total)</label>`:""}
+  </div><p class="note" style="margin:0">Confirme o código no seu telemóvel: no M-Pesa costuma ser *150# e no e-Mola *898#. Pode mudá-lo aqui.</p><p class="err" id="pcErr" hidden></p></div>
+  <footer>${ed?`<button type="button" class="btn" id="pcDel" style="margin-right:auto;color:var(--bad)">${nMov?"Apagar (tem "+nMov+" movimentos)":"Apagar"}</button>`:""}<button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn pri">${ed?"Guardar":"Criar carteira"}</button></footer>`);
+  const tsel=$("#pcT");let ultU=c.ussd||(ed?"":PF_TIPOS.find(t=>t[0]===c.tipo)[2]);$("#pcU").value=ultU;
+  tsel.onchange=()=>{const t=PF_TIPOS.find(x=>x[0]===tsel.value);const u=$("#pcU");if(!u.value||u.value===ultU){u.value=t[2];ultU=t[2]}if(!$("#pcN").value)$("#pcN").placeholder=t[1]};
+  const del=$("#pcDel");if(del)del.onclick=async()=>{if(nMov){toast("Esta carteira tem movimentos. Arquive-a em vez de apagar.");return}if(!confirmar(del,"Confirmar: apagar"))return;await store.del("pf_carteiras",ed.id);fechar();toast("Carteira apagada")};
+  $("#dform").onsubmit=async e=>{e.preventDefault();const t=tsel.value,nome=$("#pcN").value.trim()||PF_TIPO(t);
+    const o={...(ed||{id:novoId("pc"),criadoEm:new Date().toISOString(),saldoInicial:r2(Number($("#pcS").value)||0),saldoEm:new Date().toISOString(),ativa:true}),tipo:t,nome,numero:$("#pcNum").value.trim(),ussd:$("#pcU").value.trim(),seguirSms:$("#pcSms").checked};
+    if(ed)o.ativa=!$("#pcA").checked;
+    await store.put("pf_carteiras",o);fechar();toast(ed?"Carteira guardada":"Carteira criada")};
+}
+function abrirAcertar(id){const c=pfCarteira(id);if(!c)return;const s=pfSaldo(c);
+  abrir(hdr("Acertar saldo · "+c.nome,"Quando o saldo real (no telemóvel ou no extrato) for diferente do calculado.")+`
+  <div class="body"><div class="summary"><div><em>Saldo calculado</em><b>${mt(s.saldo)}</b></div><div><em>Confirmado em</em><b>${pfDataHora(s.base.em)}</b></div><div><em>Origem</em><b>${s.base.fonte==="sms"?"Mensagem":"Indicado por si"}</b></div></div>
+    <label class="f">Saldo real agora (MT)<input id="paV" type="number" step="any" inputmode="decimal" value="${s.saldo}"></label>
+    ${c.ussd?`<p class="note" style="margin:0">Não sabe o saldo? <a href="tel:${encodeURIComponent(c.ussd)}">Marque ${esc(c.ussd)}</a> no telemóvel.</p>`:""}</div>
+  <footer><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn pri">Guardar saldo</button></footer>`);
+  $("#dform").onsubmit=async e=>{e.preventDefault();const v=Number($("#paV").value);if(!Number.isFinite(v))return;await store.put("pf_carteiras",{...c,saldoInicial:r2(v),saldoEm:new Date().toISOString()});fechar();toast("Saldo de "+c.nome+": "+mt(v))}}
+
+/* ---------- mensagens da carteira ---------- */
+function pfSmsHTML(){const supa=S.modo==="supa";return`
+  <div><h1>Mensagens da carteira</h1><p class="sub">Cada transação no M-Pesa, e-Mola ou mKesh chega com uma mensagem de confirmação. O sistema lê o valor, a pessoa, a taxa e o novo saldo.</p></div>
+  <section class="panel" style="padding:16px;display:grid;gap:14px">
+    <div><h2>Colar mensagens</h2><p class="sub">Copie uma ou várias mensagens do telemóvel e cole aqui. Separe-as com uma linha em branco.</p></div>
+    <label class="f">Mensagens<textarea id="psTxt" rows="7" placeholder="Confirmado ABC123XYZ. Recebeste 1,500.00MT de 258841234567 - NOME aos 23/10/26 as 10:15. O teu novo saldo M-Pesa e de 3,250.00MT."></textarea></label>
+    <div class="row spread"><label class="f" style="min-width:220px">Se a mensagem não disser a carteira, usar<select id="psCart">${opts(S.pcarteiras.filter(c=>c.ativa!==false).map(c=>[c.id,c.nome]),"")}</select></label><button type="button" class="btn pri" id="psLer">Ler mensagens</button></div>
+    <div id="psPrev"></div>
+  </section>
+  <section class="panel" style="padding:16px;display:grid;gap:12px">
+    <div><h2>Ligação automática (telemóvel Android)</h2><p class="sub">O telemóvel reencaminha as mensagens da carteira para o sistema assim que chegam. As operadoras não oferecem acesso direto ao saldo de contas pessoais; esta é a forma de ter o saldo atualizado sem escrever nada.</p></div>
+    ${supa?`<div id="psAuto"><p class="note">A verificar…</p></div>`:`<p class="note" style="margin:0">Disponível no site da Heel Service (com login por e-mail). Aqui, cole as mensagens acima.</p>`}
+  </section>
+  <section class="panel"><header><div><h2>Mensagens recebidas</h2><p class="sub">As últimas que chegaram automaticamente</p></div></header><div class="list" id="psLista"></div></section>`}
+function ligarPfSms(){
+  $("#psLer").onclick=()=>{const txt=$("#psTxt").value,pad=$("#psCart").value;
+    if(!S.pcarteiras.length){toast("Crie primeiro uma carteira.");return}
+    const lidas=pfDividir(txt).map(t=>({t,o:pfLerSMS(t)})).filter(x=>x.o&&(x.o.valor>0||x.o.saldoApos!=null));
+    S.pfLidos=lidas.map(x=>{const cid=pfCarteiraDe(x.o,pad);if(x.o.tipo==="saldo")return{saldo:true,o:x.o,cid,incl:true};const m=pfMovDeSMS(x.o,cid,"sms");return{o:x.o,m,cid,rep:pfJaTem(x.o.ref),incl:!pfJaTem(x.o.ref)}});
+    pfPrev();if(!lidas.length)toast("Não encontrei valores em MT nestas mensagens.")};
+  if(S.modo==="supa")pfAutoEstado();
+}
+function pfPrev(){const el=$("#psPrev");if(!el)return;const L=S.pfLidos||[];if(!L.length){el.innerHTML="";return}
+  const cs=S.pcarteiras.filter(c=>c.ativa!==false).map(c=>[c.id,c.nome]);
+  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th></th><th>Data</th><th>Tipo</th><th class="num">Valor</th><th>Pessoa / empresa</th><th>Categoria</th><th>Carteira</th><th class="num">Saldo depois</th></tr></thead><tbody>${L.map((x,i)=>x.saldo?`<tr><td><input type="checkbox" data-pl="${i}"${x.incl?" checked":""} aria-label="Incluir"></td><td>${fmtD(x.o.data)}</td><td colspan="5">Consulta de saldo</td><td class="num">${mt(x.o.saldoApos)}</td></tr>`:`<tr${x.rep?' style="opacity:.55"':""}><td><input type="checkbox" data-pl="${i}"${x.incl?" checked":""} aria-label="Incluir"></td><td class="mono">${fmtD(x.m.data)}${x.m.hora?" "+x.m.hora:""}</td>
+    <td><select data-plt="${i}" aria-label="Tipo">${opts([["entrada","Entrada"],["saida","Saída"],["transferencia","Transferência"]],x.m.tipo)}</select>${x.o.duvida?'<small class="bad">confirme o tipo</small>':""}${x.rep?"<small>já importada</small>":""}</td>
+    <td class="num"><b>${mt(x.m.valor)}</b>${x.m.taxa?`<small>taxa ${mt(x.m.taxa)}</small>`:""}</td><td>${esc(x.m.contraparte||"—")}</td>
+    <td>${x.m.tipo==="transferencia"?"—":`<select data-plc="${i}" aria-label="Categoria">${opts([["","Por classificar"],...(x.m.tipo==="entrada"?S.pcfg.catEntrada:S.pcfg.catSaida).map(c=>[c,c])],x.m.categoria)}</select>`}</td>
+    <td><select data-plw="${i}" aria-label="Carteira">${opts(cs,x.cid)}</select></td><td class="num">${x.m.saldoApos==null?"—":mt(x.m.saldoApos)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="row spread"><p class="note" style="margin:0">Confira o tipo e a categoria de cada uma. As já importadas (com a mesma referência) ficam de fora.</p><button type="button" class="btn pri" id="psImp">Importar ${L.filter(x=>x.incl).length}</button></div>`;
+  el.querySelectorAll("[data-pl]").forEach(c=>c.onchange=()=>{L[+c.dataset.pl].incl=c.checked;$("#psImp").textContent="Importar "+L.filter(x=>x.incl).length});
+  el.querySelectorAll("[data-plt]").forEach(s=>s.onchange=()=>{const x=L[+s.dataset.plt];x.m.tipo=s.value;if(s.value==="transferencia"){x.m.destinoId=S.pcarteiras.find(c=>c.id!==x.cid&&c.tipo==="dinheiro")?.id||S.pcarteiras.find(c=>c.id!==x.cid)?.id||""}x.m.categoria=pfSugerir({...x.o,tipo:s.value});pfPrev()});
+  el.querySelectorAll("[data-plc]").forEach(s=>s.onchange=()=>{L[+s.dataset.plc].m.categoria=s.value});
+  el.querySelectorAll("[data-plw]").forEach(s=>s.onchange=()=>{const x=L[+s.dataset.plw];x.cid=s.value;if(x.m)x.m.carteiraId=s.value});
+  $("#psImp").onclick=async()=>{const b=$("#psImp");b.disabled=true;let n=0;
+    for(const x of L){if(!x.incl)continue;
+      if(x.saldo){const c=pfCarteira(x.cid);if(c){await store.put("pf_carteiras",{...c,saldoInicial:x.o.saldoApos,saldoEm:x.o.quando});n++}continue}
+      if(x.m.tipo==="transferencia"&&(!x.m.destinoId||x.m.destinoId===x.m.carteiraId)){toast("Uma transferência precisa de outra carteira de destino.");continue}
+      await store.put("pf_movimentos",x.m);pfLembrar(x.m);n++}
+    S.pfLidos=null;$("#psTxt").value="";pfPrev();toast(n+(n===1?" mensagem importada":" mensagens importadas"))};
+}
+function refPSms(){const el=$("#psLista");if(!el)return;const l=[...S.psms].sort((a,b)=>(b.recebidoEm||"").localeCompare(a.recebidoEm||"")).slice(0,15);
+  const ET={novo:["warn","A ler"],importado:["ok","Importada"],saldo:["ok","Saldo atualizado"],repetido:["sem","Repetida"],ignorado:["sem","Sem valor"],"sem-carteira":["bad","Sem carteira"]};
+  el.innerHTML=l.length?l.map(s=>{const e=ET[s.estado]||["sem",s.estado];return`<div class="item"><div class="who"><b>${esc(String(s.texto||"").slice(0,140))}${String(s.texto||"").length>140?"…":""}</b><small>${esc(s.de||"")} · ${pfDataHora(s.recebidoEm)}</small></div><span class="pill ${e[0]}">${e[1]}</span></div>`}).join(""):
+    `<div class="empty">${S.modo==="supa"?"Ainda não chegou nenhuma mensagem automática.":"As mensagens automáticas aparecem aqui no site com login por e-mail."}</div>`}
+async function fnCarteira(corpo){
+  const s=(await sb.auth.getSession()).data.session;const h={"Content-Type":"application/json",apikey:SUPA().key};if(s)h.Authorization="Bearer "+s.access_token;
+  let r;try{r=await fetch(SUPA().url+"/functions/v1/carteira",{method:"POST",headers:h,body:JSON.stringify(corpo)})}catch(e){throw new Error("Sem ligação ao servidor. Verifique a Internet.")}
+  let j={};try{j=await r.json()}catch(_){}if(!r.ok)throw new Error(j.erro||"O servidor respondeu com erro ("+r.status+").");return j}
+async function pfAutoEstado(acao){const el=$("#psAuto");if(!el)return;
+  try{const e=await fnCarteira({acao:acao||"estado"});
+    el.innerHTML=e.ligado?`<div class="calc" style="display:grid;gap:8px"><b>Ligação ativa.</b><span>Endereço para o telemóvel (é secreto, não o partilhe):</span>
+      <span class="withbtn"><input class="mono" id="psUrl" readonly value="${esc(e.url)}"><button type="button" class="btn sm" id="psCopy">Copiar</button></span>
+      <span>${e.total?e.total+" mensagens recebidas · última a "+pfDataHora(e.ultimo):"Ainda não chegou nenhuma mensagem."}</span></div>
+      <ol class="pf-steps"><li>No telemóvel Android, instale a aplicação <b>SMS to URL Forwarder</b> (gratuita, pela F-Droid; não existe na Play Store porque a Google não permite apps que reencaminham SMS).</li>
+      <li>Crie uma regra: em <b>Remetente</b> escreva <span class="mono">(?i)(m-?pesa|e-?mola|m-?kesh)</span> e marque “é uma expressão regular” (ou o nome exato que aparece como remetente das mensagens da sua carteira).</li>
+      <li>Em <b>URL</b> cole o endereço acima. Deixe o modelo JSON como está (envia <span class="mono">from</span> e <span class="mono">text</span>).</li>
+      <li>Guarde e faça uma transação pequena: a mensagem aparece em “Mensagens recebidas” e o movimento entra no Painel, pronto a classificar.</li></ol>
+      <div class="row" style="gap:8px"><button type="button" class="btn sm" data-act="pf-auto" data-a="gerar">Criar endereço novo</button><button type="button" class="btn sm" data-act="pf-auto" data-a="desligar" style="color:var(--bad)">Desligar</button></div>`:
+      `<p class="note" style="margin:0">A ligação está desligada.</p><div><button type="button" class="btn pri" data-act="pf-auto" data-a="gerar">Criar ligação</button></div>`;
+    const cp=$("#psCopy");if(cp)cp.onclick=()=>copiar($("#psUrl").value);
+  }catch(err){el.innerHTML=`<p class="note" style="color:var(--bad);margin:0">${esc(err.message)}</p>`}}
+
+/* ---------- categorias ---------- */
+function pfCatHTML(){const k=hoje().slice(0,7),m=pfMes(k),c=S.pcfg;
+  const lista=(key,tit,tot)=>`<section class="panel"><header><div><h2>${tit}</h2><p class="sub">Valores de ${mesNome(k)}</p></div></header><div class="list">${c[key].map(n=>`<div class="item"><div class="who"><b>${esc(n)}</b><small>${mt(tot[n]||0)}</small></div><button class="btn sm" data-act="pf-cat-del" data-k="${key}" data-n="${esc(n)}">Remover</button></div>`).join("")}
+    <form class="item pf-catadd" data-k="${key}"><input name="n" maxlength="40" placeholder="Nova categoria" aria-label="Nova categoria"><button class="btn sm pri" type="submit">Adicionar</button></form></div></section>`;
+  return`<div><h1>Categorias</h1><p class="sub">Com o quê gasta e de onde vem o seu dinheiro. As regras escolhem a categoria sozinhas quando a mensagem tem uma palavra conhecida.</p></div>
+  <div class="grid2">${lista("catSaida","Saídas",m.cat)}${lista("catEntrada","Entradas",m.catE)}</div>
+  <section class="panel"><header><div><h2>Regras automáticas</h2><p class="sub">Se a mensagem ou a pessoa tiver a palavra, usa a categoria. O sistema também se lembra da categoria que deu a cada pessoa.</p></div></header>
+    <div class="list">${(c.regras||[]).map((r,i)=>`<div class="item"><div class="who"><b class="mono">${esc(r.palavra)}</b><small>→ ${esc(r.categoria)}</small></div><button class="btn sm" data-act="pf-regra-del" data-i="${i}">Remover</button></div>`).join("")||'<div class="empty">Sem regras.</div>'}
+    <form class="item pf-regra"><div class="row" style="gap:8px;flex-wrap:wrap"><input name="p" maxlength="30" placeholder="Palavra (ex.: EDM)" aria-label="Palavra" style="width:auto;flex:1;min-width:120px"><select name="c" aria-label="Categoria" style="width:auto;flex:1;min-width:150px">${opts([...c.catSaida,...c.catEntrada.filter(x=>!c.catSaida.includes(x))].map(x=>[x,x]),"")}</select></div><button class="btn sm pri" type="submit">Adicionar regra</button></form></div></section>`}
+function ligarPfCat(){
+  $("#view").querySelectorAll(".pf-catadd").forEach(f=>f.onsubmit=async e=>{e.preventDefault();const n=f.elements.n.value.trim(),k=f.dataset.k;if(!n)return;if(S.pcfg[k].includes(n)){toast("Essa categoria já existe");return}
+    await store.cfg("pcfg","config/pessoal",{...S.pcfg,[k]:[...S.pcfg[k],n]});showTab("categorias")});
+  const r=$("#view").querySelector(".pf-regra");if(r)r.onsubmit=async e=>{e.preventDefault();const p=r.elements.p.value.trim();if(!p)return;await store.cfg("pcfg","config/pessoal",{...S.pcfg,regras:[...(S.pcfg.regras||[]),{palavra:p,categoria:r.elements.c.value}]});showTab("categorias")};
+}
+async function pfAcao(a,b){
+  if(a==="pf-novo")return abrirMov(null,b.dataset.t);
+  if(a==="pf-editar")return abrirMov(b.dataset.id);
+  if(a==="pf-csv")return csvPessoal();
+  if(a==="pf-cart-nova")return abrirCarteira();
+  if(a==="pf-cart-editar")return abrirCarteira(b.dataset.id);
+  if(a==="pf-acertar")return abrirAcertar(b.dataset.id);
+  if(a==="pf-olho"){S.pfOlho=!pfOlhoLer();pfOlhoGravar(S.pfOlho);return refresh()}
+  if(a==="pf-auto"){if(b.dataset.a==="desligar"&&!confirmar(b,"Confirmar: desligar"))return;b.disabled=true;return pfAutoEstado(b.dataset.a)}
+  if(a==="pf-cat-del"){const k=b.dataset.k,n=b.dataset.n;if(!confirmar(b,"Confirmar"))return;await store.cfg("pcfg","config/pessoal",{...S.pcfg,[k]:S.pcfg[k].filter(x=>x!==n)});return showTab("categorias")}
+  if(a==="pf-regra-del"){const rs=[...(S.pcfg.regras||[])];rs.splice(+b.dataset.i,1);await store.cfg("pcfg","config/pessoal",{...S.pcfg,regras:rs});return showTab("categorias")}
+}
+
 /* ================= mensagens automáticas: definições, recibos automáticos, registo ================= */
 Object.assign(S,{acfg:{...AVISOS.AUTO_PADRAO},aestado:null,envios:[],srv:null,autoRecibo:false});
 const autoCfg=()=>({...AVISOS.AUTO_PADRAO,...(S.acfg||{})});
@@ -3536,7 +4045,8 @@ const NF_IC={
   iptv:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="13" rx="2"/><path d="M8.5 21h7M12 17.5V21"/></svg>`,
   micro:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6.5" rx="7" ry="2.8"/><path d="M5 6.5v5c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-5"/><path d="M5 11.5v5c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-5"/></svg>`,
   serv:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><path d="M8.5 12h7M8.5 16h4"/></svg>`};
-const NF_NOME={iptv:"IPTV",micro:"Microcrédito",serv:"Serviços"};
+NF_IC.pessoal=`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="14" rx="3"/><path d="M16 11.5h5.5v5H16a2.5 2.5 0 0 1 0-5z"/><path d="M5 6l9-3 2 3"/></svg>`;
+const NF_NOME={iptv:"IPTV",micro:"Microcrédito",serv:"Serviços",pessoal:"Gestão pessoal"};
 let NOTIFS=[],nfUlt=-1,nfAutoT=null;
 function alertas(){
   const out=[];
@@ -3549,6 +4059,7 @@ function alertas(){
   [["serv","cotacoes",S.vdocs],["iptv","documentos",S.docs]].forEach(([biz,tab,docs])=>(docs||[]).forEach(d=>{
     if(d.tipo!=="cotacao"||d.estado==="anulado"||d.estado==="aceite"||!d.validade)return;const n=dias(d.validade);
     if(n>=0&&n<=3)out.push({biz,tab,nv:1,t:(d.numero||"Cotação")+" · "+((d.cliente&&d.cliente.nome)||"cliente"),d:"Cotação de "+mt(d.total)+(n===0?" caduca hoje":" caduca em "+n+" d"),act:"ver-doc",id:d.id,btn:"Abrir",ord:n})}));
+  if(typeof pfPodeVer==="function"&&pfPodeVer()){const n=pfPorClassificar().length;if(n)out.push({biz:"pessoal",tab:"movimentos",nv:1,t:n+(n===1?" movimento":" movimentos")+" por classificar",d:"Diga com o quê gastou ou de onde veio o dinheiro",act:"pf-pend",btn:"Classificar",ord:0,pre:()=>{S.pfiltro="pend";S.pmesF="";S.pcart=""}})}
   return out.sort((a,b)=>b.nv-a.nv||a.ord-b.ord);
 }
 function nfBadge(){
@@ -3563,7 +4074,7 @@ function nfHTML(){
   const h=new Date().getHours(),saud=h<12?"Bom dia":h<19?"Boa tarde":"Boa noite";
   if(!NOTIFS.length)return`<div class="nf-ok"><svg viewBox="0 0 52 52" width="64" height="64" aria-hidden="true"><circle class="nf-ring" cx="26" cy="26" r="23"/><path class="nf-tick" d="M15 27l7 7 15-16"/></svg>
     <b>${saud}! Está tudo em dia.</b><small>Sem contas a expirar, prestações em atraso nem cotações a caducar.</small></div>`;
-  return`<div class="nf-sum">${urg?`<span class="s3"><b>${urg}</b> urgente${urg>1?"s":""}</span>`:""}${av?`<span class="s2"><b>${av}</b> a vencer</span>`:""}${inf?`<span class="s1"><b>${inf}</b> cotaç${inf>1?"ões":"ão"}</span>`:""}</div>
+  return`<div class="nf-sum">${urg?`<span class="s3"><b>${urg}</b> urgente${urg>1?"s":""}</span>`:""}${av?`<span class="s2"><b>${av}</b> a vencer</span>`:""}${inf?`<span class="s1"><b>${inf}</b> aviso${inf>1?"s":""}</span>`:""}</div>
   <div class="nf-list">${NOTIFS.map((a,i)=>`<div class="nf-it nv${a.nv}" style="--i:${Math.min(i,10)}"><span class="nf-ic">${NF_IC[a.biz]}</span>
     <div class="nf-tx"><b>${esc(a.t)}</b><small>${esc(a.d)}</small><em>${NF_NOME[a.biz]}</em></div>
     <button type="button" class="btn sm${a.nv===3?" pri":""}" data-act="notif-ir" data-i="${i}">${a.btn}</button></div>`).join("")}</div>`;
@@ -3585,7 +4096,7 @@ function fecharNotif(){
 }
 function notifIr(i){
   const a=NOTIFS[i];if(!a)return;fecharNotif();fechar();
-  abrirNegocio(a.biz);showTab(a.tab);
+  if(a.pre)a.pre();abrirNegocio(a.biz);showTab(a.tab);
   setTimeout(()=>{try{if(a.act==="renovar")abrirRenovar(a.id);else if(a.act==="ver-emp")abrirEmp(a.id);else if(a.act==="ver-doc")abrirDoc(a.id)}catch(e){console.error(e)}},380);
 }
 function notifAuto(){
@@ -3635,7 +4146,7 @@ function revelar(){
 }
 
 /* ================= navegação ================= */
-const MOD={serv:SERV,iptv:IPTV,micro:MICRO};
+const MOD={serv:SERV,iptv:IPTV,micro:MICRO,pessoal:PESSOAL};
 function abrirNegocio(b){
   S.biz=b;store_("sessionStorage","hs_negocio",b);
   document.body.classList.remove("launch");
@@ -3725,6 +4236,7 @@ function refLauncher(){
   $("#view").innerHTML=banner()+`
   <section class="hero"><div class="top"><div><p class="eyebrow">${cap1(new Date().toLocaleDateString("pt-PT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</p><h1>${saud}${quem?", "+esc(quem):""}.</h1><p class="sub">Escolha o negócio que quer gerir.</p></div></div></section>
   <section class="bizsec"><div class="biz-grid">${NEG.map(n=>`<button class="biz biz-${n.k}" data-biz="${n.k}"><span class="ill">${ILL[n.k]}</span><span class="bt"><b>${n.nome}</b><span class="tl">${n.tl}</span></span><span class="feat">${n.f.map(x=>`<span>${x}</span>`).join("")}</span><span class="go">Abrir</span></button>`).join("")}</div></section>
+  ${pfLauncherHTML()}
   <section class="ovsec" id="ov">${ovHTML()}</section>`;
   ligarOv();
 }
@@ -3755,6 +4267,7 @@ function refresh(){
   if(!S.ready)$("#liveTxt").textContent="a carregar…";
   else if(S.biz==="micro"){const m=MICRO.stats();$("#liveTxt").textContent=m.ativos+" empréstimos ativos"+(m.nAtraso?" · "+m.nAtraso+" em atraso":"")}
   else if(S.biz==="iptv"){$("#liveTxt").textContent=IPTV.stats().ativos+" contas ativas"}
+  else if(S.biz==="pessoal"){const n=pfPorClassificar().length;$("#liveTxt").textContent=n?n+" movimentos por classificar":"Gestão pessoal"}
   else $("#liveTxt").textContent=S.cfg.nome||"Heel Service";
   nfBadge();
   if(locked)return;
@@ -3840,7 +4353,7 @@ function armarInatividade(){
 function subscrever(){
   const err=e=>{console.error(e);if(e&&e.code==="revoked")toast("O acesso aos dados foi retirado nesta vista.")};
   const fixCfg=(base,d)=>{const c={...base,...d};if(base.planos&&(!Array.isArray(c.planos)||!c.planos.length))c.planos=PLANOS_PADRAO;return c};
-  let pend=9;const pronto=()=>{if(--pend===0){S.ready=true;refresh();notifAuto();autoDiario();return}refresh()};
+  let pend=12;const pronto=()=>{if(--pend===0){S.ready=true;refresh();notifAuto();autoDiario();return}refresh()};
   const once=f=>{let first=true;return s=>{f(s);if(first){first=false;pronto()}else refresh()}};
   unsubs.push(db.doc("config/negocio").onSnapshot(s=>{S.cfg=fixCfg(CFG_IPTV,s.exists?s.data():{});refresh()},err));
   unsubs.push(db.doc("config/servicos").onSnapshot(s=>{S.vcfg={...CFG_SERV,...(s.exists?s.data():{})};refresh()},err));
@@ -3858,6 +4371,10 @@ function subscrever(){
   unsubs.push(db.collection("envios").onSnapshot(s=>{S.envios=s.docs.map(d=>({...d.data(),id:d.id}));reAuto()},err));
   unsubs.push(db.collection("sv_contratos").onSnapshot(once(s=>{S.vcontratos=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
   unsubs.push(db.collection("mc_contratos").onSnapshot(once(s=>{S.mcontratos=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
+  unsubs.push(db.doc("config/pessoal").onSnapshot(s=>{const d=s.exists?s.data():{};S.pcfg={...CFG_PESSOAL,...d,memoria:d.memoria||{}};refresh()},err));
+  unsubs.push(db.collection("pf_carteiras").onSnapshot(once(s=>{S.pcarteiras=s.docs.map(d=>({...d.data(),id:d.id})).sort((a,b)=>(a.criadoEm||"").localeCompare(b.criadoEm||""))}),err));
+  unsubs.push(db.collection("pf_movimentos").onSnapshot(once(s=>{S.pmovs=s.docs.map(d=>({...d.data(),id:d.id}))}),err));
+  unsubs.push(db.collection("pf_sms").onSnapshot(once(s=>{S.psms=s.docs.map(d=>({...d.data(),id:d.id}));setTimeout(pfProcessar,50)}),err));
 }
 function entrar(){
   guardarSessao();document.body.classList.remove("locked");$("#hdrUser").textContent=admin.usuario;
@@ -3867,7 +4384,7 @@ function entrar(){
 }
 function sair(msg){
   fecharNotif();store_("sessionStorage","hs_notif_visto",null);nfUlt=-1;store_("sessionStorage",SESS,null);store_("sessionStorage","hs_negocio",null);unsubs.forEach(u=>{try{u()}catch(_){}});unsubs=[];
-  S.clientes=[];S.docs=[];S.mutuarios=[];S.emprestimos=[];S.servicos=[];S.vclientes=[];S.vdocs=[];S.vcontratos=[];S.mcontratos=[];S.envios=[];S.srv=null;S.ready=false;S.biz=null;clearTimeout(idleT);$("#hdrUser").textContent="";$("#tabs").innerHTML="";if(S.modo==="supa")supaSair(msg);else telaLogin(msg);
+  S.clientes=[];S.docs=[];S.mutuarios=[];S.emprestimos=[];S.servicos=[];S.vclientes=[];S.vdocs=[];S.vcontratos=[];S.mcontratos=[];S.envios=[];S.pcarteiras=[];S.pmovs=[];S.psms=[];S.pcfg=CFG_PESSOAL;S.srv=null;S.ready=false;S.biz=null;clearTimeout(idleT);$("#hdrUser").textContent="";$("#tabs").innerHTML="";if(S.modo==="supa")supaSair(msg);else telaLogin(msg);
 }
 async function gate(){
   telaAuth("A verificar acesso…","");
@@ -3890,6 +4407,8 @@ document.addEventListener("click",async e=>{
   const mc=e.target.closest("[data-mfiltro]");if(mc){S.mfiltro=mc.dataset.mfiltro;refresh();return}
   const vf=e.target.closest("[data-vfiltro]");if(vf){S.vfiltro=vf.dataset.vfiltro;refresh();return}
   const vk=e.target.closest("[data-vkpi]");if(vk){S.vfiltro=vk.dataset.vkpi;showTab("cotacoes");return}
+  const pfk=e.target.closest("[data-pfkpi]");if(pfk){S.pfiltro=pfk.dataset.pfkpi;S.pmesF="";S.pcart="";showTab("movimentos");return}
+  const pff=e.target.closest("[data-pfiltro]");if(pff){S.pfiltro=pff.dataset.pfiltro;refPMov();return}
   const b=e.target.closest("[data-act]");if(!b)return;
   const a=b.dataset.act,id=b.dataset.id;
   const doc=()=>K().docs().find(x=>x.id===id);
@@ -3897,6 +4416,7 @@ document.addEventListener("click",async e=>{
     case"fechar":e.preventDefault();fechar();break;
     case"tema":trocarTema();break;
     case"relatorio":abrirRelatorio(b.dataset.neg);break;
+    case"pf-novo":case"pf-editar":case"pf-csv":case"pf-cart-nova":case"pf-cart-editar":case"pf-acertar":case"pf-olho":case"pf-auto":case"pf-cat-del":case"pf-regra-del":await pfAcao(a,b);break;
     case"auto-teste":case"auto-desligar":case"auto-agora":case"wa-teste":case"wa-desligar":autoAcao(a,b);break;
     case"ctr-novo":case"ctr-abrir":case"ctr-pdf":case"ctr-filtro":case"ctr-estado":case"ctr-apagar":ctrAcao(a,b.dataset.k,id,b);break;
     case"ctr-de-cot":{const ex=S.vcontratos.find(c=>c.cotacaoId===id&&c.estado!=="anulado");abrirContrato("serv",ex?.id,ex?null:id);break}
@@ -3991,6 +4511,16 @@ function demo(){
   S.vdocs=[{id:"vd1",tipo:"cotacao",numero:"COT-002",data:t,validadeDias:15,validade:addDias(t,15),clienteId:"vx1",cliente:{nome:"Exemplo — Loja Boa Vista, Lda",telefone:"84 777 8899",email:"geral@exemplo.co.mz",morada:"Av. 24 de Julho, Maputo · NUIT 400000000"},
     itens:[{desc:S.servicos[0].nome,qtd:12,un:"ponto",preco:1500,dpct:5},{desc:S.servicos[1].nome,qtd:1,un:"serviço",preco:2500,dpct:0}],descGlobal:0,iva:16,condPagamento:"50% na aceitação, 50% na conclusão",condBanco:"M-Pesa 86 925 2812",condPrazo:"5 dias úteis",estado:"pendente",criadoEm:new Date().toISOString()}];
   S.vdocs[0].total=totaisCot(S.vdocs[0]).total;
+  const agora=new Date().toISOString(),ont=addDias(t,-1);
+  S.pcarteiras=[{id:"pcx1",tipo:"mpesa",nome:"M-Pesa pessoal",numero:"84 000 0000",ussd:"*150#",seguirSms:true,saldoInicial:4200,saldoEm:pfISO(addDias(t,-12),"08:00"),ativa:true,criadoEm:pfISO(addDias(t,-12),"08:00")},
+    {id:"pcx2",tipo:"emola",nome:"e-Mola",numero:"86 000 0000",ussd:"*898#",seguirSms:true,saldoInicial:900,saldoEm:pfISO(addDias(t,-12),"08:00"),ativa:true,criadoEm:pfISO(addDias(t,-12),"08:01")},
+    {id:"pcx3",tipo:"dinheiro",nome:"Dinheiro na carteira",ussd:"",seguirSms:false,saldoInicial:1500,saldoEm:pfISO(addDias(t,-12),"08:00"),ativa:true,criadoEm:pfISO(addDias(t,-12),"08:02")}];
+  const pm=(id,tipo,valor,dd,cat,cid,quem,extra)=>({id,tipo,valor,taxa:0,data:dd,quando:pfISO(dd,"10:00"),categoria:cat,carteiraId:cid,destinoId:"",contraparte:quem,descricao:"",ref:"",saldoApos:null,origem:"manual",criadoEm:pfISO(dd,"10:00"),...(extra||{})});
+  S.pmovs=[pm("pmx1","entrada",8000,addDias(t,-10),"Negócios (Heel Service)","pcx1","Heel Service"),pm("pmx2","saida",2500,addDias(t,-9),"Casa e renda","pcx1","Senhorio"),
+    pm("pmx3","saida",650,addDias(t,-7),"Alimentação","pcx3","Mercado"),pm("pmx4","saida",350,addDias(t,-5),"Energia e água","pcx1","EDM Credelec",{taxa:5,origem:"sms",ref:"DEMO1A2B3C"}),
+    pm("pmx5","saida",200,addDias(t,-3),"Comunicações e internet","pcx2","Recarga Movitel"),pm("pmx6","saida",420,ont,"","pcx1","258841112233 - JOAO",{origem:"auto",ref:"DEMO4D5E6F",saldoApos:8775}),
+    pm("pmx7","saida",180,addDias(t,-2),"Transporte","pcx3","Chapa")];
+  S.pcfg={...CFG_PESSOAL};
 }
 
 /* ================= arranque ================= */
